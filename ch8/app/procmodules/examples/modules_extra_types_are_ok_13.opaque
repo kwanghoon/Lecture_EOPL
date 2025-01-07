@@ -1,0 +1,3 @@
+module m interface [transparent t = int y : int] 
+                    body [type u = bool x = 3 type t = int y = 4]
+          from m take y
