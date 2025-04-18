@@ -168,7 +168,6 @@ apply_cont cont val store sched actors =
           then apply_cont cont (Bool_Val True) store sched actors
           else apply_cont cont (Bool_Val False) store sched actors
 
-
     apply_cont' (Tuple_Cont explist vals env saved_cont) val store sched actors =
       let vals' = vals ++ [val] in
         case explist of
@@ -178,8 +177,12 @@ apply_cont cont val store sched actors =
 
     apply_cont' (Let_Tuple_Cont vars body env saved_cont) val store sched actors =
       case val of
-        List_Val vals -> let (env', store') = bind_vars vars vals env store 
-                         in value_of_k body env' saved_cont store' sched actors
+        List_Val vals -> 
+          if vars == [] && null vals
+          then value_of_k body env saved_cont store sched actors
+          else let (env', store') = bind_vars vars vals env store 
+               in value_of_k body env' saved_cont store' sched actors
+
         _ -> error ("LetTuple_Cont: expected a list, got " ++ show val)
 
 
@@ -285,6 +288,9 @@ value_of_k (Eq_Actor_Exp exp1 exp2) env cont store sched actors =
   value_of_k exp1 env (Actor1_Cont exp2 env cont) store sched actors
 
 -- For tuple
+value_of_k (Tuple_Exp []) env cont store sched actors =
+  apply_cont cont (List_Val []) store sched actors
+
 value_of_k (Tuple_Exp (exp:exps)) env cont store sched actors =
   value_of_k exp env (Tuple_Cont exps [] env cont) store sched actors
 
