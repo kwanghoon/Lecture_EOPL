@@ -9,6 +9,7 @@ import Parser
 import Expr
 import Interp
 import Comp
+import Actors.Expr(pprint)
 
 import Control.Monad (when)
 import System.IO
@@ -38,9 +39,14 @@ doProcess verbose fileName = do
         (fromToken (endOfToken lexerSpec))
   
    putStrLn (show expression)
+   putStrLn ""
 
-   let altorExpr = compMain expression
-   putStrLn (show altorExpr)
+   let actorExpr = compMain expression
+   putStrLn (show actorExpr)
+   putStrLn ""
+
+   putStrLn (pprint actorExpr)
+   
 
 --    let val = value_of_program expression
 --    putStrLn (show val)

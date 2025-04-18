@@ -95,9 +95,9 @@ comp (R.If_Exp e1 e2 e3) loc senv n tbl k = undefined
 comp (R.Let_Exp x e1 e2) loc senv n tbl k =
     comp e1 loc senv n tbl (\e1' n1 tbl1 ->
         let y = x ++ show n1
-            senv1 = Map.insert x y senv in
-            comp e2 loc senv1 (n1+1) tbl1 (\e2' n2 tbl2 ->
-                k (A.Let_Exp y e1' e2') n2 tbl2))
+            senv1 = Map.insert x y senv 
+            (e2', n2, tbl2) = comp e2 loc senv1 (n1+1) tbl1 k
+        in (A.Let_Exp y e1' e2', n2, tbl2))
 
 compMain :: R.Exp -> A.Exp
 compMain e = 
