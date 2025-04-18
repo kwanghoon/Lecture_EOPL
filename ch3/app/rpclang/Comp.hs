@@ -33,14 +33,14 @@ comp (R.Proc_Exp locb x e) loc senv n tbl k =
         fvsName = "fvs" ++ show (n+1)
         x1 = x ++ show (n+2)
         cloName = "clo" ++ show (n+3)
-        (body, n1, tbl1) = comp e locb (Map.insert x x1 senv) (n+4) tbl k 
+        (body, n1, tbl1) = comp e locb (Map.insert x x1 senv) (n+4) tbl (,,) 
         fclosed = mkProc fvsName fvs x1 body
         tbl2 = Map.insert fnum (locb, fvs, x1, fclosed) tbl1
     in
         if loc == locb then
-            k ( A.Call_Exp 
-                    (A.Var_Exp fName) 
-                    (A.Tuple_Exp (map A.Var_Exp fvs)) ) n1 tbl2
+            k ( A.Tuple_Exp 
+                    [ A.Var_Exp fName,
+                      A.Tuple_Exp (map A.Var_Exp fvs) ] ) n1 tbl2
         else
             let (contExp, n2, tbl3) = k (A.Var_Exp cloName) n1 tbl2 in
                 (A.Block_Exp [
@@ -120,12 +120,9 @@ actorTemplate actorName tbl e =
 
 funDecls :: [(Integer, (Location, [A.Identifier], A.Identifier, A.Exp))] -> A.Exp -> A.Exp
 funDecls [] e = e
-funDecls ((fnum, (loc, fvs, x, body)):funDeclList) e = 
+funDecls ((fnum, (loc, fvs, x, p)):funDeclList) e = 
     A.Let_Exp ("F" ++ show fnum) (A.Const_Exp (fromInteger fnum))
-    (A.Let_Exp ("f" ++ show fnum) 
-        (A.Proc_Exp "fvs" 
-            (A.LetTuple_Exp fvs (A.Var_Exp "fvs") 
-                (A.Proc_Exp x body)))
+    (A.Let_Exp ("f" ++ show fnum) p
         (funDecls funDeclList e))
 
 dispatchDecl :: [Integer] -> A.Exp -> A.Exp
