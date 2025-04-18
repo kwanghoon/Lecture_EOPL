@@ -139,6 +139,9 @@ parserSpec = ParserSpec
       rule "Expression -> ( TupleExpressionList )"
         (\rhs -> return $ get rhs 2),
 
+      rule "TupleExpressionList -> "
+        (\rhs -> return $ PETExp (Tuple_Exp [])),
+
       rule "TupleExpressionList -> Expression"
         (\rhs -> return $ PETExp (Tuple_Exp [expFrom (get rhs 1)])),
       
@@ -152,6 +155,9 @@ parserSpec = ParserSpec
         (\rhs -> return $ PETExp (LetTuple_Exp (idListFrom (get rhs 3)) (expFrom (get rhs 6)) (expFrom (get rhs 8)))),
 
       -- IdentifierList :: [String]
+      rule "IdentifierList -> "
+        (\rhs -> return $ PETIdList []),
+
       rule "IdentifierList -> identifier"
         (\rhs -> return $ PETIdList [getText rhs 1]),
       

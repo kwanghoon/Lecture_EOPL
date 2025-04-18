@@ -31,7 +31,7 @@ proc(main)
                                     
                         in (fClosed2, (x))
     in
-    let clo1 = (fClosed1, (100)) in    
+    let clo1 = (fClosed1, ()) in    
 
     begin
         send(a, (clo1, 1, main));

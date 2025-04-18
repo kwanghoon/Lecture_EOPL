@@ -34,8 +34,8 @@ proc(main)
 
                     if zero?(-(fNo, F1))
                     then 
-                        let (d) = fvs in
-                        let clo = (f1, (d)) in
+                        let () = fvs in
+                        let clo = (f1, ()) in
                         begin
                             send(sender, clo);
                             ready(mainLoop)
@@ -72,7 +72,7 @@ proc(main)
     let F2        = 2 in
 
     begin
-        send(a, CREATECLO, (F1, (100), main));
+        send(a, CREATECLO, (F1, (), main));
         ready(proc (clo0)
                 begin
                     send(a, CALLCLO, (clo0, 1, main));
