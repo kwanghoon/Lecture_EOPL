@@ -26,7 +26,7 @@ begin send (sender, clo); ready (mainLoop) end
     let ret = (ffvs arg) in
 begin send (sender, ret); ready (mainLoop) end
   in
-    let behaviourb = proc (self)
+    let behaviourb = proc (b)
   let CREATECLO = 1 in
   let CALLCLO = 2 in
   let F1 = 1 in
