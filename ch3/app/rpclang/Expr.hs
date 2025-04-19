@@ -26,5 +26,5 @@ fv (IsZero_Exp e) = fv e
 fv (If_Exp e1 e2 e3) = fv e1 `Set.union` fv e2 `Set.union` fv e3
 fv (Var_Exp x) = Set.singleton x
 fv (Let_Exp x e1 e2) = Set.delete x (fv e1 `Set.union` fv e2)
-fv (Proc_Exp _ x e) = Set.delete x (fv e)
+fv (Proc_Exp loc x e) = Set.union (Set.delete x (fv e)) (Set.singleton loc)
 fv (Call_Exp e1 _ e2) = fv e1 `Set.union` fv e2
