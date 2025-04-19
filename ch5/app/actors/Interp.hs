@@ -297,6 +297,9 @@ value_of_k (Tuple_Exp (exp:exps)) env cont store sched actors =
 value_of_k (LetTuple_Exp vars exp1 exp2) env cont store sched actors =
   value_of_k exp1 env (Let_Tuple_Cont vars exp2 env cont) store sched actors
 
+value_of_k (Log_Exp str exp) env cont store sched actors =
+  trace str $ value_of_k exp env cont store sched actors
+
 value_of_k exp _ _ _ _ _ =
   error $ "Unknown expression in value_of_k" ++ show exp
   

@@ -35,6 +35,9 @@ data Exp =
   -- For Tuple
   | Tuple_Exp [ Exp ]                     -- ( expression1, ..., expressionk )
   | LetTuple_Exp [ Identifier ] Exp Exp   -- let x1, ..., xk = expression in expression
+
+  -- Logging
+  | Log_Exp String Exp
   
   deriving Show
 
