@@ -101,7 +101,9 @@ comp (R.Let_Exp x e1 e2) loc senv n tbl k =
 
 compMain :: R.Exp -> A.Exp
 compMain e = 
-    let senv = Map.empty
+    let 
+        locSet = fvLoc e
+        senv = Map.fromList [(loc, loc) | loc <- Set.toList locSet]
         n = 0
         tbl = Map.empty
         (e1,n1,tbl1) = comp e "main" senv n tbl (,,) -- Wow! (,,) = \e n tbl -> (e, n, tbl)) 
@@ -204,7 +206,7 @@ createActors' :: [Location] -> Table -> A.Exp -> A.Exp
 createActors' [] tbl e = e
 createActors' (loc:locList) tbl e = 
     let e1 = createActors' locList tbl e 
-        p = actorTemplate "self" tbl (A.Ready_Exp (A.Var_Exp "mainLoop"))
+        p = actorTemplate loc tbl (A.Ready_Exp (A.Var_Exp "mainLoop"))
         bName = "behaviour" ++ loc
         aName = loc
     in A.Let_Exp bName p 
@@ -215,3 +217,14 @@ apply_senv :: SEnv -> Identifier -> Identifier
 apply_senv senv x = case Map.lookup x senv of
     Just y  -> y
     Nothing -> error ("unbound variable: " ++ x)
+
+--
+fvLoc :: R.Exp -> Set.Set Location
+fvLoc (R.Const_Exp _) = Set.empty
+fvLoc (R.Diff_Exp e1 e2) = fvLoc e1 `Set.union` fvLoc e2
+fvLoc (R.IsZero_Exp e) = fvLoc e
+fvLoc (R.If_Exp e1 e2 e3) = fvLoc e1 `Set.union` fvLoc e2 `Set.union` fvLoc e3
+fvLoc (R.Var_Exp _) = Set.empty
+fvLoc (R.Let_Exp _ e1 e2) = fvLoc e1 `Set.union` fvLoc e2
+fvLoc (R.Proc_Exp loc _ e) = Set.singleton loc `Set.union` fvLoc e
+fvLoc (R.Call_Exp e1 _ e2) = fvLoc e1 `Set.union` fvLoc e2
