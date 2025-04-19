@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use camelCase" #-}
 module Lexer(lexerSpec) where
 
 import Prelude hiding (EQ)
@@ -23,7 +25,7 @@ lexerSpec = LexerSpec
 
         ("[0-9]+"  , mkFn INTEGER_NUMBER),
 
-        ("\\\"[^\\\"]*\\\"", mkFn STRING),
+        ("\"[^\"]*\""      , mkFn STRING),
         
         ("\\-"     , mkFn SUB),
         ("\\("     , mkFn OPEN_PAREN),
@@ -94,3 +96,25 @@ multiLineCommentBegin = \text0 -> -- /*
     mlc ('\n':text) line col = mlc text (line+1) col
     mlc ('\r':text) line col = mlc text (line+1) col
     mlc (_:text) line col = mlc text line (col+1)
+
+init_string_literal :: LexAction Token IO ()          -- String -> Maybe Token
+init_string_literal = \text0 -> 
+  do  (state_parm_, line, col, text) <- ST.get
+      lift $ putStrLn [head text]
+      (newLine, newCol, newText, newStr) <- isl (tail text) line (col+1) ""
+      ST.put (state_parm_, newLine, newCol, newText)
+      lift $ putStrLn newStr
+      lift $ print (newLine, newCol)
+      return (Just STRING) -- mkFn STRING ("\"" ++ newStr ++ "\"")
+
+  where
+    isl [] line col accu = return (line, col, [], accu)
+    isl ('\"':text) line col accu = 
+      do lift $ putStrLn ("\"")
+         return (line, col+1, text, reverse accu)
+    isl ('\\':ch:text) line col accu = 
+      do lift $ putStrLn ("\\" ++ [ch])
+         isl text line (col+2) (ch : accu)
+    isl (ch:text) line col accu = 
+      do lift $ putStrLn [ch]
+         isl text line (col+1) (ch : accu)
