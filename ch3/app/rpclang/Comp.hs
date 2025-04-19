@@ -28,7 +28,7 @@ comp (R.Var_Exp x) loc senv n tbl k =
 comp (R.Proc_Exp locb x e) loc senv n tbl k =
     let fnum = n
         fName = "f" ++ show fnum
-        fvs1 = Set.toList (Set.delete x (R.fv e))
+        fvs1 = Set.toList (Set.delete x (R.fv e) `Set.union` Set.singleton locb)
         fvs = map (apply_senv senv) fvs1
         fvsName = "fvs" ++ show (n+1)
         x1 = x ++ show (n+2)
@@ -206,7 +206,7 @@ createActors' :: [Location] -> Table -> A.Exp -> A.Exp
 createActors' [] tbl e = e
 createActors' (loc:locList) tbl e = 
     let e1 = createActors' locList tbl e 
-        p = actorTemplate loc tbl (A.Ready_Exp (A.Var_Exp "mainLoop"))
+        p = actorTemplate "self" tbl (A.Ready_Exp (A.Var_Exp "mainLoop"))
         bName = "behaviour" ++ loc
         aName = loc
     in A.Let_Exp bName p 
