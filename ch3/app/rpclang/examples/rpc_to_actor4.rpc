@@ -1,0 +1,8 @@
+let k= proc a (x)
+        proc b (y)
+            x
+in let s = proc a (f)
+            proc b (g)
+                proc c (z)
+                    ((f a z) b (g a z))
+    in (((s a k) b k ) c 1) 
