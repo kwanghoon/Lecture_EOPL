@@ -59,6 +59,9 @@ data Token =
   | NEW
   | EQACTOR
 
+  | LOG
+  | STRING
+
   deriving (Eq, Show)
 
 tokenStrList :: [(Token,String)]
@@ -66,6 +69,7 @@ tokenStrList =
   [ (END_OF_TOKEN, "$"),
     
     (INTEGER_NUMBER, "integer_number"),
+    (STRING, "string"),
     
     (SUB, "-"),
     (OPEN_PAREN, "("),
@@ -114,7 +118,9 @@ tokenStrList =
     (SEND,   "send"),
     (READY,  "ready"),
     (NEW,    "new"),
-    (EQACTOR, "actor?")
+    (EQACTOR, "actor?"),
+
+    (LOG, "log")
   ]
 
 findTok tok [] = Nothing

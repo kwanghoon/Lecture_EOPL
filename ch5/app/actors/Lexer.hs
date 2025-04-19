@@ -22,6 +22,8 @@ lexerSpec = LexerSpec
         ("//" ++ "([^\n])*" ++ "[\n]", skip),
 
         ("[0-9]+"  , mkFn INTEGER_NUMBER),
+
+        ("\\\"[^\\\"]*\\\"", mkFn STRING),
         
         ("\\-"     , mkFn SUB),
         ("\\("     , mkFn OPEN_PAREN),
@@ -71,6 +73,7 @@ keywords =
   , ("send",   SEND)
   , ("ready",  READY)
   , ("new",    NEW)
+  , ("log",    LOG)
   ]
   
 -- Invariant: text = "/*..."  

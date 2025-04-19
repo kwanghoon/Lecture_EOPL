@@ -115,6 +115,9 @@ parserSpec = ParserSpec
       rule "Expression -> print ( Expression )"
         (\rhs -> return $ PETExp (Unary_Exp Print (expFrom (get rhs 3)))),
 
+      rule "Expression -> log string Expression"
+        (\rhs -> return $ PETExp (Log_Exp (init (tail (getText rhs 2))) (expFrom (get rhs 3)))),
+
       -- Actors
       rule "Expression -> send ( SendExpressionList )"
         (\rhs -> return $ (get rhs 3)),
