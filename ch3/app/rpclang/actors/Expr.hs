@@ -38,6 +38,9 @@ data Exp =
   -- For Tuple
   | Tuple_Exp [ Exp ]                     -- ( expression1, ..., expressionk )
   | LetTuple_Exp [ Identifier ] Exp Exp   -- let x1, ..., xk = expression in expression
+
+  -- Logging
+  | Log_Exp String Exp  
   
   deriving Show
 
@@ -178,3 +181,5 @@ pprint' indentLevel expr =
       "(" ++ intercalate ", " (map (pprint' 0) exprs) ++ ")"
     LetTuple_Exp vars e1 e2 ->
       ind ++ "let (" ++ intercalate ", " vars ++ ") = " ++ pprint' 0 e1 ++ " in\n" ++ pprint' indentLevel e2
+    Log_Exp str e ->
+      ind ++ "log " ++ show str ++ " " ++ pprint' 0 e

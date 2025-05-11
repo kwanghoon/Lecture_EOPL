@@ -22,10 +22,12 @@ constCALLCLO   = "CALLCLO"
 
 comp :: R.Exp -> Location -> SEnv -> Integer -> Table -> Cont -> (A.Exp, Integer, Table)
 comp (R.Var_Exp x) loc senv n tbl k = 
+    debugM (_show (R.Var_Exp x)) $
     let y = apply_senv senv x in
         k (A.Var_Exp y) n tbl
     
 comp (R.Proc_Exp locb x e) loc senv n tbl k =
+    debugM (_show (R.Proc_Exp locb x e)) $
     let fnum = n
         fName = "f" ++ show fnum
         fvs1 = Set.toList (Set.delete x (R.fv e) `Set.union` Set.singleton locb)
@@ -61,6 +63,7 @@ comp (R.Proc_Exp locb x e) loc senv n tbl k =
                     (A.Proc_Exp x body))
     
 comp (R.Call_Exp e1 locb e2) loc senv n tbl k =
+    debugM (_show (R.Call_Exp e1 locb e2)) $
     comp e1 loc senv n tbl (\clo n1 tbl1 -> 
         comp e2 loc senv n1 tbl1 (\arg n2 tbl2 ->
             if loc == locb then
@@ -82,9 +85,11 @@ comp (R.Call_Exp e1 locb e2) loc senv n tbl k =
                     A.Ready_Exp (A.Proc_Exp retName contExp) ], n3, tbl3) ))
     
 comp (R.Const_Exp i) loc senv n tbl k =
+    debugM (_show (R.Const_Exp i)) $
     k (A.Const_Exp i) n tbl
 
 comp (R.Diff_Exp e1 e2) loc senv n tbl k =
+    debugM (_show (R.Diff_Exp e1 e2)) $
     comp e1 loc senv n tbl (\e1' n1 tbl1 ->
         comp e2 loc senv n1 tbl1 (\e2' n2 tbl2 ->
             k (A.Diff_Exp e1' e2') n2 tbl2))
@@ -100,6 +105,7 @@ comp (R.If_Exp e1 e2 e3) loc senv n tbl k =
                 k (A.If_Exp e1' e2' e3') n3 tbl3)))
 
 comp (R.Let_Exp x e1 e2) loc senv n tbl k =
+    debugM (_show (R.Let_Exp x e1 e2)) $
     comp e1 loc senv n tbl (\e1' n1 tbl1 ->
         let y = x ++ show n1
             senv1 = Map.insert x y senv 
@@ -115,7 +121,16 @@ compMain e =
         tbl = Map.empty
         (e1,n1,tbl1) = comp e "main" senv n tbl (,,) -- Wow! (,,) = \e n tbl -> (e, n, tbl)) 
     in actorTemplate "main" tbl1 
-        (createActors tbl1 e1)
+        (createActors tbl1 (debug "main" e1))
+
+_show :: R.Exp -> String
+_show exp = filter (/= '\"') $ show exp
+
+debug :: String -> A.Exp -> A.Exp
+debug msg e = A.Log_Exp msg e
+
+debugM :: String -> (A.Exp, Integer, Table) -> (A.Exp, Integer, Table)
+debugM msg (e, n, tbl) = (A.Log_Exp msg e, n, tbl)
 
 actorTemplate :: String -> Table -> A.Exp -> A.Exp
 actorTemplate actorName tbl e = 
