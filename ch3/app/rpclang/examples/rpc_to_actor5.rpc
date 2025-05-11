@@ -1,0 +1,2 @@
+(proc a (x) if zero?(x) then 1 else 2 
+    a 0)
