@@ -94,8 +94,15 @@ comp (R.Diff_Exp e1 e2) loc senv n tbl k =
         comp e2 loc senv n1 tbl1 (\e2' n2 tbl2 ->
             k (A.Diff_Exp e1' e2') n2 tbl2))
 
-comp (R.IsZero_Exp e) loc senv n tbl k = undefined
-comp (R.If_Exp e1 e2 e3) loc senv n tbl k = undefined
+comp (R.IsZero_Exp e) loc senv n tbl k =
+    comp e loc senv n tbl (\e1' n1 tbl1 ->
+        k (A.Unary_Exp A.IsZero e1') n1 tbl1)
+
+comp (R.If_Exp e1 e2 e3) loc senv n tbl k =
+    comp e1 loc senv n tbl (\e1' n1 tbl1 ->
+        comp e2 loc senv n1 tbl1 (\e2' n2 tbl2 ->
+            comp e3 loc senv n2 tbl2 (\e3' n3 tbl3 ->
+                k (A.If_Exp e1' e2' e3') n3 tbl3)))
 
 comp (R.Let_Exp x e1 e2) loc senv n tbl k =
     debugM (_show (R.Let_Exp x e1 e2)) $
