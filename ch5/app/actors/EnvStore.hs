@@ -10,29 +10,30 @@ import Queue
 -- Environment
 data Env =
     Empty_env
-  | Extend_env Identifier DenVal Env
-  | Extend_env_rec [(Identifier,Identifier,Exp)] Env
+  | Extend_env ActorName Identifier DenVal Env
+  | Extend_env_rec ActorName [(Identifier,Identifier,Exp)] Env
 
 empty_env :: Env
 empty_env = Empty_env
 
-apply_env :: Env -> Store -> Identifier -> (DenVal, Store)
+apply_env :: Env -> Store -> Identifier -> (ActorName, DenVal, Store)
 apply_env Empty_env store search_var = error (search_var ++ " is not found.")
-apply_env (Extend_env saved_var saved_val saved_env) store search_var
-  | search_var==saved_var = (saved_val,store)
+apply_env (Extend_env saved_actor saved_var saved_val saved_env) store search_var
+  | search_var==saved_var = (saved_actor,saved_val,store)
   | otherwise             = apply_env saved_env store search_var
-apply_env (Extend_env_rec idIdExpList saved_env) store search_var
-  | isIn      = newref store procVal
+apply_env (Extend_env_rec saved_actor idIdExpList saved_env) store search_var
+  | isIn      = let (loc, store') = newref store procVal
+                in (saved_actor, loc, store')
   | otherwise = apply_env saved_env store search_var
   where isIn      = or [ p_name==search_var | (p_name,b_var,p_body) <- idIdExpList ]
-        procVal = head [ Proc_Val (procedure b_var p_body (Extend_env_rec idIdExpList saved_env)) 
+        procVal = head [ Proc_Val (procedure saved_actor b_var p_body (Extend_env_rec saved_actor idIdExpList saved_env)) 
                        | (p_name,b_var,p_body) <- idIdExpList, p_name==search_var ]
 
-extend_env :: Identifier -> DenVal -> Env -> Env
-extend_env x v env = Extend_env x v env
+extend_env :: ActorName -> Identifier -> DenVal -> Env -> Env
+extend_env a x v env = Extend_env a x v env
 
-extend_env_rec :: [(Identifier,Identifier,Exp)] -> Env -> Env
-extend_env_rec idIdExpList env = Extend_env_rec idIdExpList env
+extend_env_rec :: ActorName -> [(Identifier,Identifier,Exp)] -> Env -> Env
+extend_env_rec a idIdExpList env = Extend_env_rec a idIdExpList env
 
 -- Expressed values
 data ExpVal =
@@ -40,9 +41,10 @@ data ExpVal =
   | Bool_Val  {expval_bool :: Bool}
   | Proc_Val  {expval_proc :: Proc}
   | List_Val  {expval_list :: [ExpVal]}
-  | Mutex_Val {expval_mutex :: Mutex } -- Mutex {Loc to Bool, Loc to Queue Thread}
+  | Mutex_Val {expval_mutex :: Mutex }        -- Mutex {Loc to Bool, Loc to Queue Thread}
   | Queue_Val {expval_queue :: Queue Thread}  -- (newref queue); newref takes an Expval arg!
   | Actor_Val {expval_actor :: Integer}
+  | Unit_Val  -- for dummy value
 
 instance Show ExpVal where
   show (Num_Val num)   = show num
@@ -52,6 +54,7 @@ instance Show ExpVal where
   show (Mutex_Val mutex) = show mutex
   show (Queue_Val queue) = show "queue"
   show (Actor_Val actor) = "actor" ++ show actor
+  show (Unit_Val) = "dummy"
 
 type FinalAnswer = ExpVal 
 
@@ -62,10 +65,10 @@ type Location = Integer
 type DenVal = Location
 
 -- Procedure values : data structures
-data Proc = Procedure {var :: Identifier, body :: Exp, saved_env :: Env}
+data Proc = Procedure {actor_name :: ActorName, var :: Identifier, body :: Exp, saved_env :: Env}
 
-procedure :: Identifier -> Exp -> Env -> Proc
-procedure var body env = Procedure var body env
+procedure :: ActorName -> Identifier -> Exp -> Env -> Proc
+procedure actorname var body env = Procedure actorname var body env
 
 -- Mutex values : boolean and thread queue
 data Mutex = Mutex Location Location -- binary semaphores: Loc to Bool, Loc to (Queue Thread)
@@ -133,6 +136,20 @@ setActorSpace (actor,queue,_) space = (actor,queue,space)
 initialActorState :: ActorState
 initialActorState = (0, empty_queue, (1, []))
 
+-- lookup and remove for Remote
+extractActor :: ActorName -> ActorState -> (ActorInfo, ActorState)
+extractActor name (current, q, (next, actorList)) =
+  let (found, rest) = extractActor' name actorList
+  in (found, (current, q, (next, rest)))
+
+extractActor' :: ActorName -> [ActorInfo] -> (ActorInfo, [ActorInfo])
+extractActor' _ [] = error "Actor not found"
+extractActor' name (info@(n,_,_,_):rest)
+  | name == n = (info, rest)
+  | otherwise = let (found, rest') = extractActor' name rest
+                in (found, info : rest')
+
+
 -- For actor
 --   value_of_k :: Exp -> Env -> Cont -> Store -> SchedState 
 --                       -> ActorState -> (FinalAnswer, Store)
@@ -140,7 +157,6 @@ initialActorState = (0, empty_queue, (1, []))
 
 -- Actor별로 Store를 가지고 있음 Store
 -- Actor별로 메시지 큐를 가지고 있음 Queue ExpVal
-
 
 sendmsg :: ActorName -> ExpVal -> ActorState -> ActorState 
 sendmsg to v (current, q, (next, actorList))
@@ -165,9 +181,9 @@ readymsg (current, q, actorSpace)
   | otherwise = let (v, q1) = dequeue q in Just (v, (current, q1, actorSpace))
 
 -- For tuple
-bind_vars :: [Identifier] -> [ExpVal] -> Env -> Store -> (Env, Store)
-bind_vars [] [] env store = (env, store)
-bind_vars (x:xs) (v:vs) env store = 
+bind_vars :: ActorName -> [Identifier] -> [ExpVal] -> Env -> Store -> (Env, Store)
+bind_vars _ [] [] env store = (env, store)
+bind_vars a (x:xs) (v:vs) env store = 
   let (loc, store') = newref store v
-      env' = extend_env x loc env
-  in bind_vars xs vs env' store'
+      env' = extend_env a x loc env
+  in bind_vars a xs vs env' store'

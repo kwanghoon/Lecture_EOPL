@@ -63,4 +63,3 @@ run_next_actor' (current, q, store, scState) (next, x:xs) =
            (nextCurrent, nextQ, nextStore, nextScState) = head actorList1         -- the next actor executes
            actorState1 = (nextCurrent, nextQ, (next, tail actorList1))
        in run_next_thread nextStore nextScState actorState1
-

@@ -28,7 +28,7 @@ data Cont =
   | Rator_Cont Exp Env Cont
   | Rand_Cont ExpVal Cont
   | Unop_Arg_Cont UnaryOp Cont
-  | Set_Rhs_Cont Location Cont
+  | Set_Rhs_Cont Identifier Env Cont
   | Spawn_Cont Cont
   | Wait_Cont Cont
   | Signal_Cont Cont
@@ -41,6 +41,11 @@ data Cont =
 
   | Tuple_Cont [Exp] [ExpVal] Env Cont
   | Let_Tuple_Cont [Identifier] Exp Env Cont
+
+  | Var_Cont Identifier Env Cont
+  | End_Remote_Thread_Cont ActorName
+  | Remote_Ready_Cont Cont
+
 
 apply_cont :: Cont -> ExpVal -> Store -> SchedState -> ActorState -> (FinalAnswer, Store)
 apply_cont cont val store sched actors =
@@ -74,7 +79,7 @@ apply_cont cont val store sched actors =
 
     apply_cont' (Let_Exp_Cont var body env cont) val1 store sched actors =
       let (loc,store') = newref store val1
-      in  value_of_k body (extend_env var loc env) cont store' sched actors
+      in  value_of_k body (extend_env (currentActor actors) var loc env) cont store' sched actors
 
     apply_cont' (If_Test_Cont exp2 exp3 env cont) v store sched actors =
       if expval_bool v
@@ -97,12 +102,43 @@ apply_cont cont val store sched actors =
       value_of_k rand env (Rand_Cont ratorVal cont) store sched actors
 
     apply_cont' (Rand_Cont ratorVal cont) randVal store sched actors =
-      let proc = expval_proc ratorVal in
-        apply_procedure_k proc randVal cont store sched actors
+      let proc = expval_proc ratorVal
+          current = currentActor actors in
+        case (actor_name proc) == current of
+          True -> apply_procedure_k proc randVal cont store sched actors
+          False -> let ((calleeName, calleeQ, calleeStore, calleeSched), actors') = extractActor (actor_name proc) actors
+                       calleeSched' = place_on_ready_queue
+                                         (\s sch act -> apply_procedure_k proc randVal (End_Remote_Thread_Cont current) s sch act)
+                                         calleeSched
 
-    apply_cont' (Set_Rhs_Cont loc cont) val store sched actors =
-      let store' = setref store loc val in
-        apply_cont cont (Num_Val 23) store' sched actors
+                       sched1 = place_on_ready_queue
+                                     (apply_cont' (Remote_Ready_Cont cont) randVal) sched
+                       (next, actorList) = actorSpace actors'
+                       actorList1 = actorList ++ [(current, msgQueue actors, store, sched1)]
+
+                       actors'' = (calleeName, calleeQ, (next, actorList1))
+                   in run_next_thread calleeStore calleeSched' actors''
+  
+
+    apply_cont' (Set_Rhs_Cont var env cont) val store sched actors =
+      let (actorName, loc, store') = apply_env env store var in
+      case actorName == currentActor actors of
+        True -> let store'' = setref store' loc val in
+                  apply_cont cont (Num_Val 23) store'' sched actors
+
+        False -> let ((calleeName, calleeQ, calleeStore, calleeSched), actors') = extractActor actorName actors
+                     calleeSched' = place_on_ready_queue
+                                         (\s sch act -> let s' = setref s loc val in 
+                                                          apply_cont' (End_Remote_Thread_Cont (currentActor actors)) (Unit_Val) s' sch act)
+                                         calleeSched
+
+                     sched1 = place_on_ready_queue
+                                     (apply_cont' (Remote_Ready_Cont cont) (Unit_Val)) sched
+                     (next, actorList) = actorSpace actors'
+                     actorList1 = actorList ++ [(currentActor actors, msgQueue actors, store, sched1)]
+
+                     actors'' = (calleeName, calleeQ, (next, actorList1))   
+                 in run_next_thread calleeStore calleeSched' actors''
 
     apply_cont' (Spawn_Cont saved_cont) val store sched actors =
       let proc1 = expval_proc val
@@ -135,10 +171,10 @@ apply_cont cont val store sched actors =
     apply_cont' (Ready_Cont saved_cont) val store sched actors =
       case readymsg actors of 
         Just (msgVal, actors1) -> 
-          let Procedure x body env = expval_proc val 
+          let Procedure _ x body env = expval_proc val 
               (next, actorList) = actorSpace actors1 
               (loc, store1) = newref store msgVal 
-              env1 = extend_env x loc env 
+              env1 = extend_env (currentActor actors) x loc env 
           in value_of_k body env1 saved_cont store1 sched actors1 
         Nothing ->
           let sched1 = 
@@ -147,10 +183,10 @@ apply_cont cont val store sched actors =
           in run_next_actor store sched1 actors      
 
     apply_cont' (New_Cont saved_cont) val store sched actors = 
-      let Procedure x body env = expval_proc val
+      let Procedure _ x body env = expval_proc val
           (next, actorList) = actorSpace actors 
           (loc,store1) = newref initStore (Actor_Val next)
-          env1 = extend_env x loc env -- Bug: env must not contain locations to the store!
+          env1 = extend_env next x loc env -- Bug: env must not contain locations to the store!
           sched1 = place_on_ready_queue 
                      (value_of_k body env1 End_Main_Thread_Cont) 
                        (initialize_scheduler timeslice)
@@ -180,10 +216,39 @@ apply_cont cont val store sched actors =
         List_Val vals -> 
           if vars == [] && null vals
           then value_of_k body env saved_cont store sched actors
-          else let (env', store') = bind_vars vars vals env store 
+          else let (env', store') = bind_vars (currentActor actors) vars vals env store 
                in value_of_k body env' saved_cont store' sched actors
 
         _ -> error ("LetTuple_Cont: expected a list, got " ++ show val)
+
+    apply_cont' (Var_Cont var env saved_cont) val store sched actors =
+      let (actorName, loc, store') = apply_env env store var
+          ((calleeName, calleeQ, calleeStore, calleeSched), actors') = extractActor actorName actors
+          calleeSched' = place_on_ready_queue
+                            (\s sch act -> value_of_k (Var_Exp var) env 
+                                                (End_Remote_Thread_Cont (currentActor actors)) s sch act)
+                            calleeSched
+
+          sched1 = place_on_ready_queue
+                            (apply_cont' (Remote_Ready_Cont saved_cont) (Unit_Val)) sched
+          (next, actorList) = actorSpace actors'
+          actorList1 = actorList ++ [(currentActor actors, msgQueue actors, store', sched1)]
+
+          actors'' = (calleeName, calleeQ, (next, actorList1))
+                
+      in run_next_thread calleeStore calleeSched' actors''
+
+    apply_cont' (Remote_Ready_Cont saved_cont) val store sched actors =
+      case readymsg actors of 
+        Just (msgVal, actors1) -> apply_cont saved_cont msgVal store sched actors1
+
+        Nothing -> let sched1 = place_on_ready_queue
+                                  (apply_cont' (Remote_Ready_Cont saved_cont) val) sched
+                    in run_next_actor store sched1 actors
+
+    apply_cont' (End_Remote_Thread_Cont callerName) val store sched actors =
+      let actors' = sendmsg callerName val actors in 
+        run_next_actor store sched actors'
 
 
 
@@ -216,10 +281,12 @@ value_of_k (Const_List_Exp nums) env cont store sched actors =
   apply_cont cont (List_Val (map Num_Val nums)) store sched actors 
 
 value_of_k (Var_Exp var) env cont store sched actors =
-  let (loc,store') = apply_env env store var
-      val = deref store' loc
-  in apply_cont cont val store' sched actors 
-
+  let (actorName, loc, store') = apply_env env store var in
+    case actorName == currentActor actors of
+      True  -> let val = deref store' loc in 
+                  apply_cont cont val store' sched actors
+      False -> apply_cont (Var_Cont var env cont) (Unit_Val) store sched actors
+                  
 value_of_k (Diff_Exp exp1 exp2) env cont store sched actors =
   value_of_k exp1 env (Diff1_Cont exp2 env cont) store sched actors 
 
@@ -233,10 +300,10 @@ value_of_k (Let_Exp var exp1 body) env cont store sched actors =
   value_of_k exp1 env (Let_Exp_Cont var body env cont) store sched actors 
 
 value_of_k (Letrec_Exp nameArgBodyList letrec_body) env cont store sched actors =
-  value_of_k letrec_body (extend_env_rec nameArgBodyList env) cont store sched actors 
+  value_of_k letrec_body (extend_env_rec (currentActor actors) nameArgBodyList env) cont store sched actors 
 
 value_of_k (Proc_Exp var body) env cont store sched actors =
-  apply_cont cont (Proc_Val (procedure var body env)) store sched actors 
+  apply_cont cont (Proc_Val (procedure (currentActor actors) var body env)) store sched actors 
 
 value_of_k (Call_Exp rator rand) env cont store sched actors =
   value_of_k rator env (Rator_Cont rand env cont) store sched actors 
@@ -251,8 +318,7 @@ value_of_k (Block_Exp []) env cont store sched actors =
   error "Unexpected empty block"
 
 value_of_k (Set_Exp x exp) env cont store sched actors =
-  let (loc,store') = apply_env env store x in
-  value_of_k exp env (Set_Rhs_Cont loc cont) store' sched actors 
+    value_of_k exp env (Set_Rhs_Cont x env cont) store sched actors 
 
 value_of_k (Spawn_Exp exp) env cont store sched actors =
   value_of_k exp env (Spawn_Cont cont) store sched actors 
@@ -311,7 +377,7 @@ value_of_program :: Exp -> Integer -> ExpVal
 
 value_of_program exp timeslice =
   let (finalVal, _) = 
-        value_of_k exp initEnv (Init_Main_Actor_Cont End_Main_Thread_Cont)
+        value_of_k exp initEnv End_Main_Thread_Cont
            initStore (initialize_scheduler timeslice) initialActorState
   in finalVal
 
@@ -323,4 +389,4 @@ initEnv = empty_env
 apply_procedure_k :: Proc -> ExpVal -> Cont -> Store -> SchedState -> ActorState -> (FinalAnswer, Store)
 apply_procedure_k proc arg cont store sched actors =
   let (loc,store') = newref store arg in
-   value_of_k (body proc) (extend_env (var proc) loc (saved_env proc)) cont store' sched actors
+   value_of_k (body proc) (extend_env (currentActor actors) (var proc) loc (saved_env proc)) cont store' sched actors
