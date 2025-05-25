@@ -1,0 +1,75 @@
+// rpc program:
+//   let y1 = 1 in
+//   let y2 = 2 in
+//      (proc b (x) -( -(x, y1), y2) b 2)
+proc(main) 
+
+    let behavior = 
+        proc (self)
+            let CREATECLO = 1 in 
+            let CALLCLO   = 2 in 
+
+            let F1        = 1 in
+
+            let f1 = proc(ys)
+                  let (y1,y2) = ys in
+                     proc (x) -( -(x, y1) , y2 )
+            in
+
+
+            letrec
+            
+                mainLoop(msg) = 
+                    if zero?(-(msg,CREATECLO))
+                    then ready(createClo)
+                    else if zero?(-(msg, CALLCLO))
+                    then ready(callClo)
+                    else ready(mainLoop)
+
+                createClo (msg) = 
+                    let (fNo, fvs, sender) = msg in
+
+                    if zero?(-(fNo, F1))
+                    then
+                        let (y1, y2) = fvs in
+                        let clo = (f1, (y1, y2)) in
+                        begin
+                            send(sender, clo);
+                            ready(mainLoop)
+                        end
+
+                    else ready(mainLoop)
+
+                callClo (msg) = 
+                    let (clo, arg, sender) = msg in
+                    let (g0, ys) = clo in
+                    let gClosed = (g0 ys) in
+                    let ret = (gClosed arg) in
+                        begin
+                            send(sender, ret);
+                            ready(mainLoop)
+                        end
+
+            in ready(mainLoop)
+    in
+    let b = new (behavior) in
+
+    let y1 = 1 in
+    let y2 = 2 in
+
+    let CREATECLO = 1 in 
+    let CALLCLO   = 2 in 
+    let F1        = 1 in
+
+    begin
+        send(b, CREATECLO, (F1, (y1, y2), main));
+        ready(proc(clo0) 
+                begin
+                    send(b, CALLCLO, (clo0, 2, main));
+                    ready(proc(ret) begin
+                                        print(ret);
+                                        ret
+                                    end)
+                end
+        )
+    end

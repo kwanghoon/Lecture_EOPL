@@ -1,0 +1,16 @@
+let ctr = let x = 0
+             in proc (n) proc (d)
+                  begin
+                   print(n); 
+                   print(x);
+                   set x = -(x,-1);
+                   print(n); 
+                   print(x)
+                  end
+   in begin
+       spawn((ctr 100));
+       spawn((ctr 200));
+       spawn((ctr 300));
+       999
+      end
+

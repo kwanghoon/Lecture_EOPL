@@ -1,0 +1,66 @@
+let sem = proc(self)
+            let state = 0 
+            in
+                letrec sem_self (msg) =
+                    let StartMsg = 0 in
+                    let GetMsg = 1 in
+                    let ReleaseMsg = 2 in
+
+                    if zero?(-(msg, GetMsg))
+                    then if zero?(state)
+                         then ready( proc(from)
+                                        begin
+                                            set state = 1;
+                                            send(from, GetMsg, self);
+                                            print(300);
+                                            ready(sem_self)
+                                        end )
+                         else ready( proc(from)
+                                        begin
+                                            send(from, StartMsg, self);
+                                            print(400);
+                                            ready(sem_self)
+                                        end )
+                    else if zero?(-(msg, ReleaseMsg))
+                         then begin 
+                                set state = 0; 
+                                print(500); 
+                                ready(sem_self) 
+                              end
+                         else ready(sem_self)
+                in
+                ready(sem_self)
+in
+let customer = proc(self)
+                    letrec customer_self (msg) =
+                        let StartMsg = 0 in
+                        let GetMsg = 1 in
+                        let ReleaseMsg = 2 in
+
+                        if zero?(msg)
+                        then ready( proc(s)
+                                        begin
+                                            send(s, GetMsg, self);
+                                            print(200);
+                                            ready(customer_self)
+                                        end )
+                        else if zero?(-(msg, GetMsg))
+                             then ready( proc(s)
+                                            begin
+                                                print(msg);
+                                                send(s, ReleaseMsg)
+                                            end )
+                             else ready(customer_self)
+                    in
+                    ready(customer_self)
+in
+let StartMsg = 0 in
+let s = new(sem) in
+let a1 = new(customer) in
+let a2 = new(customer) in
+    begin
+        send(a1, StartMsg, s);
+        print(100);
+        send(a2, StartMsg, s);
+        print(101)
+    end

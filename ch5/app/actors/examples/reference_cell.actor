@@ -1,0 +1,49 @@
+let cell = 
+      proc (self)
+        let v = 0
+	    in
+            letrec cell_self (msg) =
+                let GetMsg = 0 in
+                let SetMsg = 1 in
+
+                if zero? (-(msg, GetMsg))
+                then
+                    ready( proc (clientActor)
+                            begin
+                                send(clientActor, v);
+                                print(300);
+                                ready(cell_self)
+                            end
+                    )
+
+                else if zero? (-(msg, SetMsg))
+                     then 
+                        ready( proc (value)
+                                begin
+                                    set v = value;
+                                    print(200);
+                                    ready(cell_self)
+                                end
+                        )
+                     else ready(cell_self)
+
+            in ready(cell_self)
+
+in let client =
+        proc (self)
+            letrec client_self (msg) = print(msg)
+            in ready(client_self)
+
+    in 
+        let GetMsg = 0 in
+        let SetMsg = 1 in
+        let a = new(cell) in
+        let c = new(client) in 
+            begin  
+                send(a, SetMsg, 7);
+                print(100);
+                send(a, SetMsg, 2);
+                print(101);
+                send(a, GetMsg, c);
+                print(102)
+            end

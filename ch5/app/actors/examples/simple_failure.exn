@@ -1,0 +1,1 @@
+try -(1, raise 44) catch (m) m

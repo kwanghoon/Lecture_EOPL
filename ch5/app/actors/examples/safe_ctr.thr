@@ -1,0 +1,18 @@
+let ctr = let x = 0 in let mut = mutex()
+             in proc (n) proc (d)
+                  begin
+                   wait(mut);
+                   print(n); 
+                   print(x);
+                   set x = -(x,-1);
+                   print(n); 
+                   print(x);
+                   signal(mut)
+                  end
+   in begin
+       spawn((ctr 100));
+       spawn((ctr 200));
+       spawn((ctr 300));
+       999
+      end
+

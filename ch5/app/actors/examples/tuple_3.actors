@@ -1,0 +1,2 @@
+let (x, y, w, z) = (1, 2, zero?(0), proc(x) x) in
+    (z 100)

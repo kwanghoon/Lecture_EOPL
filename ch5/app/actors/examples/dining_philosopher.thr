@@ -1,0 +1,54 @@
+let  pasta1 = 3 in
+let  pasta2 = 3  in
+let  pasta3 = 3 in
+let  pasta4 = 3 in
+let  pasta5 = 3 in
+let chopstick1 = mutex() in
+let chopstick2 = mutex() in
+let chopstick3 = mutex() in
+let chopstick4 = mutex() in
+let chopstick5 = mutex() in
+let
+  philosopher = 
+     proc(name)
+      proc(pasta)
+        proc(left)
+           proc(right)
+              proc(d)
+                  begin wait(left);
+                           wait(right);
+                           print(name);
+                           print(pasta);
+                           set pasta = -(pasta,1);
+                           signal(left);
+                           signal(right);
+
+                           wait(left);
+                           wait(right);
+                           print(name);
+                           print(pasta);
+                           set pasta = -(pasta,1);
+                           signal(left);
+                           signal(right);
+
+                           wait(left); 
+                           wait(right);
+                           print(name);
+                           print(pasta);
+                           set pasta = -(pasta,1);
+                           signal(left);
+                           signal(right);
+
+                           print(name);
+                           print(pasta)
+                    end
+ in
+ let p1 = spawn ( ((((philosopher 100) pasta1) chopstick1) chopstick5) )  in
+ let p2 = spawn ( ((((philosopher 200) pasta2) chopstick2) chopstick1) )  in
+ let p3 = spawn ( ((((philosopher 300) pasta3) chopstick3) chopstick2) )  in
+ let p4 = spawn ( ((((philosopher 400) pasta4) chopstick4) chopstick3) )  in
+ let p5 = spawn ( ((((philosopher 500) pasta5) chopstick4) chopstick5) )  in
+ 42
+
+ 
+

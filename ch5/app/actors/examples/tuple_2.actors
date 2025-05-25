@@ -1,0 +1,1 @@
+let y = 100 in (1, zero?(0), zero?(1), proc(x) x, [2,3,4], y)

@@ -1,0 +1,30 @@
+let buffer = 0 
+in let   mut = mutex()  
+in let
+  producer = proc (n) 
+              letrec 
+                waitloop(k) 
+                 = if zero?(k) 
+                   then 
+                    begin
+                     set buffer = n;
+                     signal(mut)  
+                    end
+                   else 
+                    begin
+                        print(-(k,-200));
+                        (waitloop -(k,1))
+                    end
+              in (waitloop 5)
+in let consumer = proc (d)
+                     begin
+                      wait(mut);
+                      buffer
+                     end
+in
+ begin
+  wait(mut);   
+  spawn(proc (d) (producer 44));
+  print(300);
+  (consumer 86)
+ end

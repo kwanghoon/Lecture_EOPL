@@ -1,0 +1,27 @@
+let buffer = 0
+in let
+    producer = proc (n) 
+              letrec 
+                loop(k) = if zero?(k) 
+                          then set buffer = n
+                          else begin
+                                       print(-(k,-200));
+                                       yield();
+                                       (loop -(k,1))
+                               end
+              in (loop 5)
+in let consumer = proc (d) letrec
+                     busywait (k) = if zero?(buffer)
+                                   then begin
+                                         print(-(k,-100));
+                                         yield();
+                                         (busywait -(k,-1))
+                                        end
+                                   else buffer
+                in (busywait 0)
+in
+ begin
+  spawn(proc (d) (producer 44));
+  (consumer 88)
+ end
+

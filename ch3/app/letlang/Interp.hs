@@ -46,7 +46,8 @@ value_of_program exp = value_of exp initEnv
 initEnv :: Env
 initEnv = extend_env "i" (Num_Val 1)
             (extend_env "v" (Num_Val 5)
-              (extend_env "x" (Num_Val 10) empty_env))
+              (extend_env "x" (Num_Val 10)
+                empty_env))
 
           
 

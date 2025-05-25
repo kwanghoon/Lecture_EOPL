@@ -1,0 +1,3 @@
+(proc (twice)
+           ((twice proc (z) -(z,1)) 11)
+         proc (f) proc (x) (f (f x)))

@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - yapb >= 0.2.3
 - hspec
+- transformers
 
 library:
   source-dirs: src
@@ -57,6 +58,16 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - ch5
+
+  actors-exe:
+    main:                Main.hs
+    source-dirs:         app/actors
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - ch5    
 
 tests:
   letreccps-test:
@@ -94,6 +105,18 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - ch5    
+    - ch5  
+
+  actors-test:
+    main:                Spec.hs
+    source-dirs:         
+    - test/actors
+    - app/actors
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - ch5      
 
   

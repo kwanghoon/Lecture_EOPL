@@ -1,0 +1,4 @@
+let f = proc (x) -(x, -(raise 99, 1))  
+       in try (f 33) 
+          catch (m) 44
+

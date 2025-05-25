@@ -1,0 +1,97 @@
+//  ( ( proc a (x)
+//          proc b (y)
+//              -(x,y) a 1 ) b 2 )
+proc(main) 
+    let behavior = 
+        proc (self)
+            let CREATECLO = 1 in 
+            let CALLCLO   = 2 in
+
+            let F2        = 2 in
+            
+            let f2 = proc(fv)
+                        let (x) = fv in
+                            proc(y) -(x,y)
+
+            in
+            let F1        = 1 in
+
+            let f1 = proc(fv)
+                        proc(x) (F2, x)
+
+            in
+            letrec
+
+                mainLoop(msg) = 
+                    if zero?(-(msg,CREATECLO))
+                    then ready(createClo)
+                    else if zero?(-(msg,CALLCLO))
+                    then ready(callClo) 
+                    else ready(mainLoop)
+
+                createClo(msg) = 
+                    let (fNo, fvs, sender) = msg in
+
+                    if zero?(-(fNo, F1))
+                    then 
+                        let () = fvs in
+                        let clo = (f1, ()) in
+                        begin
+                            send(sender, clo);
+                            ready(mainLoop)
+                        end
+                    
+                    else if zero?(-(fNo, F2))
+                         then
+                            let (x) = fvs in
+                            let clo = (f2, (x)) in
+                            begin 
+                                send(sender, clo);
+                                ready(mainLoop)
+                            end
+                         else ready(mainLoop)
+
+                callClo(msg) = 
+                    let (clo, arg, sender) = msg in
+                    let (g0, ys) = clo in
+                    let gClosed = (g0 ys) in
+                    let ret = (gClosed arg) in
+                        begin
+                            send(sender, ret);
+                            ready(mainLoop)
+                        end
+            in ready(mainLoop)
+
+    in
+    let a = new (behavior) in
+    let b = new (behavior) in
+
+    let CREATECLO = 1 in 
+    let CALLCLO   = 2 in 
+    let F1        = 1 in
+    let F2        = 2 in
+
+    begin
+        send(a, CREATECLO, (F1, (), main));
+        ready(proc (clo0)
+                begin
+                    send(a, CALLCLO, (clo0, 1, main));
+                    ready(proc(tuple)
+                            let (fNo, fv) = tuple in
+                            begin
+                                send(b, CREATECLO, (fNo, (fv), main));
+                                ready(proc(clo1)
+                                        begin
+                                            send(b, CALLCLO, (clo1, 2, main));
+                                            ready(proc(ret) 
+                                                    begin 
+                                                        print(ret);
+                                                        ret
+                                                    end)
+                                            
+                                        end)
+                            end
+                        )
+                end
+            )
+    end

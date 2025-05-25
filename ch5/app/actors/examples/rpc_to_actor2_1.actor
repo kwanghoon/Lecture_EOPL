@@ -1,0 +1,111 @@
+// rpc program:
+//  main: 
+//    let y = 1 in
+//       (proc b (x) -(x, y) b 2)
+proc(main) 
+
+    let behavior = 
+        proc (self)
+            let CREATECLO = 1 in 
+            let CALLCLO   = 2 in 
+
+            // Copmpiling: proc b (x) -(x, y)
+
+            let F1        = 1 in
+
+            let f1  = proc(ys)
+                        let (y) = ys in
+                            proc (x) -(x, y)
+            in
+
+            // let F2        = 2 in
+            // 
+            // let f2  = proc(ys)
+            //             let (y1, ..., yk) = ys in
+            //                 proc (x) ....
+            // in
+
+            let dispatch = proc(fNo)
+                    if zero?(-(fNo, F1)) then f1
+                    // else if zero?(-(fNo, F2)) then f2
+                    else 0   // error!!
+            in
+            letrec 
+                
+              mainLoop(msg) =
+                if zero?(-(msg,CREATECLO))
+                then ready(createClo)
+                else if zero?(-(msg,CALLCLO))
+                then ready(callClo) 
+                else ready(mainLoop)
+
+              createClo (msg) =
+                let (fNo, fvs, sender) = msg in 
+                let f = (dispatch fNo) in 
+                let (y) = fvs in 
+                let clo = (f, (y)) in 
+                    begin
+                        send(sender, clo);
+                        ready(mainLoop)
+                    end
+
+              callClo (tuple_msg) =
+                let (clo, arg, sender) = tuple_msg in
+                let (g0, ys) = clo in 
+                let gClosed = (g0 ys) in
+                let ret = (gClosed arg) in
+                    begin
+                        send(sender, ret);
+                        ready(mainLoop)
+                    end
+            in ready(mainLoop)
+    in
+    let b = new (behavior) in
+
+//  Compiling:  let y = 1 in
+
+    let y = 1 in
+
+//  Compiling: proc b (x) -(x, y)       remote procedure compiling!!
+
+    let CREATECLO = 1 in 
+    let CALLCLO   = 2 in 
+    let F1        = 1 in
+
+    begin
+        send(b, CREATECLO, (F1, (y), main));
+        ready(proc(clo0)  // K(clo0)
+
+//  Compiling:  clo0 b 2 
+
+                begin
+                    send(b, CALLCLO, (clo0, 2, main));
+                    ready(proc(ret) begin 
+                                        print(ret);
+                                        ret
+                                    end) 
+                end
+        )
+    end
+
+// Example:    K (Var_Exp "clo0")
+//   K :: Exp -> Exp 
+//   K x =  
+//          begin  
+//                send(b, CALLCLO, (x, 2, main));
+//                ready(proc(ret) begin 
+//                                    print(ret);
+//                                    ret
+//                                end) 
+//            end   
+
+//  K0 :: Exp -> Exp 
+//  K0 x = begin print (x);
+//                x
+//         end
+//
+//  K0 (Var_Exp "ret")
+
+//  Compiling: proc a (x) -(x, y)      local procedure compiling!!
+//  let clo0 = (f3, (y1, ..., yj)) in
+//     K (clo0)

@@ -1,0 +1,112 @@
+let phil = proc(self)
+                let left = 0 in
+                let right = 0 in
+                let sticks = 0 in
+
+                    letrec phil_self (msg) =
+                        let Chop = 0 in
+                        let Pickup = 1 in
+                        let Release = 2 in
+
+                        if zero?(-(msg, Chop))
+                        then ready( proc(cl)
+                                        begin
+                                            set left = cl;
+                                            ready( proc(cr)
+                                                    set right = cr );
+                                            print(300);
+                                            ready(phil_self)
+                                        end )
+
+                        else if zero?(-(msg, Pickup))
+                             then if zero?(-(sticks, 0))
+                                  then  begin
+                                            set sticks = 1;
+                                            print(301);
+                                            ready(phil_self)
+                                        end
+                                  else  begin
+                                            set sticks = 2;
+                                            send (left, Release, self);
+                                            send (right, Release, self);
+                                            print(302);
+                                            ready(phil_self)
+                                        end
+                             
+                             else if zero?(-(msg, Release))
+                                  then if zero?(-(sticks, 2))
+                                       then begin 
+                                                set sticks = 1;
+                                                print(400);
+                                                ready(phil_self) 
+                                            end
+                                        else begin set sticks = 0; print(401) end
+                                  else ready(phil_self)
+                    
+                    in ready(phil_self)
+in
+let chopstick = proc(self)
+                    let nil = new(proc(d) 42) in
+                    let having = nil in
+                    let waiting = nil in
+
+                    letrec chopstick_self (msg) =
+                        let Pickup = 1 in
+                        let Release = 2 in
+
+                        if zero?(-(msg, Pickup))
+                        then if actor?(having, nil)
+                             then ready( proc(phil) 
+                                            begin
+                                                send(phil, Pickup);
+                                                set having = phil;
+                                                print(200);
+                                                ready(chopstick_self)
+                                            end )
+                             else ready ( proc(phil)
+                                            begin
+                                                set waiting = phil;
+                                                print(201);
+                                                ready(chopstick_self)
+                                            end )
+
+                        else if zero?(-(msg, Release))
+                             then ready( proc(phil)
+                                            begin
+                                                send(phil, Release);
+                                                print(202);
+
+                                                if actor?(waiting, nil)
+                                                then ready(chopstick_self)
+                                                else begin
+                                                        send(waiting, Pickup);
+                                                        set having = waiting;
+                                                        set waiting = nil;
+                                                        ready(chopstick_self)
+                                                     end;
+                                                print(203)
+                                            end )
+                             else ready(chopstick_self)
+                    
+                    in ready(chopstick_self)
+in
+let Chop = 0 in
+let Pickup = 1 in
+
+let c0 = new(chopstick) in
+let c1 = new(chopstick) in
+let p0 = new(phil) in
+let p1 = new(phil) in
+
+begin
+    send(p0, Chop, c0, c1);
+    send(p1, Chop, c1, c0);
+    print(100);
+
+    send(c0, Pickup, p0);
+    send(c1, Pickup, p0);
+    print(101);
+    send(c0, Pickup, p1);
+    send(c1, Pickup, p1);
+    print(102)
+end

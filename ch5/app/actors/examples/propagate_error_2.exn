@@ -1,0 +1,7 @@
+let f = proc (x) -(1, raise 99)
+       in
+          try
+             try (f 44)
+             catch (exc) (f 23)
+          catch (exc) 11
+

@@ -1,0 +1,45 @@
+//  ( ( proc a (x)
+//          proc b (y)
+//              -(x,y) a 1 ) b 2 )
+proc(main) 
+    let behavior = 
+        proc (self)
+            letrec g (tuple_msg) =
+                let (clo, arg, sender) = tuple_msg in
+                let (g0, ys) = clo in 
+                let gClosed = (g0 ys) in
+                let ret = (gClosed arg) in
+                    begin
+                        send(sender, ret);
+                        print(ret);
+                        ready(g)
+                    end
+            in ready(g)
+    in
+
+    let a = new (behavior) in
+    let b = new (behavior) in
+
+
+    let fClosed1
+         = proc(fv)
+                proc(x)
+                        let fClosed2 
+                             = proc(fv)
+                                    let (x) = fv in
+                                        proc(y) -(x,y)
+                                    
+                        in (fClosed2, (x))
+    in
+    let clo1 = (fClosed1, ()) in    
+
+    begin
+        send(a, (clo1, 1, main));
+        ready( proc(clo)
+                begin
+                    send(b, (clo, 2, main));
+                    print(100);
+                    ready(proc (x) print(200))
+                end
+                    )
+    end

@@ -1,0 +1,62 @@
+proc (main)
+  let CREATECLO = 1 in
+  let CALLCLO = 2 in
+  let F1 = 1 in
+  let f1 = proc (fvs2)
+  let (y0) = fvs2 in
+  proc (x3)
+-(x3 , y0) in
+  let dispatch = proc (fNO)
+if zero? (-(fNO , 1))
+  then f1
+  else 0 in
+  letrec
+    mainLoop (msg) = if zero? (-(msg , CREATECLO))
+    then ready (createClo)
+    else if zero? (-(msg , CALLCLO))
+      then ready (callClo)
+      else ready (mainLoop)
+    createClo (msg) =     let (fNO, fvs, sender) = msg in
+    let f = (dispatch fNO) in
+    let clo = (f, fvs) in
+begin send (sender, clo); ready (mainLoop) end
+    callClo (msg) =     let (clo, arg, sender) = msg in
+    let (f, fvs) = clo in
+    let ffvs = (f fvs) in
+    let ret = (ffvs arg) in
+begin send (sender, ret); ready (mainLoop) end
+  in
+    let behaviourb = proc (b)
+  let CREATECLO = 1 in
+  let CALLCLO = 2 in
+  let F1 = 1 in
+  let f1 = proc (fvs2)
+  let (y0) = fvs2 in
+  proc (x3)
+-(x3 , y0) in
+  let dispatch = proc (fNO)
+if zero? (-(fNO , 1))
+  then f1
+  else 0 in
+  letrec
+    mainLoop (msg) = if zero? (-(msg , CREATECLO))
+    then ready (createClo)
+    else if zero? (-(msg , CALLCLO))
+      then ready (callClo)
+      else ready (mainLoop)
+    createClo (msg) =     let (fNO, fvs, sender) = msg in
+    let f = (dispatch fNO) in
+    let clo = (f, fvs) in
+begin send (sender, clo); ready (mainLoop) end
+    callClo (msg) =     let (clo, arg, sender) = msg in
+    let (f, fvs) = clo in
+    let ffvs = (f fvs) in
+    let ret = (ffvs arg) in
+begin send (sender, ret); ready (mainLoop) end
+  in
+ready (mainLoop) in
+    let b = new (behaviourb) in
+    let y0 = 1 in
+begin send (b, CREATECLO, (1, (y0), main)); ready (proc (clo4)
+begin send (b, CALLCLO, (clo4, 2, main)); ready (proc (ret5) begin print(ret5);
+ret5 end) end) end

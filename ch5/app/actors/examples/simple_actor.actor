@@ -1,0 +1,6 @@
+let b = proc( self ) 
+           let b_self = proc( x ) 23 
+           in ready ( b_self )
+in
+let m = new( b ) in
+send( m, 0 )

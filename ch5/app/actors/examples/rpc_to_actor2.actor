@@ -1,0 +1,36 @@
+// rpc program:
+//  main: 
+//    let y = 1 in
+//       (proc b (x) -(x, y) b 2)
+proc(main) 
+    let y = 1 in
+
+    let fClosed
+         = proc(ys)
+              let (y) = ys in
+                 proc (x) -(x, y)
+        in
+    let clo0 = (fClosed, (y)) in
+
+    let behavior = 
+        proc (self)
+            letrec g (tuple_msg) =
+                let (clo, arg, sender) = tuple_msg in
+                let (g0, ys) = clo in 
+                let gClosed = (g0 ys) in
+                let ret = (gClosed arg) in
+                    begin
+                        send(sender, ret);
+                        ready(g)
+                    end
+            in ready(g)
+    in
+    let b = new (behavior) in
+
+    begin
+        send(b, (clo0, 2, main));
+        ready(proc(ret) begin 
+                              print(ret);
+                              ret
+                        end)
+    end

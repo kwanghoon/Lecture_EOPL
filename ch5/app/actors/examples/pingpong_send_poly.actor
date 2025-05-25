@@ -1,0 +1,34 @@
+let master = 
+      proc(self)
+	let pingServer = 
+	      proc(self)
+		letrec pingServer_self (msg) =
+		    let PingMsg = 1 in
+		    let PongMsg = 2 in
+		    if zero? (-(msg, PingMsg))
+		    then ready ( proc (masterSelf)
+				    send (masterSelf, PongMsg, self)
+			  )
+		    else ready (pingServer_self)
+		in ready(pingServer_self)
+	in
+        letrec master_self (msg) =
+            let StartMsg = 0 in
+            let PingMsg = 1 in
+            let PongMsg = 2 in
+            if zero? (-(msg,StartMsg))
+            then
+              let p = new(pingServer) in
+                begin
+                  send (p, PingMsg, self);
+                  ready (master_self)
+                end
+            else if zero? (-(msg, PongMsg))
+            then print(400)
+            else ready (master_self)
+
+        in ready(master_self)
+in let StartMsg = 0 in
+   let m = new (master) in 
+       send (m, StartMsg)
+
