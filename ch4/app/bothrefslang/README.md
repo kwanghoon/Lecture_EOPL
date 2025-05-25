@@ -115,6 +115,15 @@ let p = proc(z) set z = 30 in
 - The environment maps identifiers to `DenVal`.
 - Evaluating a variable fetches the `DenVal`, dereferencing if needed.
 - `set` checks for `Ref` and updates the referenced cell.
+- Haskell stack commands
+  - `stack ghci ch4:exe:bothref-exe`
+  - `stack build ch4:exe:bothref-exe`
+  - `stack test ch4:test:bothrefslang-test`
+  - `stack run bothref-exe .\app\bothrefslang\examples\both1.bothref`
+  - `stack run bothref-exe .\app\bothrefslang\examples\both2_error.bothref`
+  - `stack run bothref-exe .\app\bothrefslang\examples\both3_proc.bothref`
+  - `stack run bothref-exe .\app\bothrefslang\examples\both4_proc.bothref`
+
 
 ## Future work
 
