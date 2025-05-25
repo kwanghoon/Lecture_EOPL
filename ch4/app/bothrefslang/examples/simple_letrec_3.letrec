@@ -1,0 +1,2 @@
+let m = -5
+in letrec f(x) = if zero?(x) then 0 else -((f -(x,1)), m) in (f 4)

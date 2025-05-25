@@ -1,0 +1,6 @@
+let x = 10 in
+letmutable y = 20 in
+let p = proc(z) set z = 30 in
+  begin (p y);
+        -(0,-(-(0,x),y))
+  end

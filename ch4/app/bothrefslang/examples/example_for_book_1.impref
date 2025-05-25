@@ -1,0 +1,6 @@
+let f = proc (x) proc (y) 
+                  begin
+                   set x = -(x,-1);
+                   -(x,y)
+                  end
+in ((f 44) 33)
