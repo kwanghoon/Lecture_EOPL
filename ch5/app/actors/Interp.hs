@@ -42,7 +42,7 @@ data Cont =
   | Tuple_Cont [Exp] [ExpVal] Env Cont
   | Let_Tuple_Cont [Identifier] Exp Env Cont
 
-  | Var_Cont Identifier Env Cont
+  | Var_Cont ActorName Identifier Env Cont
   | End_Remote_Thread_Cont ActorName
   | Remote_Ready_Cont Cont
 
@@ -105,40 +105,48 @@ apply_cont cont val store sched actors =
       let proc = expval_proc ratorVal
           current = currentActor actors in
         case (actor_name proc) == current of
-          True -> apply_procedure_k proc randVal cont store sched actors
-          False -> let ((calleeName, calleeQ, calleeStore, calleeSched), actors') = extractActor (actor_name proc) actors
-                       calleeSched' = place_on_ready_queue
-                                         (\s sch act -> apply_procedure_k proc randVal (End_Remote_Thread_Cont current) s sch act)
-                                         calleeSched
+          True -> 
+            apply_procedure_k proc randVal cont store sched actors
 
-                       sched1 = place_on_ready_queue
-                                     (apply_cont' (Remote_Ready_Cont cont) randVal) sched
-                       (next, actorList) = actorSpace actors'
-                       actorList1 = actorList ++ [(current, msgQueue actors, store, sched1)]
+          False -> 
+            let ((calleeName, calleeQ, calleeStore, calleeSched), actors1) = extractActor (actor_name proc) actors
+                calleeSched1 = place_on_ready_queue
+                                  (\sto sch act -> 
+                                    apply_procedure_k proc randVal (End_Remote_Thread_Cont current) sto sch act)
+                                  calleeSched
 
-                       actors'' = (calleeName, calleeQ, (next, actorList1))
-                   in run_next_thread calleeStore calleeSched' actors''
-  
+                callerSched = place_on_ready_queue
+                                (apply_cont' (Remote_Ready_Cont cont) randVal) sched
+                (next, actorList) = actorSpace actors1
+                actorList1 = actorList ++ [(current, msgQueue actors, store, callerSched)]
+                actors2 = (calleeName, calleeQ, (next, actorList1))
+
+            in run_next_thread calleeStore calleeSched1 actors2
 
     apply_cont' (Set_Rhs_Cont var env cont) val store sched actors =
-      let (actorName, loc, store') = apply_env env store var in
-      case actorName == currentActor actors of
-        True -> let store'' = setref store' loc val in
-                  apply_cont cont (Num_Val 23) store'' sched actors
+      let saved_actor = lookup_env env var in
+        case saved_actor == currentActor actors of
+          True -> 
+            let (loc, store1) = apply_env env store var
+                store2 = setref store1 loc val
+            in apply_cont cont (Num_Val 23) store2 sched actors
 
-        False -> let ((calleeName, calleeQ, calleeStore, calleeSched), actors') = extractActor actorName actors
-                     calleeSched' = place_on_ready_queue
-                                         (\s sch act -> let s' = setref s loc val in 
-                                                          apply_cont' (End_Remote_Thread_Cont (currentActor actors)) (Unit_Val) s' sch act)
-                                         calleeSched
+          False -> 
+            let ((calleeName, calleeQ, calleeStore, calleeSched), actors1) = extractActor saved_actor actors
+                calleeSched1 = place_on_ready_queue
+                                  (\sto sch act -> 
+                                    let (loc, store1) = apply_env env sto var
+                                        sto' = setref sto loc val 
+                                    in apply_cont' (End_Remote_Thread_Cont (currentActor actors)) (Unit_Val) sto' sch act)
+                                  calleeSched
 
-                     sched1 = place_on_ready_queue
-                                     (apply_cont' (Remote_Ready_Cont cont) (Unit_Val)) sched
-                     (next, actorList) = actorSpace actors'
-                     actorList1 = actorList ++ [(currentActor actors, msgQueue actors, store, sched1)]
+                callerSched = place_on_ready_queue
+                                (apply_cont' (Remote_Ready_Cont cont) (Unit_Val)) sched
+                (next, actorList) = actorSpace actors1
+                actorList1 = actorList ++ [(currentActor actors, msgQueue actors, store, callerSched)]
+                actors2 = (calleeName, calleeQ, (next, actorList1))
 
-                     actors'' = (calleeName, calleeQ, (next, actorList1))   
-                 in run_next_thread calleeStore calleeSched' actors''
+            in run_next_thread calleeStore calleeSched1 actors2
 
     apply_cont' (Spawn_Cont saved_cont) val store sched actors =
       let proc1 = expval_proc val
@@ -221,22 +229,21 @@ apply_cont cont val store sched actors =
 
         _ -> error ("LetTuple_Cont: expected a list, got " ++ show val)
 
-    apply_cont' (Var_Cont var env saved_cont) val store sched actors =
-      let (actorName, loc, store') = apply_env env store var
-          ((calleeName, calleeQ, calleeStore, calleeSched), actors') = extractActor actorName actors
-          calleeSched' = place_on_ready_queue
-                            (\s sch act -> value_of_k (Var_Exp var) env 
-                                                (End_Remote_Thread_Cont (currentActor actors)) s sch act)
+    apply_cont' (Var_Cont actorName var env saved_cont) val store sched actors =
+      let ((calleeName, calleeQ, calleeStore, calleeSched), actors1) = extractActor actorName actors
+          calleeSched1 = place_on_ready_queue
+                            (\sto sch act -> 
+                              value_of_k (Var_Exp var) env 
+                                  (End_Remote_Thread_Cont (currentActor actors)) sto sch act)
                             calleeSched
 
-          sched1 = place_on_ready_queue
+          callerSched = place_on_ready_queue
                             (apply_cont' (Remote_Ready_Cont saved_cont) (Unit_Val)) sched
-          (next, actorList) = actorSpace actors'
-          actorList1 = actorList ++ [(currentActor actors, msgQueue actors, store', sched1)]
+          (next, actorList) = actorSpace actors1
+          actorList1 = actorList ++ [(currentActor actors, msgQueue actors, store, callerSched)]
+          actors2 = (calleeName, calleeQ, (next, actorList1))
 
-          actors'' = (calleeName, calleeQ, (next, actorList1))
-                
-      in run_next_thread calleeStore calleeSched' actors''
+      in run_next_thread calleeStore calleeSched1 actors2
 
     apply_cont' (Remote_Ready_Cont saved_cont) val store sched actors =
       case readymsg actors of 
@@ -281,12 +288,13 @@ value_of_k (Const_List_Exp nums) env cont store sched actors =
   apply_cont cont (List_Val (map Num_Val nums)) store sched actors 
 
 value_of_k (Var_Exp var) env cont store sched actors =
-  let (actorName, loc, store') = apply_env env store var in
-    case actorName == currentActor actors of
-      True  -> let val = deref store' loc in 
-                  apply_cont cont val store' sched actors
-      False -> apply_cont (Var_Cont var env cont) (Unit_Val) store sched actors
-                  
+  let saved_actor = lookup_env env var in
+    case saved_actor == currentActor actors of
+      True -> let (loc, store') = apply_env env store var
+                  val = deref store' loc
+              in apply_cont cont val store' sched actors
+      False -> apply_cont (Var_Cont saved_actor var env cont) Unit_Val store sched actors
+
 value_of_k (Diff_Exp exp1 exp2) env cont store sched actors =
   value_of_k exp1 env (Diff1_Cont exp2 env cont) store sched actors 
 

@@ -16,14 +16,14 @@ data Env =
 empty_env :: Env
 empty_env = Empty_env
 
-apply_env :: Env -> Store -> Identifier -> (ActorName, DenVal, Store)
+apply_env :: Env -> Store -> Identifier -> (DenVal, Store)
 apply_env Empty_env store search_var = error (search_var ++ " is not found.")
-apply_env (Extend_env saved_actor saved_var saved_val saved_env) store search_var
-  | search_var==saved_var = (saved_actor,saved_val,store)
+apply_env (Extend_env _ saved_var saved_val saved_env) store search_var
+  | search_var==saved_var = (saved_val,store)
   | otherwise             = apply_env saved_env store search_var
 apply_env (Extend_env_rec saved_actor idIdExpList saved_env) store search_var
   | isIn      = let (loc, store') = newref store procVal
-                in (saved_actor, loc, store')
+                in (loc, store')
   | otherwise = apply_env saved_env store search_var
   where isIn      = or [ p_name==search_var | (p_name,b_var,p_body) <- idIdExpList ]
         procVal = head [ Proc_Val (procedure saved_actor b_var p_body (Extend_env_rec saved_actor idIdExpList saved_env)) 
@@ -34,6 +34,20 @@ extend_env a x v env = Extend_env a x v env
 
 extend_env_rec :: ActorName -> [(Identifier,Identifier,Exp)] -> Env -> Env
 extend_env_rec a idIdExpList env = Extend_env_rec a idIdExpList env
+
+-- lookup_env: 변수가 정의된 위치(액터 이름)만 반환
+lookup_env :: Env -> Identifier -> ActorName
+lookup_env Empty_env search_var = error (search_var ++ " is not found.")
+
+lookup_env (Extend_env saved_actor saved_var _ saved_env) search_var
+  | search_var == saved_var = saved_actor
+  | otherwise               = lookup_env saved_env search_var
+
+lookup_env (Extend_env_rec saved_actor idIdExpList saved_env) search_var
+  | isIn      = saved_actor
+  | otherwise = lookup_env saved_env search_var
+  where
+    isIn = or [ p_name == search_var | (p_name, _, _) <- idIdExpList ]
 
 -- Expressed values
 data ExpVal =
