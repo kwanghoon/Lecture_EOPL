@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -32,6 +32,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
     , hspec
     , yapb >=0.2.3
   default-language: Haskell2010
@@ -54,6 +55,7 @@ executable letlang-exe
   build-depends:
       base >=4.7 && <5
     , ch3
+    , containers
     , hspec
     , yapb >=0.2.3
   default-language: Haskell2010
@@ -75,6 +77,7 @@ executable letreclang-exe
   build-depends:
       base >=4.7 && <5
     , ch3
+    , containers
     , hspec
     , yapb >=0.2.3
   default-language: Haskell2010
@@ -97,6 +100,32 @@ executable proclang-exe
   build-depends:
       base >=4.7 && <5
     , ch3
+    , containers
+    , hspec
+    , yapb >=0.2.3
+  default-language: Haskell2010
+
+executable rpclang-exe
+  main-is: Main.hs
+  other-modules:
+      Comp
+      Env
+      Expr
+      Interp
+      Lexer
+      MainUtil
+      Parser
+      Token
+      Expr
+      Paths_ch3
+  hs-source-dirs:
+      app/rpclang
+      app/rpclang/actors
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , ch3
+    , containers
     , hspec
     , yapb >=0.2.3
   default-language: Haskell2010
@@ -122,6 +151,7 @@ test-suite letlang-test
   build-depends:
       base >=4.7 && <5
     , ch3
+    , containers
     , hspec
     , yapb >=0.2.3
   default-language: Haskell2010
@@ -146,6 +176,7 @@ test-suite letreclang-test
   build-depends:
       base >=4.7 && <5
     , ch3
+    , containers
     , hspec
     , yapb >=0.2.3
   default-language: Haskell2010
@@ -171,6 +202,33 @@ test-suite proclang-test
   build-depends:
       base >=4.7 && <5
     , ch3
+    , containers
+    , hspec
+    , yapb >=0.2.3
+  default-language: Haskell2010
+
+test-suite rpclang-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Comp
+      Env
+      Expr
+      Interp
+      Lexer
+      Main
+      MainUtil
+      Parser
+      Token
+      Paths_ch3
+  hs-source-dirs:
+      test/rpclang
+      app/rpclang
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , ch3
+    , containers
     , hspec
     , yapb >=0.2.3
   default-language: Haskell2010

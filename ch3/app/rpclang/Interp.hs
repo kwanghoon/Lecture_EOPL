@@ -35,10 +35,10 @@ value_of (Let_Exp var exp1 body) env =
   let val1 = value_of exp1 env in
     value_of body (extend_env var val1 env)
 
-value_of (Proc_Exp var body) env =
+value_of (Proc_Exp _ var body) env =
   Proc_Val (procedure var body env)
 
-value_of (Call_Exp rator rand) env =
+value_of (Call_Exp rator _ rand) env =
   apply_procedure proc arg
   where proc = expval_proc (value_of rator env)
         arg  = value_of rand env
@@ -51,11 +51,11 @@ value_of_program exp = value_of exp initEnv
 
 
 --
-initEnv :: Env
+--
 initEnv = extend_env "i" (Num_Val 1)
             (extend_env "v" (Num_Val 5)
-              (extend_env "x" (Num_Val 10)
-                empty_env))
+              (extend_env "x" (Num_Val 10) empty_env))
+
 --
 apply_procedure :: Proc -> ExpVal -> ExpVal
 apply_procedure proc arg =

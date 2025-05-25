@@ -1,0 +1,3 @@
+let y1 = 1 in
+let y2 = 2 in
+(proc b (x) -( -(x, y1), y2) b 2)

@@ -1,0 +1,2 @@
+module m interface [y : int] body [x = 3 type t = int y = 4]
+         from m take y

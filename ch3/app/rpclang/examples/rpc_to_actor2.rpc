@@ -1,0 +1,2 @@
+let y = 1 in
+    (proc b (x) -(x, y) b 2)
