@@ -64,19 +64,51 @@ DenVal = Ref(ExpVal) + ExpVal
 - Dereferecing is implicit. 
   - When a variable is looked up, and the value if a reference, its contenst are returned.
 
-## Example
+## Examples
 
 ```
 let x = 10 in
 letmutable y = 20 in
   begin set y = 30;
-        x+y
+        -(0,-(-(0,x),y))
   end
 ```
 
 - `x` is immutable, bound directly to 10.
 - `y` is mutable, initially 20, updated to 30.
 - `x+y` evaluates to `10+30=40`.
+
+```
+let x = 10 in
+letmutable y = 20 in
+  begin set x = 30;
+        -(0,-(-(0,x),y))
+  end
+```
+
+- `Cannot set immutable variable: x`
+
+```
+let x = 10 in
+letmutable y = 20 in
+let p = proc(z) set z = 30 in
+  begin (p y);
+        -(0,-(-(0,x),y))
+  end
+```
+
+- `10+20=30`
+
+```
+let x = 10 in
+letmutable y = 20 in
+let p = proc(z) set z = 30 in
+  begin (p x);
+        -(0,-(-(0,x),y))
+  end
+```
+
+- `10+20=30`
 
 ## Implementation Notes
 
