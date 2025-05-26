@@ -229,6 +229,8 @@ apply_cont cont val store sched actors =
 
         _ -> error ("LetTuple_Cont: expected a list, got " ++ show val)
 
+-- TODO: 현재 actor A를 대기시켜놓고, 원격 actor B를 바로 실행하는 로직으로 구현되어 있음
+--       원격 actor B를 대기시켜놓고, 현재 actor A를 바로 실행하는 로직으로 변경해야 함
     apply_cont' (Var_Cont actorName var env saved_cont) val store sched actors =
       let ((calleeName, calleeQ, calleeStore, calleeSched), actors1) = extractActor actorName actors
           calleeSched1 = place_on_ready_queue
@@ -307,11 +309,28 @@ value_of_k (If_Exp exp1 exp2 exp3) env cont store sched actors =
 value_of_k (Let_Exp var exp1 body) env cont store sched actors =
   value_of_k exp1 env (Let_Exp_Cont var body env cont) store sched actors 
 
-value_of_k (Letrec_Exp nameArgBodyList letrec_body) env cont store sched actors =
-  value_of_k letrec_body (extend_env_rec (currentActor actors) nameArgBodyList env) cont store sched actors 
+-- Todo: 코드 리뷰 !!
+value_of_k (Letrec_Exp nameActorIdArgBodyList letrec_body) env cont store sched actors =
+  let currentActorName = currentActor actors
+      nameActorNameArgBodyList = 
+        [ case maybeActorId of 
+            Nothing -> (p_name,currentActorName,b_var,p_body) 
+            Just actorId ->
+              let (loc, store1) = apply_env env store actorId   -- Ignore store1!!
+                  actorName  = deref store1 loc
+              in (p_name,actorName,b_var,p_body)
+        | (p_name,maybeActorId,b_var,p_body) <- nameActorIdArgBodyList] in
+    value_of_k letrec_body (extend_env_rec nameActorNameArgBodyList env) cont store sched actors 
 
-value_of_k (Proc_Exp var body) env cont store sched actors =
-  apply_cont cont (Proc_Val (procedure (currentActor actors) var body env)) store sched actors 
+-- Todo: ActorIdentifier을 도입
+--     actorIdentifier :: ActorIdentifer을 env에서 찾아서 actorName :: ActorName으로 변환
+--     변환된 actorName을 procedure에 지정!! 
+value_of_k (Proc_Exp var (Just actorIdentifier) body) env cont store sched actors =
+  let actorName = apply_env env store actorIdentifier in 
+    apply_cont cont (Proc_Val (procedure actorName var body env)) store sched actors
+
+value_of_k (Proc_Exp var Noithing body) env cont store sched actors =
+  apply_cont cont (Proc_Val (procedure (currentActor actors) var body env)) store sched actors    
 
 value_of_k (Call_Exp rator rand) env cont store sched actors =
   value_of_k rator env (Rator_Cont rand env cont) store sched actors 

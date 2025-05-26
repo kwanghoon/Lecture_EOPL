@@ -1,0 +1,45 @@
+let SET = 1 in
+let PRINT = 2 in
+let x = 1 in
+letrec inc(x) = -(x, -1) in
+
+let a = new (proc( self )
+           letrec f(msg) =
+             let (cmd, nextActor) = msg in
+                   if zero?(-(cmd, SET))
+                   then begin set x = (inc x);
+                              send (nextActor, PRINT);
+                              print(200)
+                        end
+                   else ready(f)
+           in ready(f) )
+
+in
+let b = new (proc ( self )
+           letrec g(msg) =
+             let cmd = msg in
+                  if zero?(-(cmd, PRINT))
+                   then print(x)
+                   else ready(g)
+             
+           in ready(g) )
+
+in
+
+letrec p1 a (x) = -(x, -1) in
+letrec p2 b (x) = -(x, -1) in
+let p3 = proc a (x) = -(x, -1) in
+let p4 = proc b (x) = -(x, -1) in
+let p5 = proc (x) = -(x,-1) in 
+
+    begin
+        send(a, (SET, b));
+        print(100);
+        ready(proc(d) print(d))
+
+        (p1 100);
+        (p2 200);
+        (p3 300);
+        (p4 400);
+        (p5 500)
+    end

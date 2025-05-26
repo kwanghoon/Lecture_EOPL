@@ -11,7 +11,7 @@ import Queue
 data Env =
     Empty_env
   | Extend_env ActorName Identifier DenVal Env
-  | Extend_env_rec ActorName [(Identifier,Identifier,Exp)] Env
+  | Extend_env_rec [(Identifier,ActorName,Identifier,Exp)] Env
 
 empty_env :: Env
 empty_env = Empty_env
@@ -21,19 +21,19 @@ apply_env Empty_env store search_var = error (search_var ++ " is not found.")
 apply_env (Extend_env _ saved_var saved_val saved_env) store search_var
   | search_var==saved_var = (saved_val,store)
   | otherwise             = apply_env saved_env store search_var
-apply_env (Extend_env_rec saved_actor idIdExpList saved_env) store search_var
+apply_env (Extend_env_rec idActorNameIdExpList saved_env) store search_var
   | isIn      = let (loc, store') = newref store procVal
                 in (loc, store')
   | otherwise = apply_env saved_env store search_var
   where isIn      = or [ p_name==search_var | (p_name,b_var,p_body) <- idIdExpList ]
         procVal = head [ Proc_Val (procedure saved_actor b_var p_body (Extend_env_rec saved_actor idIdExpList saved_env)) 
-                       | (p_name,b_var,p_body) <- idIdExpList, p_name==search_var ]
+                       | (p_name,saved_actor,b_var,p_body) <- idActorNameIdExpList, p_name==search_var ]
 
 extend_env :: ActorName -> Identifier -> DenVal -> Env -> Env
 extend_env a x v env = Extend_env a x v env
 
-extend_env_rec :: ActorName -> [(Identifier,Identifier,Exp)] -> Env -> Env
-extend_env_rec a idIdExpList env = Extend_env_rec a idIdExpList env
+extend_env_rec :: [(Identifier, ActorName, Identifier,Exp)] -> Env -> Env
+extend_env_rec idActorNameIdExpList env = Extend_env_rec a idIdExpList env
 
 -- lookup_env: 변수가 정의된 위치(액터 이름)만 반환
 lookup_env :: Env -> Identifier -> ActorName
@@ -73,7 +73,7 @@ instance Show ExpVal where
 type FinalAnswer = ExpVal 
 
 -- Location
-type Location = Integer
+-- type Location = Integer
 
 -- Denoted values   
 type DenVal = Location

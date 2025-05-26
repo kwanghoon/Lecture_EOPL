@@ -45,16 +45,16 @@ parserSpec = ParserSpec
         (\rhs -> let Letrec_Exp recbinds _ = (expFrom (get rhs 2)) in
                    return $ PETExp (Letrec_Exp recbinds (expFrom (get rhs 4)))),
 
-      rule "ArbiNumberOfUnaryProcs -> identifier ( identifier ) = Expression"
-        (\rhs -> return $ PETExp (Letrec_Exp [ (getText rhs 1, getText rhs 3, (expFrom (get rhs 6))) ] undefined)),
+      rule "ArbiNumberOfUnaryProcs -> identifier OptIdentifier ( identifier ) = Expression"
+        (\rhs -> return $ PETExp (Letrec_Exp [ (getText rhs 1, optIdFrom (get rhs 2), getText rhs 4, (expFrom (get rhs 7))) ] undefined)),
 
-      rule "ArbiNumberOfUnaryProcs -> identifier ( identifier ) = Expression ArbiNumberOfUnaryProcs"
-        (\rhs -> let recbind = (getText rhs 1, getText rhs 3, (expFrom (get rhs 6)))
-                     Letrec_Exp theRest body = (expFrom (get rhs 7))
+      rule "ArbiNumberOfUnaryProcs -> identifier OptIdentifier( identifier ) = Expression ArbiNumberOfUnaryProcs"
+        (\rhs -> let recbind = (getText rhs 1, optIdFrom (get rhs 2), getText rhs 4, (expFrom (get rhs 7)))
+                     Letrec_Exp theRest body = (expFrom (get rhs 8))
                  in  return $ PETExp (Letrec_Exp (recbind:theRest) body)),
-      
-      rule "Expression -> proc ( identifier ) Expression"
-        (\rhs -> return $ PETExp (Proc_Exp (getText rhs 3) (expFrom (get rhs 5)))),
+
+      rule "Expression -> proc OptIdentifier ( identifier ) Expression"
+        (\rhs -> return $ PETExp (Proc_Exp (optIdFrom (get rhs 2)) (getText rhs 4) (expFrom (get rhs 6)))),
 
       rule "Expression -> ( Expression Expression )"
         (\rhs -> return $ PETExp (Call_Exp (expFrom (get rhs 2)) (expFrom (get rhs 3)))),
@@ -165,7 +165,13 @@ parserSpec = ParserSpec
         (\rhs -> return $ PETIdList [getText rhs 1]),
       
       rule "IdentifierList -> identifier , IdentifierList"
-        (\rhs -> return $ PETIdList (getText rhs 1 : idListFrom (get rhs 3)) )
+        (\rhs -> return $ PETIdList (getText rhs 1 : idListFrom (get rhs 3)) ),
+
+      rule "OptIdentifier -> "
+        (\_ -> return $ PETOptIdentifier Nothing),
+
+      rule "OptIdentifier -> identifier"
+        (\rhs -> return $ PETOptIdentifier (Just (getText rhs 1)))
     ],
     
     baseDir        = "./",
@@ -179,4 +185,5 @@ parserSpec = ParserSpec
 data PET =
     PETExp { expFrom :: Exp } 
   | PETIdList { idListFrom :: [String] }
+  | PETOptIdentifier { optIdFrom :: Maybe Identifier }
   deriving (Show)
