@@ -48,7 +48,7 @@ parserSpec = ParserSpec
       rule "ArbiNumberOfUnaryProcs -> identifier OptIdentifier ( identifier ) = Expression"
         (\rhs -> return $ PETExp (Letrec_Exp [ (getText rhs 1, optIdFrom (get rhs 2), getText rhs 4, (expFrom (get rhs 7))) ] undefined)),
 
-      rule "ArbiNumberOfUnaryProcs -> identifier OptIdentifier( identifier ) = Expression ArbiNumberOfUnaryProcs"
+      rule "ArbiNumberOfUnaryProcs -> identifier OptIdentifier ( identifier ) = Expression ArbiNumberOfUnaryProcs"
         (\rhs -> let recbind = (getText rhs 1, optIdFrom (get rhs 2), getText rhs 4, (expFrom (get rhs 7)))
                      Letrec_Exp theRest body = (expFrom (get rhs 8))
                  in  return $ PETExp (Letrec_Exp (recbind:theRest) body)),

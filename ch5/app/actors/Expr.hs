@@ -2,7 +2,7 @@
 {-# HLINT ignore "Use camelCase" #-}
 module Expr(Program,Exp(..),Identifier,UnaryOp(..)) where
 
-import ActorIdentifier(ActorIdentifier)
+import ActorName(ActorName)
 
 type Program = Exp
   
@@ -14,8 +14,8 @@ data Exp =
   | Var_Exp    Identifier                 -- variable : x
   | Let_Exp    Identifier Exp Exp         -- let x = expression in expression
   | Letrec_Exp
-      [(Identifier, Maybe ActorIdentifier, Identifier,Exp)] Exp   -- letrec { ..., f_i actorIdentifer (x_i) = expression_i, ... } in expression
-  | Proc_Exp   (Maybe ActorIdentifier) Identifier Exp   -- proc actorIdentifer ( identifier ) expression
+      [(Identifier, Maybe ActorName, Identifier,Exp)] Exp   -- letrec { ..., f_i actorName (x_i) = expression_i, ... } in expression
+  | Proc_Exp   (Maybe ActorName) Identifier Exp             -- proc actorName ( identifier ) expression
   | Call_Exp   Exp Exp                    -- ( expression expression)
   | Block_Exp  [ Exp ]                    -- begin exp1; ...; expk end
   | Set_Exp    Identifier Exp             -- set x = expression
