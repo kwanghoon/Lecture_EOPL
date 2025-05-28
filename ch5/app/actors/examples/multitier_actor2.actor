@@ -4,15 +4,17 @@ let x = 1 in
 letrec inc(x) = -(x, -1) in
 
 let a = new (proc( self )
-           letrec f(msg) =
+            letrec f(msg) =
              let (cmd, nextActor) = msg in
                    if zero?(-(cmd, SET))
                    then begin set x = (inc x);
                               send (nextActor, PRINT);
-                              print(200)
+                              print(200);
+                              let p6 = proc self (x) -(x,- 1) in 
+                                    print((p6 600))
                         end
                    else ready(f)
-           in ready(f) )
+            in ready(f) )
 
 in
 let b = new (proc ( self )
@@ -21,24 +23,22 @@ let b = new (proc ( self )
                   if zero?(-(cmd, PRINT))
                    then print(x)
                    else ready(g)
-             
-           in ready(g) )
+            in ready(g) )
 
 in
-
 letrec p1 a (x) = -(x, -1)
        p2 b (x) = -(x, -1) in
 let p3 = proc a (x) -(x, -1) in
 let p4 = proc b (x) -(x, -1) in
 let p5 = proc (x) -(x,-1) in 
 
-    begin
-        send(a, (SET, b));
-        print(100);
-        let r1 = (p1 100) in print(r1);
-        let r2 = (p2 200) in print(r2);
-        let r3 = (p3 300) in print(r3);
-        let r4 = (p4 400) in print(r4);
-        let r5 = (p5 500) in print(r5);
-        ready(proc(d) print(d))
-    end
+begin
+      send(a, (SET, b));
+      print(100);
+      let r1 = (p1 100) in print(r1);
+      let r2 = (p2 200) in print(r2);
+      let r3 = (p3 300) in print(r3);
+      let r4 = (p4 400) in print(r4);
+      let r5 = (p5 500) in print(r5);
+      ready(proc(d) print(d))
+end

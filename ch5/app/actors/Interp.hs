@@ -42,7 +42,7 @@ data Cont =
   | Tuple_Cont [Exp] [ExpVal] Env Cont
   | Let_Tuple_Cont [Identifier] Exp Env Cont
 
-  | Var_Cont ActorId Identifier Env Cont
+  | Remote_Var_Cont ActorId Identifier Env Cont
   | End_Remote_Thread_Cont ActorId
   | Remote_Ready_Cont Cont
 
@@ -104,7 +104,7 @@ apply_cont cont val store sched actors =
     apply_cont' (Rand_Cont ratorVal cont) randVal store sched actors =
       let proc = expval_proc ratorVal
           current = currentActor actors in
-        if (actor_name proc) == current
+        if actor_name proc == current
         then apply_procedure_k proc randVal cont store sched actors
         else 
              let newThread = \sto sch act -> 
@@ -210,7 +210,7 @@ apply_cont cont val store sched actors =
 
         _ -> error ("LetTuple_Cont: expected a list, got " ++ show val)
 
-    apply_cont' (Var_Cont actorId var env saved_cont) val store sched actors =
+    apply_cont' (Remote_Var_Cont actorId var env saved_cont) val store sched actors =
       let newThread = \sto sch act -> 
                               value_of_k (Var_Exp var) env 
                                   (End_Remote_Thread_Cont (currentActor actors)) sto sch act
@@ -264,7 +264,7 @@ value_of_k (Var_Exp var) env cont store sched actors =
     then let (loc, store') = apply_env env store var
              val = deref store' loc
          in apply_cont cont val store' sched actors
-    else apply_cont (Var_Cont saved_actor var env cont) Unit_Val store sched actors
+    else apply_cont (Remote_Var_Cont saved_actor var env cont) Unit_Val store sched actors
 
 value_of_k (Diff_Exp exp1 exp2) env cont store sched actors =
   value_of_k exp1 env (Diff1_Cont exp2 env cont) store sched actors 
@@ -291,14 +291,18 @@ value_of_k (Letrec_Exp nameActorNameArgBodyList letrec_body) env cont store sche
     value_of_k letrec_body (extend_env_rec nameActorIdArgBodyList env) cont store sched actors 
 
 value_of_k (Proc_Exp (Just actorName) var body) env cont store sched actors = 
-  let (loc, store1) = apply_env env store actorName   -- Ignore store1!!
-      actorId = expval_actor (deref store1 loc)
-      newThread = \sto sch act -> 
+  let currentActorId = currentActor actors
+      (loc, store1) = apply_env env store actorName   -- Ignore store1!!
+      remoteActorId = expval_actor (deref store1 loc) in
+      if remoteActorId == currentActorId
+      then apply_cont cont (Proc_Val (procedure currentActorId var body env)) store sched actors
+      else
+           let newThread = \sto sch act -> 
                           value_of_k (Proc_Exp Nothing var body) env 
-                                  (End_Remote_Thread_Cont (currentActor actors)) sto sch act
+                                  (End_Remote_Thread_Cont currentActorId) sto sch act
 
-      actors' = updateActorSched actorId (place_on_ready_queue newThread) actors
-  in apply_cont (Remote_Ready_Cont cont) (Unit_Val) store sched actors'
+               actors' = updateActorSched remoteActorId (place_on_ready_queue newThread) actors
+           in apply_cont (Remote_Ready_Cont cont) (Unit_Val) store sched actors'
 
 value_of_k (Proc_Exp Nothing var body) env cont store sched actors =
   apply_cont cont (Proc_Val (procedure (currentActor actors) var body env)) store sched actors    
