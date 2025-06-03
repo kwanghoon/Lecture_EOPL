@@ -44,6 +44,6 @@ data Exp =
   
   deriving Show
 
-data UnaryOp = IsZero | IsNull | Car | Cdr | Print deriving Show
+data UnaryOp = IsZero | IsNull | Car | Cdr | Print | Read deriving Show
 
 type Identifier = String

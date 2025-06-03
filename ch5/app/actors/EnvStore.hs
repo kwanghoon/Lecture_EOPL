@@ -57,6 +57,7 @@ data ExpVal =
   | Mutex_Val {expval_mutex :: Mutex }        -- Mutex {Loc to Bool, Loc to Queue Thread}
   | Queue_Val {expval_queue :: Queue Thread}  -- (newref queue); newref takes an Expval arg!
   | Actor_Val {expval_actor :: Integer}
+  | String_Val {expval_string :: String}
   | Unit_Val  -- for dummy value
 
 instance Show ExpVal where
@@ -67,6 +68,7 @@ instance Show ExpVal where
   show (Mutex_Val mutex) = show mutex
   show (Queue_Val queue) = show "queue"
   show (Actor_Val actor) = "actor" ++ show actor
+  show (String_Val str) = show str
   show (Unit_Val) = "dummy"
 
 type FinalAnswer = ExpVal 
@@ -88,7 +90,7 @@ data Mutex = Mutex Location Location -- binary semaphores: Loc to Bool, Loc to (
              deriving Show
 
 -- Threads
-type Thread = Store -> SchedState -> ActorState -> (FinalAnswer, Store)
+type Thread = Store -> SchedState -> ActorState -> IO (FinalAnswer, Store)
 
 -- Scheduler states
 data SchedState =

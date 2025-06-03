@@ -71,6 +71,7 @@ keywords =
   , ("car",    CAR)
   , ("cdr",    CDR)
   , ("print",  PRINT)
+  , ("read",   READ)
   , ("in",     IN)
   , ("send",   SEND)
   , ("ready",  READY)

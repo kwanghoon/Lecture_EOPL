@@ -49,6 +49,7 @@ data Token =
   | CAR                         -- car
   | CDR                         -- cdr
   | PRINT                       -- print
+  | READ                        -- read
 
   | TRY                         -- try
   | CATCH                       -- catch
@@ -110,6 +111,7 @@ tokenStrList =
     (CAR,    "car"),
     (CDR,    "cdr"),
     (PRINT,  "print"),
+    (READ,   "read"),
 
     (TRY,    "try"),
     (CATCH,  "catch"),

@@ -1,0 +1,6 @@
+let x = 1 in
+let y = read() in
+begin
+    print(x);
+    print(y)
+end
