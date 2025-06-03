@@ -14,6 +14,7 @@ import Queue (empty_queue)
 
 import Debug.Trace
 import Expr (Exp(Send_Exp))
+import System.IO (hFlush, stdout)
 
 -- Continuation
 
@@ -47,18 +48,18 @@ data Cont =
   | Remote_Ready_Cont Cont
 
 
-apply_cont :: Cont -> ExpVal -> Store -> SchedState -> ActorState -> (FinalAnswer, Store)
-apply_cont cont val store sched actors =
+apply_cont :: Cont -> ExpVal -> Store -> SchedState -> ActorState -> IO (FinalAnswer, Store)
+apply_cont cont val store sched actors = do
   if time_expired sched
-  then
+  then do
     let sched' = place_on_ready_queue
                    (apply_cont cont val)
                    sched
-    in  run_next_actor store sched' actors  -- run_next_thread
+    run_next_actor store sched' actors  -- run_next_thread
     
-  else
+  else do
     let sched' = decrement_timer sched
-    in  apply_cont' cont val store sched' actors
+    apply_cont' cont val store sched' actors
     
   where
     apply_cont' End_Main_Thread_Cont v store sched actors =
@@ -94,9 +95,9 @@ apply_cont cont val store sched actors =
           num2 = expval_num val2
       in  apply_cont cont (Num_Val (num1 - num2)) store sched actors
 
-    apply_cont' (Unop_Arg_Cont op cont) val store sched actors =
-      let res = apply_unop op val in
-        res `seq` apply_cont cont res store sched actors
+    apply_cont' (Unop_Arg_Cont op cont) val store sched actors = do
+      res <- apply_unop op val
+      apply_cont cont res store sched actors
 
     apply_cont' (Rator_Cont rand env cont) ratorVal store sched actors =
       value_of_k rand env (Rand_Cont ratorVal cont) store sched actors
@@ -233,16 +234,23 @@ apply_cont cont val store sched actors =
 -- Todo: Introduce exceptions and define apply_handler to see how complex it is!
 -- Todo: Use the monadic style to hide as many global parameters as possible.
 
-apply_unop :: UnaryOp -> ExpVal -> ExpVal
+apply_unop :: UnaryOp -> ExpVal -> IO ExpVal
 
 apply_unop IsZero (Num_Val num)
-  | num==0    = Bool_Val True
-  | otherwise = Bool_Val False
-apply_unop IsNull (List_Val [])  = Bool_Val True
-apply_unop IsNull (List_Val _)   = Bool_Val False
-apply_unop Car (List_Val (x:_))  = x
-apply_unop Cdr (List_Val (_:xs)) = List_Val xs
-apply_unop Print v = trace (show v) $ List_Val []  -- ???
+  | num==0    = return $ Bool_Val True
+  | otherwise = return $ Bool_Val False
+apply_unop IsNull (List_Val [])  = return $ Bool_Val True
+apply_unop IsNull (List_Val _)   = return $ Bool_Val False
+apply_unop Car (List_Val (x:_))  = return $ x
+apply_unop Cdr (List_Val (_:xs)) = return $ List_Val xs
+apply_unop Print v = do
+  putStrLn (show v)
+  return Unit_Val
+apply_unop Read _ = do
+  putStr ">> "
+  hFlush stdout
+  line <- getLine
+  return $ String_Val line
 apply_unop op rand = error ("Unknown unary operator: :" ++ show op ++ " " ++ show rand)
 --
 -- For actor
@@ -250,7 +258,7 @@ apply_unop op rand = error ("Unknown unary operator: :" ++ show op ++ " " ++ sho
 --                       -> ActorState -> (FinalAnswer, Store)
 --
 
-value_of_k :: Exp -> Env -> Cont -> Store -> SchedState -> ActorState -> (FinalAnswer, Store)
+value_of_k :: Exp -> Env -> Cont -> Store -> SchedState -> ActorState -> IO (FinalAnswer, Store)
 
 value_of_k (Const_Exp n) env cont store sched actors =
   apply_cont cont (Num_Val n) store sched actors
@@ -375,20 +383,19 @@ value_of_k exp _ _ _ _ _ =
   
 
 --
-value_of_program :: Exp -> Integer -> ExpVal
+value_of_program :: Exp -> Integer -> IO ExpVal
 
-value_of_program exp timeslice =
-  let (finalVal, _) = 
-        value_of_k exp initEnv End_Main_Thread_Cont
-           initStore (initialize_scheduler timeslice) initialActorState
-  in finalVal
+value_of_program exp timeslice = do
+  (finalVal, _) <- value_of_k exp initEnv End_Main_Thread_Cont
+                     initStore (initialize_scheduler timeslice) initialActorState
+  return finalVal
 
 
 --
 initEnv = empty_env
 
 --
-apply_procedure_k :: Proc -> ExpVal -> Cont -> Store -> SchedState -> ActorState -> (FinalAnswer, Store)
-apply_procedure_k proc arg cont store sched actors =
-  let (loc,store') = newref store arg in
-   value_of_k (body proc) (extend_env (currentActor actors) (var proc) loc (saved_env proc)) cont store' sched actors
+apply_procedure_k :: Proc -> ExpVal -> Cont -> Store -> SchedState -> ActorState -> IO (FinalAnswer, Store)
+apply_procedure_k proc arg cont store sched actors = do
+  let (loc,store') = newref store arg
+  value_of_k (body proc) (extend_env (currentActor actors) (var proc) loc (saved_env proc)) cont store' sched actors

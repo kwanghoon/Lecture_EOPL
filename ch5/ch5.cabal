@@ -40,6 +40,7 @@ library
 executable actors-exe
   main-is: Main.hs
   other-modules:
+      ActorName
       EnvStore
       Expr
       Interp

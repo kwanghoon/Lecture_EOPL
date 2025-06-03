@@ -13,6 +13,12 @@ enqueue queue elem = queue ++ [elem]
 
 dequeueWithFun :: Queue a -> (a -> Queue a -> b) -> b 
 dequeueWithFun queue f = f (head queue) (tail queue)
+
+dequeueWithFunIO :: Queue a -> (a -> Queue a -> IO b) -> IO b
+dequeueWithFunIO queue f
+  | isempty queue = error "Empty queue"
+  | otherwise = f (head queue) (tail queue)
+
   -- Note that dequeue is used in run_next_thread:Schedule.hs and
   -- singal_mutex:Semaphore.hs where
   --

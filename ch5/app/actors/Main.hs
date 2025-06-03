@@ -42,5 +42,5 @@ doProcess verbose fileName = do
   
   putStrLn (show expression)
 
-  let val = value_of_program expression timeslice
+  val <- value_of_program expression timeslice
   putStrLn (show val)

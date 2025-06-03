@@ -115,6 +115,9 @@ parserSpec = ParserSpec
       rule "Expression -> print ( Expression )"
         (\rhs -> return $ PETExp (Unary_Exp Print (expFrom (get rhs 3)))),
 
+      rule "Expression -> read ( )"
+        (\rhs -> return $ PETExp (Unary_Exp Read (Const_Exp 0))), -- dummy Exp
+
       rule "Expression -> log string Expression"
         (\rhs -> return $ PETExp (Log_Exp (init (tail (getText rhs 2))) (expFrom (get rhs 3)))),
 
