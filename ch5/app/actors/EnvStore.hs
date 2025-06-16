@@ -1,17 +1,30 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
+{-# LANGUAGE DeriveGeneric #-}
 module EnvStore where
 
 import Expr (Identifier,Exp)
-import Data.List(intersperse)
+import Data.List(intersperse, find)
 import Data.Maybe
 import Queue
+
+import Control.Distributed.Process (ProcessId, NodeId)
+
+import Data.Binary
+import Data.Typeable (Typeable)
+import GHC.Generics (Generic)
+import Control.Applicative ((<|>))
+import Control.Monad (replicateM)
 
 -- Environment
 data Env =
     Empty_env
   | Extend_env ActorId Identifier DenVal Env
   | Extend_env_rec [(Identifier,ActorId,Identifier,Exp)] Env
+  | Serialized_env ActorId Identifier Env
+  deriving (Generic)
+
+instance Binary Env
 
 empty_env :: Env
 empty_env = Empty_env
@@ -48,6 +61,25 @@ lookup_env (Extend_env_rec idActoridIdExpList saved_env) search_var =
     (saved_actor:_) -> saved_actor
     []     -> lookup_env saved_env search_var
 
+-- serialize
+-- 원격 액터에 실행할 식을 보낼 때 env도 함께 넘겨줘야 함 
+--    : send pid (StartActor (ActorBehavior x body env1 actors))
+-- env에 Extend_env_rec가 존재하면 직렬화 불가
+-- 따라서 변수(함수) 이름 + 정의된 위치만 보존하도록 변경
+convert_rec_to_serialized :: Env -> Env
+convert_rec_to_serialized env = case env of
+  Empty_env -> Empty_env
+  Extend_env pid var loc saved_env ->
+    Extend_env pid var loc (convert_rec_to_serialized saved_env)
+  Serialized_env pid fname saved_env -> 
+    Serialized_env pid fname (convert_rec_to_serialized saved_env)
+  Extend_env_rec bindings saved_env ->
+    let serializedChain = foldr (\(fname, pid, _,_) acc -> Serialized_env pid fname acc)
+                                (convert_rec_to_serialized saved_env)
+                                bindings
+    in serializedChain
+
+
 -- Expressed values
 data ExpVal =
     Num_Val   {expval_num  :: Int}
@@ -55,8 +87,8 @@ data ExpVal =
   | Proc_Val  {expval_proc :: Proc}
   | List_Val  {expval_list :: [ExpVal]}
   | Mutex_Val {expval_mutex :: Mutex }        -- Mutex {Loc to Bool, Loc to Queue Thread}
-  | Queue_Val {expval_queue :: Queue Thread}  -- (newref queue); newref takes an Expval arg!
-  | Actor_Val {expval_actor :: Integer}
+--  | Queue_Val {expval_queue :: Queue Thread}  -- (newref queue); newref takes an Expval arg!
+  | Actor_Val {expval_actor :: ActorId}
   | String_Val {expval_string :: String}
   | Unit_Val  -- for dummy value
 
@@ -66,10 +98,46 @@ instance Show ExpVal where
   show (Proc_Val proc) = show "<proc>"
   show (List_Val nums) = show "[" ++ concat (intersperse "," (map show nums)) ++ show "]"
   show (Mutex_Val mutex) = show mutex
-  show (Queue_Val queue) = show "queue"
+--  show (Queue_Val queue) = show "queue"
   show (Actor_Val actor) = "actor" ++ show actor
   show (String_Val str) = show str
   show (Unit_Val) = "dummy"
+
+instance Binary ExpVal where
+  put (Num_Val n) = do
+    put (0 :: Word8)
+    put n
+  put (Bool_Val b) = do
+    put (1 :: Word8)
+    put b
+  put (Proc_Val _) =
+    error "need to implement"
+  put (List_Val xs) = do
+    put (3 :: Word8)
+    put (length xs)
+    mapM_ put xs
+  put (Mutex_Val _) =
+    error "need to implement"
+  put (Actor_Val aid) = do
+    put (6 :: Word8)
+    put aid
+  put (String_Val s) = do
+    put (7 :: Word8)
+    put s
+  put Unit_Val = put (8 :: Word8)
+
+  get = do
+    tag <- get :: Get Word8
+    case tag of
+      0 -> Num_Val <$> get
+      1 -> Bool_Val <$> get
+      3 -> do
+        len <- get
+        List_Val <$> replicateM len get
+      6 -> Actor_Val <$> get
+      7 -> String_Val <$> get
+      8 -> return Unit_Val
+      _ -> error "instance Binary ExpVal"
 
 type FinalAnswer = ExpVal 
 
@@ -90,16 +158,7 @@ data Mutex = Mutex Location Location -- binary semaphores: Loc to Bool, Loc to (
              deriving Show
 
 -- Threads
-type Thread = Store -> SchedState -> ActorState -> IO (FinalAnswer, Store)
-
--- Scheduler states
-data SchedState =
-  SchedState {
-   the_ready_queue :: Queue Thread,
-   the_final_answer :: Maybe FinalAnswer,
-   the_max_time_slice :: Integer,
-   the_time_remaining :: Integer
-  }
+-- type Thread = Store -> SchedState -> ActorState -> IO (FinalAnswer, Store)
 
 -- In Interp.hs
 -- apply_procedure :: Proc -> ExpVal -> ExpVal
@@ -126,85 +185,30 @@ initStore :: Store
 initStore = (1,[])
 
 -- Actors
-type ActorId = Integer
+type ActorId = ProcessId
 
--- (next actor id, actors)
-type ActorSpace = (ActorId, [ ActorInfo ])
-type ActorInfo  = (ActorId, Queue ExpVal, Store, SchedState)
+data ActorState = ActorState { mainNode :: NodeId } 
+  deriving (Generic)
 
--- (current actor id, message queue, actor space)
-type ActorState = (ActorId, Queue ExpVal, ActorSpace)
+instance Binary ActorState
 
-currentActor :: ActorState -> ActorId
-currentActor (actor,_,_) = actor
+initActorState :: NodeId -> ActorState
+initActorState mainNid = ActorState { mainNode = mainNid }
 
-msgQueue :: ActorState -> Queue ExpVal
-msgQueue (_,queue,_) = queue
+data ActorBehavior = ActorBehavior Identifier Exp Env ActorState
+  deriving (Generic, Typeable)
 
-actorSpace :: ActorState -> ActorSpace
-actorSpace (_,_,space) = space
+instance Binary ActorBehavior
 
-setActorSpace :: ActorState -> ActorSpace -> ActorState
-setActorSpace (actor,queue,_) space = (actor,queue,space)
+data ActorMessage = StartActor ActorBehavior
+  deriving (Generic, Typeable)
 
--- 0 for the main actor, 1 for the next actors to be created
-initialActorState :: ActorState
-initialActorState = (0, empty_queue, (1, []))
-
--- lookup and remove for Remote
--- extractActor :: ActorId -> ActorState -> (ActorInfo, ActorState)
--- extractActor name (current, q, (next, actorList)) =
---   let (found, rest) = extractActor' name actorList
---   in (found, (current, q, (next, rest)))
-
--- extractActor' :: ActorId -> [ActorInfo] -> (ActorInfo, [ActorInfo])
--- extractActor' _ [] = error "Actor not found"
--- extractActor' name (info@(n,_,_,_):rest)
---   | name == n = (info, rest)
---   | otherwise = let (found, rest') = extractActor' name rest
---                 in (found, info : rest')
-
--- lookup and update target actor's scheduler for Remote
-updateActorSched :: ActorId -> (SchedState -> SchedState) -> ActorState -> ActorState
-updateActorSched search_Id f (current, q, (next, actorList)) =
-  let updatedActorList = updateActorSched' search_Id f actorList
-  in (current, q, (next, updatedActorList))
-  where
-    updateActorSched' _ _ [] = error ("Actor not found : " ++ show search_Id)
-    updateActorSched' search_Id f (info@(id, q, store, sched):rest)
-      | search_Id == id = (id, q, store, f sched) : rest
-      | otherwise = info : updateActorSched' search_Id f rest
-
+instance Binary ActorMessage
 
 -- For actor
 --   value_of_k :: Exp -> Env -> Cont -> Store -> SchedState 
 --                       -> ActorState -> (FinalAnswer, Store)
 
-
--- Actor별로 Store를 가지고 있음 Store
--- Actor별로 메시지 큐를 가지고 있음 Queue ExpVal
-
-sendmsg :: ActorId -> ExpVal -> ActorState -> ActorState 
-sendmsg to v (current, q, (next, actorList))
-  | to == current = (current, enqueue q v, (next, actorList))
-  | otherwise = (current, q, (next, sendmsg' to v actorList))
-
-sendmsg' :: ActorId -> ExpVal -> [ActorInfo] -> [ActorInfo]
-sendmsg' to v [] = [] -- error ("Unknown actor for send: " ++ show to ++ ", " ++ show v)
-sendmsg' to v ((name, q, store, sched):actorList)
-  | to == name = (name, enqueue q v, store, sched) : actorList
-  | otherwise = (name, q, store, sched) : sendmsg' to v actorList
-
-sendAllmsg :: ActorId -> [ExpVal] -> ActorState -> ActorState
-sendAllmsg _ [] actors = actors
-sendAllmsg to (v:vs) actors =
-  let actors1 = sendmsg to v actors
-  in sendAllmsg to vs actors1
-
-readymsg :: ActorState -> Maybe (ExpVal, ActorState)
-readymsg (current, q, actorSpace) 
-  | isempty q = Nothing 
-  | otherwise = let (v, q1) = dequeue q in Just (v, (current, q1, actorSpace))
 
 -- For tuple
 bind_vars :: ActorId -> [Identifier] -> [ExpVal] -> Env -> Store -> (Env, Store)

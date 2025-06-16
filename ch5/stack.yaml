@@ -17,8 +17,14 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/1.yaml
+#resolver:
+#  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/1.yaml
+resolver: lts-18.28
+
+build:
+  library-profiling: false
+  test: false
+  bench: false
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -42,9 +48,18 @@ packages:
 #
 extra-deps:
 - yapb-0.2.3
+- entropy-0.4.1.11@sha256:1a40e0ff033e6b392d3d4aa29c4d2b89b4e915f69f10e3b240f681a18279dc64
+- distributed-process-0.7.8
+- distributed-process-simplelocalnet-0.3.3
+- network-transport-tcp-0.8.1
+- distributed-static-0.3.9@sha256:f5e781867eddec660cb3b39805c849e3f096b7da245d43a07d8529e3c92b3a27
+- rank1dynamic-0.4.3
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
+flags:
+  entropy:
+    donotgetentropy: true
 
 # Extra package databases containing global packages
 # extra-package-dbs: []

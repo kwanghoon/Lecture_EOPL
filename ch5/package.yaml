@@ -67,7 +67,16 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - ch5    
+    - ch5
+    - bytestring
+    - distributed-process
+    - network-transport
+    - network-transport-tcp
+    - binary
+    - mtl
+    - lens
+    - random
+    - stm
 
 tests:
   letreccps-test:
@@ -117,6 +126,15 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - ch5      
+    - ch5
+    - bytestring
+    - distributed-process
+    - network-transport
+    - network-transport-tcp
+    - binary
+    - mtl
+    - lens
+    - random
+    - stm
 
   

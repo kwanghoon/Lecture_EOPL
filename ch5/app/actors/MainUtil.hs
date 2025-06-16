@@ -8,7 +8,7 @@ import Terminal
 import Parser
 import Expr
 import Interp
-import Scheduler(timeslice)
+import Scheduler
 
 import Control.Monad (when)
 import System.IO
@@ -27,7 +27,7 @@ runProg text bool = do
 
   if bool then putStrLn (show expression) else return ()
   
-  let val = value_of_program expression timeslice     -- interpreter
+  let val = value_of_program expression     -- interpreter
   return val
 --  putStrLn (show val)
   
