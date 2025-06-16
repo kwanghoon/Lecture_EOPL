@@ -1,0 +1,2 @@
+let x = new(proc(self) print(200))
+in print(100)

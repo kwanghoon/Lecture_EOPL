@@ -1,8 +1,11 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
 module Expr(Program,Exp(..),Identifier,UnaryOp(..)) where
 
 import ActorName(ActorName)
+import GHC.Generics (Generic)
+import Data.Binary (Binary)
 
 type Program = Exp
   
@@ -42,8 +45,13 @@ data Exp =
   -- Logging
   | Log_Exp String Exp
   
-  deriving Show
+  deriving (Show, Generic)
 
-data UnaryOp = IsZero | IsNull | Car | Cdr | Print | Read deriving Show
+instance Binary Exp
+
+data UnaryOp = IsZero | IsNull | Car | Cdr | Print | Read 
+  deriving (Show, Generic)
+
+instance Binary UnaryOp
 
 type Identifier = String
