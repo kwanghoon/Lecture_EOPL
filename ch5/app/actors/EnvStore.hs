@@ -21,8 +21,8 @@ data Env =
     Empty_env
   | Extend_env ActorId Identifier DenVal Env
   | Extend_env_rec [(Identifier,ActorId,Identifier,Exp)] Env
-  | Serialized_env ActorId Identifier Env
-  deriving (Generic)
+--  | Serialized_env ActorId Identifier Env
+  deriving (Show, Generic)
 
 instance Binary Env
 
@@ -61,24 +61,6 @@ lookup_env (Extend_env_rec idActoridIdExpList saved_env) search_var =
     (saved_actor:_) -> saved_actor
     []     -> lookup_env saved_env search_var
 
--- serialize
--- 원격 액터에 실행할 식을 보낼 때 env도 함께 넘겨줘야 함 
---    : send pid (StartActor (ActorBehavior x body env1 actors))
--- env에 Extend_env_rec가 존재하면 직렬화 불가
--- 따라서 변수(함수) 이름 + 정의된 위치만 보존하도록 변경
-convert_rec_to_serialized :: Env -> Env
-convert_rec_to_serialized env = case env of
-  Empty_env -> Empty_env
-  Extend_env pid var loc saved_env ->
-    Extend_env pid var loc (convert_rec_to_serialized saved_env)
-  Serialized_env pid fname saved_env -> 
-    Serialized_env pid fname (convert_rec_to_serialized saved_env)
-  Extend_env_rec bindings saved_env ->
-    let serializedChain = foldr (\(fname, pid, _,_) acc -> Serialized_env pid fname acc)
-                                (convert_rec_to_serialized saved_env)
-                                bindings
-    in serializedChain
-
 
 -- Expressed values
 data ExpVal =
@@ -88,8 +70,9 @@ data ExpVal =
   | List_Val  {expval_list :: [ExpVal]}
   | Mutex_Val {expval_mutex :: Mutex }        -- Mutex {Loc to Bool, Loc to Queue Thread}
 --  | Queue_Val {expval_queue :: Queue Thread}  -- (newref queue); newref takes an Expval arg!
-  | Actor_Val {expval_actor :: ActorId}
+  | Actor_Val  {expval_actor :: ActorId}
   | String_Val {expval_string :: String}
+  | Loc_Val    {expval_loc :: RemoteLocation} -- location that returned by remote procedure creation
   | Unit_Val  -- for dummy value
 
 instance Show ExpVal where
@@ -101,6 +84,7 @@ instance Show ExpVal where
 --  show (Queue_Val queue) = show "queue"
   show (Actor_Val actor) = "actor" ++ show actor
   show (String_Val str) = show str
+  show (Loc_Val remoteLoc) = "loc" ++ show (loc remoteLoc) ++ " aid" ++ show (actorId remoteLoc)
   show (Unit_Val) = "dummy"
 
 instance Binary ExpVal where
@@ -110,8 +94,9 @@ instance Binary ExpVal where
   put (Bool_Val b) = do
     put (1 :: Word8)
     put b
-  put (Proc_Val _) =
-    error "need to implement"
+  put (Proc_Val p) = do
+    put (2 :: Word8)
+    put p
   put (List_Val xs) = do
     put (3 :: Word8)
     put (length xs)
@@ -124,19 +109,28 @@ instance Binary ExpVal where
   put (String_Val s) = do
     put (7 :: Word8)
     put s
-  put Unit_Val = put (8 :: Word8)
+  put (Loc_Val remoteLoc) = do
+    put (8 :: Word8)
+    put (loc remoteLoc)
+    put (actorId remoteLoc)
+  put Unit_Val = put (9 :: Word8)
 
   get = do
     tag <- get :: Get Word8
     case tag of
       0 -> Num_Val <$> get
       1 -> Bool_Val <$> get
+      2 -> Proc_Val <$> get
       3 -> do
         len <- get
         List_Val <$> replicateM len get
       6 -> Actor_Val <$> get
       7 -> String_Val <$> get
-      8 -> return Unit_Val
+      8 -> do
+        loc <- get
+        aid <- get
+        return (Loc_Val (RemoteLocation loc aid))
+      9 -> return Unit_Val
       _ -> error "instance Binary ExpVal"
 
 type FinalAnswer = ExpVal 
@@ -147,11 +141,26 @@ type Location = Integer
 -- Denoted values   
 type DenVal = Location
 
+
 -- Procedure values : data structures
-data Proc = Procedure {actor_name :: ActorId, var :: Identifier, body :: Exp, saved_env :: Env}
+data Proc = Procedure {saved_actor :: ActorId, var :: Identifier, body :: Exp, saved_env :: Env}
+  deriving (Generic)
+
+instance Binary Proc
 
 procedure :: ActorId -> Identifier -> Exp -> Env -> Proc
 procedure actorId var body env = Procedure actorId var body env
+
+
+-- Remote location : location + actor id
+data RemoteLocation = RemoteLocation { loc :: Location, actorId :: ActorId }
+  deriving (Show, Typeable, Generic)
+
+instance Binary RemoteLocation
+
+remoteLocation :: Location -> ActorId -> RemoteLocation
+remoteLocation loc aid = RemoteLocation { loc = loc, actorId = aid }
+
 
 -- Mutex values : boolean and thread queue
 data Mutex = Mutex Location Location -- binary semaphores: Loc to Bool, Loc to (Queue Thread)
@@ -184,13 +193,12 @@ setref store@(next,s) loc v = (next,update s)
 initStore :: Store
 initStore = (1,[])
 
+
 -- Actors
 type ActorId = ProcessId
 
 data ActorState = ActorState { mainNode :: NodeId } 
   deriving (Generic)
-
-instance Binary ActorState
 
 initActorState :: NodeId -> ActorState
 initActorState mainNid = ActorState { mainNode = mainNid }
@@ -198,16 +206,27 @@ initActorState mainNid = ActorState { mainNode = mainNid }
 data ActorBehavior = ActorBehavior Identifier Exp Env ActorState
   deriving (Generic, Typeable)
 
-instance Binary ActorBehavior
-
-data ActorMessage = StartActor ActorBehavior
+data ActorMessage = StartActor ActorBehavior ActorId
   deriving (Generic, Typeable)
 
+instance Binary ActorState
+instance Binary ActorBehavior
 instance Binary ActorMessage
 
--- For actor
---   value_of_k :: Exp -> Env -> Cont -> Store -> SchedState 
---                       -> ActorState -> (FinalAnswer, Store)
+
+-- Messages
+data RemoteMessage = 
+    RemoteVar (Exp, Env) ActorId
+  | RemoteSet (Identifier, ExpVal) ActorId
+  | RemoteProc Exp ActorId
+  | RemoteCall (ExpVal, ExpVal) ActorId
+  deriving (Show, Typeable, Generic)
+
+data ReturnMessage = ReturnMessage ExpVal
+  deriving (Show, Typeable, Generic)
+
+instance Binary RemoteMessage
+instance Binary ReturnMessage
 
 
 -- For tuple

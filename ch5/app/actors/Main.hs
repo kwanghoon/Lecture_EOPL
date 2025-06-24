@@ -133,6 +133,8 @@ runMainNode addrStr fileName = do
     result <- value_of_program expression
     liftIO $ putStrLn ("[Process@" ++ show pid ++ "] Final result: " ++ show result)
 
+    forever $ liftIO $ threadDelay maxBound
+
 waitForStartCommand :: NodeId -> NodeRegistry -> IO ()
 waitForStartCommand mNid nodesRegistry = do
   printPrompt mNid
@@ -195,14 +197,16 @@ nodeListener = do
   liftIO $ putStrLn $ "[Process@" ++ show self ++ "] nodeListener started."
   forever $ do
     receiveWait
-      [ match $ \(StartActor (ActorBehavior x body env actors)) -> do
-          _ <- spawnLocal ( do
+      [ match $ \(StartActor (ActorBehavior x body env actors) requester) -> do
+          liftIO $ putStrLn $ "[Process@" ++ show self ++ "] Received StartActor message"
+          pid <- spawnLocal ( do
               self <- getSelfPid
+              liftIO $ putStrLn $ "[Process@" ++ show self ++ "] SpawnLocal"
               let (loc, store1) = newref initStore (Actor_Val self)
                   env1 = extend_env self x loc env
               _ <- value_of_k body env1 End_Main_Thread_Cont store1 actors
-              return () )
-          return ()
+              forever $ liftIO $ threadDelay maxBound )
+          send requester pid
       ]
 
     
