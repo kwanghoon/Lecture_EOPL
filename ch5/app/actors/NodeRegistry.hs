@@ -14,6 +14,7 @@ module NodeRegistry
 import Control.Concurrent.STM
 import Control.Concurrent.STM.TVar
 import Control.Distributed.Process
+import Control.Distributed.Process.Closure
 import Data.Binary
 import Data.Typeable
 import GHC.Generics
@@ -47,7 +48,7 @@ assignNode registry = do
   nids <- readTVar registry
   case nids of
     (nid:rest) -> do
-      writeTVar registry (rest ++ [nid])
+      writeTVar registry (rest)
       return (Just nid)
     [] -> return Nothing
 

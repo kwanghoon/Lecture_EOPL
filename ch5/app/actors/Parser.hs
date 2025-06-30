@@ -8,6 +8,9 @@ import CommonParserUtil
 import Token
 import Expr
 
+import Data.List (unfoldr)
+
+
 -- | Utility
 rule prodRule action              = (prodRule, action, Nothing  )
 ruleWithPrec prodRule action prec = (prodRule, action, Just prec)
@@ -29,6 +32,11 @@ parserSpec = ParserSpec
       
       rule "Expression -> - integer_number"
         (\rhs -> return $ PETExp (Const_Exp (-(read (getText rhs 2) :: Int)))),
+
+      rule "Expression -> string"
+        (\rhs -> let raw = init (tail (getText rhs 1))
+                     decoded = decodeEscapes raw
+                 in return $ PETExp (Str_Exp decoded)),
       
       rule "Expression -> - ( Expression , Expression )"
         (\rhs -> return $ PETExp (Diff_Exp (expFrom (get rhs 3)) (expFrom (get rhs 5)))),
@@ -40,7 +48,7 @@ parserSpec = ParserSpec
       
       rule "Expression -> let identifier = Expression in Expression"
         (\rhs -> return $ PETExp (Let_Exp (getText rhs 2) (expFrom (get rhs 4)) (expFrom (get rhs 6)))),
-
+      
       rule "Expression -> letrec ArbiNumberOfUnaryProcs in Expression"
         (\rhs -> let Letrec_Exp recbinds _ = (expFrom (get rhs 2)) in
                    return $ PETExp (Letrec_Exp recbinds (expFrom (get rhs 4)))),
@@ -112,8 +120,20 @@ parserSpec = ParserSpec
       rule "Expression -> cdr ( Expression )"
         (\rhs -> return $ PETExp (Unary_Exp Cdr (expFrom (get rhs 3)))),
 
-      rule "Expression -> print ( Expression )"
-        (\rhs -> return $ PETExp (Unary_Exp Print (expFrom (get rhs 3)))),
+      rule "Expression -> print ( PrintExpression )"
+        (\rhs -> do let exprs = expListFrom (get rhs 3)
+                    return $ PETExp $
+                      case exprs of
+                        [single] -> Unary_Exp Print single
+                        _        -> Block_Exp (map (Unary_Exp Print) exprs)),
+
+      rule "PrintExpression -> Expression"
+        (\rhs -> return $ PETExpList [expFrom (get rhs 1)]),
+
+      rule "PrintExpression -> PrintExpression ++ PrintExpression"
+        (\rhs -> let PETExpList es1 = get rhs 1
+                     PETExpList es2 = get rhs 3
+                 in return $ PETExpList (es1 ++ es2)),
 
       rule "Expression -> read ( )"
         (\rhs -> return $ PETExp (Unary_Exp Read (Const_Exp 0))), -- dummy Exp
@@ -160,6 +180,10 @@ parserSpec = ParserSpec
       rule "Expression -> let ( IdentifierList ) = Expression in Expression"
         (\rhs -> return $ PETExp (LetTuple_Exp (idListFrom (get rhs 3)) (expFrom (get rhs 6)) (expFrom (get rhs 8)))),
 
+      -- Tuple Append
+      rule "Expression -> append ( identifier , Expression )"
+        (\rhs -> return $ PETExp (Append_Exp (getText rhs 3) (expFrom (get rhs 5)))),
+
       -- IdentifierList :: [String]
       rule "IdentifierList -> "
         (\rhs -> return $ PETIdList []),
@@ -168,7 +192,7 @@ parserSpec = ParserSpec
         (\rhs -> return $ PETIdList [getText rhs 1]),
       
       rule "IdentifierList -> identifier , IdentifierList"
-        (\rhs -> return $ PETIdList (getText rhs 1 : idListFrom (get rhs 3)) ),
+        (\rhs -> return $ PETIdList (getText rhs 1 : idListFrom (get rhs 3))),
 
       rule "OptIdentifier -> "
         (\_ -> return $ PETOptIdentifier Nothing),
@@ -189,4 +213,16 @@ data PET =
     PETExp { expFrom :: Exp } 
   | PETIdList { idListFrom :: [String] }
   | PETOptIdentifier { optIdFrom :: Maybe Identifier }
+  | PETExpList { expListFrom :: [Exp] }
   deriving (Show)
+
+
+decodeEscapes :: String -> String
+decodeEscapes [] = []
+decodeEscapes ('\\':'n':xs)  = '\n' : decodeEscapes xs
+decodeEscapes ('\\':'t':xs)  = '\t' : decodeEscapes xs
+decodeEscapes ('\\':'r':xs)  = '\r' : decodeEscapes xs
+decodeEscapes ('\\':'\\':xs) = '\\' : decodeEscapes xs
+decodeEscapes ('\\':'"':xs)  = '\"' : decodeEscapes xs
+decodeEscapes ('\\':x:xs)    = x : decodeEscapes xs
+decodeEscapes (x:xs)         = x : decodeEscapes xs

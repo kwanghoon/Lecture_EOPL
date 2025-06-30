@@ -14,6 +14,7 @@ import Expr
 import EnvStore
 import Interp
 import NodeRegistry
+import DynamicMessage
 
 import System.IO
 import System.Environment (getArgs)
@@ -32,6 +33,7 @@ import GHC.Generics (Generic)
 import Data.Binary (Binary)
 import Data.Typeable
 import Data.Char (toLower)
+import Data.List (isPrefixOf, isInfixOf)
 
 
 -- Entrypoint :
@@ -43,7 +45,8 @@ main = do
   case args of
     ("main":addrStr:fileName:_)     -> runMainNode addrStr fileName
     ("node":addrStr:mainAddrStr:_)  -> runRemoteNode addrStr mainAddrStr
-    _                               -> putStrLn "Usage:\n  actors-exe main <ip:port> <file>\n  actors-exe node <ip:port>"
+    ("dynamic-node":addrStr:mainAddrStr:_) -> runDynamicNode addrStr mainAddrStr
+    _                               -> putStrLn "Usage:\n  actors-exe main <ip:port> <file>\n actors-exe node <ip:port> <ip:port>\n actors-exe dynamic-node <ip:port> <ip:port>"
 
 
 -- Main Node :
@@ -65,7 +68,7 @@ runMainNode addrStr fileName = do
 
   mvar <- newEmptyMVar              -- just for prompt
 
-  -- Background listener
+  -- Background 1 : 정적 노드 레지스트리 프로세스
   _ <- forkIO $ runProcess node $ do
     mNid <- getSelfNode
     liftIO $ putMVar mvar mNid      -- just for prompt
@@ -73,7 +76,7 @@ runMainNode addrStr fileName = do
     -- "nodeRegistry"라는 이름으로 현재 프로세스 등록
     self <- getSelfPid
     register "nodeRegistry" self
-    liftIO $ putStrLn $ "[Main@" ++ show mNid ++ "] Node registry process started."
+    liftIO $ putStrLn $ "[Backgournd1@" ++ show mNid ++ "] Node registry process started."
 
     -- 무한 루프 : 
     --    1. 노드 등록 (stack run actors-exe node ...)
@@ -88,7 +91,7 @@ runMainNode addrStr fileName = do
                 _ <- monitorNode nid
                 liftIO $ atomically $ registerNode nid nodesRegistry
                 liftIO $ do
-                  putStrLn $ "\n[Main@" ++ show mNid ++ "] Registered node: " ++ show nid
+                  putStrLn $ "\n[Background1@" ++ show mNid ++ "] Registered node: " ++ show nid
                   printPrompt mNid
 
               -- 노드 할당 요청 처리
@@ -97,26 +100,56 @@ runMainNode addrStr fileName = do
                 case nids of
                   Just nid -> do
                     send requester (AssignNode nid)
-                    liftIO $ putStrLn $ "[Main@" ++ show mNid ++ "] Assigned node: " ++ show nid
+                    liftIO $ putStrLn $ "[Background1@" ++ show mNid ++ "] Assigned node: " ++ show nid
                   Nothing -> do
                     send requester AssignSelf
-                    liftIO $ putStrLn $ "[Main@" ++ show mNid ++ "] No available node"
+                    liftIO $ putStrLn $ "[Background1@" ++ show mNid ++ "] No available node"
           ,
           -- 다운된 노드 감지 시 레지스트리에서 제거
           match $ \(NodeMonitorNotification reason downedNode _) -> do
             liftIO $ atomically $ removeNode downedNode nodesRegistry
-            liftIO $ putStrLn $ "\n[Main@" ++ show mNid ++ "] Node down: " ++ show downedNode ++ " removed"
+            liftIO $ putStrLn $ "\n[Background1@" ++ show mNid ++ "] Node down: " ++ show downedNode ++ " removed"
         ]
 
   mNid <- takeMVar mvar       -- just for prompt
+
+  -- Background 2 : 동적 노드 레지스트리 프로세스
+  _ <- forkIO $ runProcess node $ do
+    self <- getSelfPid
+    nid <- getSelfNode
+    register "dynamicNodeRegistry" self
+
+    liftIO $ putStrLn $ "[Background2@" ++ show nid ++ "] Starting dynamic node"
+
+    -- 파일에서 behavior 이름 추출
+    text <- liftIO $ readFile fileName
+    let behaviorNames = extractBehaviorNames text  -- e.g., ["serverBehavior", "clientBehavior"]
+    
+    -- 초기 저장소: main 노드가 자신 pid를 "main"에 바인딩
+    pidMapVar <- liftIO $ atomically $ newTVar [("main", self)]
+
+    -- 메시지 수신 루프:
+    forever $ receiveWait
+      [ match (\(msg :: DynamicMessage) -> case msg of
+          RequestBehaviorList from -> 
+            send from (BehaviorList behaviorNames)
+          RequestPidMap from -> do
+            currentMap <- liftIO $ atomically $ readTVar pidMapVar
+            send from (RespondPidMap currentMap)
+          RegisterNamedPid name pid -> do
+            liftIO $ atomically $ modifyTVar' pidMapVar (\m -> (name, pid) : filter ((/= name) . fst) m)
+            liftIO $ putStrLn $ "[Background2@" ++ show nid ++ "] Registered: " ++ name ++ " for " ++ show pid )
+      ]
 
   -- wait for user command (start or status)
   putStrLn $ "[Main@" ++ show mNid ++ "] Waiting for command ..."
   waitForStartCommand mNid nodesRegistry
 
+
   -- Run the interpreter (by start command)
   runProcess node $ do
     pid <- getSelfPid
+    register "dynamicMainInterp" pid
     liftIO $ putStrLn fileName
     text <- liftIO $ readFile fileName
     let debugFlag = False
@@ -131,7 +164,7 @@ runMainNode addrStr fileName = do
     liftIO $ print expression
 
     result <- value_of_program expression
-    liftIO $ putStrLn ("[Process@" ++ show pid ++ "] Final result: " ++ show result)
+    liftIO $ putStrLn ("[Main@" ++ show pid ++ "] Final result: " ++ show result)
 
     forever $ liftIO $ threadDelay maxBound
 
@@ -153,6 +186,14 @@ printPrompt :: NodeId -> IO ()
 printPrompt mNid = do
   putStrLn $ "[Main@" ++ show mNid ++ "] Type 'start' or 'status'"
   hFlush stdout
+
+-- e.g. "let serverBehavior = proc(self) ..." 형태 탐지
+extractBehaviorNames :: String -> [String]
+extractBehaviorNames = map extractName . filter isBehaviorDef . lines
+  where
+    isBehaviorDef line = "let " `isPrefixOf` line && "Behavior = proc" `isInfixOf` line
+    extractName line = takeWhile (/= ' ') . drop 4 $ line  -- skip "let "
+
 
 
 -- Remote node :
@@ -209,43 +250,98 @@ nodeListener = do
           send requester pid
       ]
 
+
+
+runDynamicNode :: String -> String -> IO ()
+runDynamicNode addrStr mainAddrStr = do
+  let (host, portStr)         = break (== ':') addrStr
+      (mainHost, mainPortStr) = break (== ':') mainAddrStr
+  Right transport <- createTransport (defaultTCPAddr host (tail portStr)) defaultTCPParameters
+  node <- newLocalNode transport initRemoteTable
+
+  runProcess node $ do
+    self <- getSelfPid
+    let mainNodeId = NodeId (EndPointAddress (BS.pack (mainAddrStr ++ ":0")))
+
+    -- main 노드의 registry 찾기
+    whereisRemoteAsync mainNodeId "dynamicNodeRegistry"
+    reply <- expect
+    (registryPid, behaviors) <- case reply of
+      (WhereIsReply "dynamicNodeRegistry" (Just pid)) -> do
+        send pid (RequestBehaviorList self)
+        BehaviorList behaviors <- expect
+        return (pid, behaviors)
+      (WhereIsReply "dynamicNodeRegistry" Nothing) -> do
+        liftIO $ putStrLn "Registry not found on main node!"
+        error "Registry lookup failed"
+      _ -> do
+        liftIO $ putStrLn $ "Unexpected reply: " ++ show reply
+        error "Unexpected reply to whereisRemoteAsync"
+
+    -- 선택 요청
+    (behaviorName, actorVar) <- liftIO $ promptForBehaviorAndVar behaviors
+
+    -- 선택 후 서버에 등록 요청 및 바인딩 요청
+    send registryPid (RegisterNamedPid actorVar self)
+
+    -- 최신 바인딩 맵을 받음
+    send registryPid (RequestPidMap self)
+    RespondPidMap pidMap <- expect
+
+    -- main 노드의 interpreter에 env, store 요청
+    whereisRemoteAsync mainNodeId "dynamicMainInterp"
+    reply <- expect
+    (env, store) <- case reply of
+      (WhereIsReply "dynamicMainInterp" (Just pid)) -> do
+        send pid (RequestEnvStore self)
+        RespondEnvStore (env, store) <- expect
+        return (env, store)
+      (WhereIsReply "dynamicMainInterp" Nothing) -> do
+        liftIO $ putStrLn "Registry not found on main node!"
+        error "Registry lookup failed"
+      _ -> do
+        liftIO $ putStrLn $ "Unexpected reply: " ++ show reply
+        error "Unexpected reply to whereisRemoteAsync"
+
+    let (loc, store1) = apply_env env store behaviorName
+        proc = deref store1 loc
+        savedVar = var (expval_proc proc)
+        savedBody = body (expval_proc proc)
+        savedEnv = saved_env (expval_proc proc)
+
+    -- 여러 (이름, PID) 바인딩을 누적해서 전체 Exp 조립
+    let allPidBindings = pidMap ++ [(savedVar, self)]
+        exp = buildPidBindings allPidBindings savedBody
     
+    _ <- value_of_k exp savedEnv End_Main_Thread_Cont initStore (initActorState mainNodeId)
 
--- main :: IO ()
--- main =
---  do args <- getArgs
---     _main args
-
-
--- _main [] = return ()
--- _main (fileName:args) = 
---   case fileName of
---     _ -> do _ <- doProcess True fileName
---             _main args
+    liftIO $ putStrLn ("[Process@" ++ show self ++ "] Done.")
+    forever $ liftIO $ threadDelay maxBound
 
 
--- doProcess verbose fileName = do
---   putStrLn fileName
---   text <- readFile fileName
---   let debugFlag = False
-        
---   pet <-
---     parsing debugFlag
---        parserSpec ((), 1, 1, text)
---        (aLexer lexerSpec)
---        (fromToken (endOfToken lexerSpec))
+promptForBehaviorAndVar :: [String] -> IO (String, String)
+promptForBehaviorAndVar available = do
+  putStrLn "\nAvailable behaviors:"
+  mapM_ putStrLn available
+  putStr "Enter behavior name exactly as listed: "
+  hFlush stdout
+  behaviorName <- getLine
+  if behaviorName `notElem` available
+    then do
+      putStrLn "Invalid behavior name. Please try again."
+      promptForBehaviorAndVar available
+    else do
+      putStr "Enter variable name to bind this actor to : "
+      hFlush stdout
+      varName <- getLine
+      if null varName
+        then do
+          putStrLn "Variable name cannot be empty. Try again."
+          promptForBehaviorAndVar available
+        else return (behaviorName, varName)
 
---   let expression = expFrom pet
-  
---   putStrLn (show expression)
-
---   -- val <- value_of_program expression timeslice
---   -- putStrLn (show val)
-
---   -- Transport and LocalNode for distributed-process
---   Right transport <- createTransport (defaultTCPAddr "127.0.0.1" "8080") defaultTCPParameters
---   node <- newLocalNode transport initRemoteTable
-
---   runProcess node $ do
---     result <- value_of_program expression
---     liftIO $ print result
+-- 여러 pid 바인딩을 중첩된 let으로 조립
+buildPidBindings :: [(String, ProcessId)] -> Exp -> Exp
+buildPidBindings [] body = body
+buildPidBindings ((name, pid):rest) body =
+  Let_Exp name (Pid_Exp pid) (buildPidBindings rest body)

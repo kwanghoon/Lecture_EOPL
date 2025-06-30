@@ -1,0 +1,27 @@
+let a = new (proc(self)
+                letrec recv (msg) =
+                    let (head, tail) = msg in
+                    if zero?(-(head, 0))
+                    then
+                        let (content, from) = tail in
+                        begin
+                            print(content);
+                            print(from);
+                            print(tail);
+                            ready(recv)
+                        end
+                    else
+                        begin
+                            print(msg);
+                            ready(recv)
+                        end
+                in ready(recv)
+            )
+in
+letrec getline (d) = 
+    let msg = read() in
+    begin
+        send(a, (0,(msg,d)));
+        (getline 100)
+    end
+in (getline 100)

@@ -25,12 +25,15 @@ lexerSpec = LexerSpec
 
         ("[0-9]+"  , mkFn INTEGER_NUMBER),
 
-        ("\"[^\"]*\""      , mkFn STRING),
+        --("\"[^\"]*\""      , mkFn STRING),
+        --("\""      , init_string_literal),
+        ("\"([^\"\\\\]|\\\\.)*\"", mkFn STRING),
         
         ("\\-"     , mkFn SUB),
         ("\\("     , mkFn OPEN_PAREN),
         ("\\)"     , mkFn CLOSE_PAREN),
         ("\\,"     , mkFn COMMA),
+        ("\\+\\+"  , mkFn PLUSPLUS),
         
         ("\\="     , mkFn EQ),
         
@@ -77,6 +80,7 @@ keywords =
   , ("ready",  READY)
   , ("new",    NEW)
   , ("log",    LOG)
+  , ("append", APPEND)
   ]
   
 -- Invariant: text = "/*..."  
@@ -101,21 +105,23 @@ multiLineCommentBegin = \text0 -> -- /*
 init_string_literal :: LexAction Token IO ()          -- String -> Maybe Token
 init_string_literal = \text0 -> 
   do  (state_parm_, line, col, text) <- ST.get
-      lift $ putStrLn [head text]
       (newLine, newCol, newText, newStr) <- isl (tail text) line (col+1) ""
       ST.put (state_parm_, newLine, newCol, newText)
-      lift $ putStrLn newStr
-      lift $ print (newLine, newCol)
-      return (Just STRING) -- mkFn STRING ("\"" ++ newStr ++ "\"")
+      mkFn STRING ("\"" ++ newStr ++ "\"")  -- return (Just STRING)
 
   where
     isl [] line col accu = return (line, col, [], accu)
-    isl ('\"':text) line col accu = 
-      do lift $ putStrLn ("\"")
+    isl ('\"':text) line col accu = do 
          return (line, col+1, text, reverse accu)
-    isl ('\\':ch:text) line col accu = 
-      do lift $ putStrLn ("\\" ++ [ch])
-         isl text line (col+2) (ch : accu)
-    isl (ch:text) line col accu = 
-      do lift $ putStrLn [ch]
-         isl text line (col+1) (ch : accu)
+    isl ('\\':ch:text) line col accu = do
+         let escapedChar = case ch of
+                'n'  -> '\n'
+                't'  -> '\t'
+                '\\' -> '\\'
+                '\"' -> '\"'
+                _    -> ch
+         isl text line (col+2) (escapedChar : accu)
+    isl (ch:text) line col accu = do
+         --isl text line (col+1) (ch : accu)
+         let (newLine, newCol) = if ch == '\n' then (line + 1, 1) else (line, col + 1)
+         isl text newLine newCol (ch : accu)
