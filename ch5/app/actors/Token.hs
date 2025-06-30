@@ -50,6 +50,7 @@ data Token =
   | CDR                         -- cdr
   | PRINT                       -- print
   | READ                        -- read
+  | PLUSPLUS                    -- ++
 
   | TRY                         -- try
   | CATCH                       -- catch
@@ -62,6 +63,8 @@ data Token =
 
   | LOG
   | STRING
+
+  | APPEND
 
   deriving (Eq, Show)
 
@@ -112,6 +115,7 @@ tokenStrList =
     (CDR,    "cdr"),
     (PRINT,  "print"),
     (READ,   "read"),
+    (PLUSPLUS, "++"),
 
     (TRY,    "try"),
     (CATCH,  "catch"),
@@ -122,7 +126,9 @@ tokenStrList =
     (NEW,    "new"),
     (EQACTOR, "actor?"),
 
-    (LOG, "log")
+    (LOG, "log"),
+
+    (APPEND, "append")
   ]
 
 findTok tok [] = Nothing

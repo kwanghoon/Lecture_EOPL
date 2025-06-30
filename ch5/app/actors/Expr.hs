@@ -6,12 +6,15 @@ module Expr(Program,Exp(..),Identifier,UnaryOp(..)) where
 import ActorName(ActorName)
 import GHC.Generics (Generic)
 import Data.Binary (Binary)
+import Control.Distributed.Process(ProcessId)
 
 type Program = Exp
   
 
 data Exp =
     Const_Exp  Int
+  | Str_Exp    String
+  | Pid_Exp    ProcessId
   | Diff_Exp   Exp Exp
   | If_Exp     Exp Exp Exp
   | Var_Exp    Identifier                 -- variable : x
@@ -41,6 +44,7 @@ data Exp =
   -- For Tuple
   | Tuple_Exp [ Exp ]                     -- ( expression1, ..., expressionk )
   | LetTuple_Exp [ Identifier ] Exp Exp   -- let x1, ..., xk = expression in expression
+  | Append_Exp Identifier Exp             -- append ( var , exp2 )
 
   -- Logging
   | Log_Exp String Exp

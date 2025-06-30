@@ -1,0 +1,28 @@
+let registry = () in
+let a = new (proc(self)
+                letrec listen(msg) =
+                    begin
+                        print(msg);
+                        ready(listen)
+                    end
+                in ready(listen)
+            )
+in
+let b = new (proc(self)
+                letrec listen(msg) =
+                    begin
+                        print(msg);
+                        ready(listen)
+                    end
+                in ready(listen)
+            )
+in
+begin
+    print(registry);
+    append(registry, a);
+    append(registry, b);
+    send(a, 100);
+    send(b, 200);
+    send(registry, 300);
+    ready(proc(d)d)
+end

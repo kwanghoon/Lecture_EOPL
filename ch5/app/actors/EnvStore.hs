@@ -4,7 +4,7 @@
 module EnvStore where
 
 import Expr (Identifier,Exp)
-import Data.List(intersperse, find)
+import Data.List(intersperse, intercalate, find)
 import Data.Maybe
 import Queue
 
@@ -74,16 +74,17 @@ data ExpVal =
   | String_Val {expval_string :: String}
   | Loc_Val    {expval_loc :: RemoteLocation} -- location that returned by remote procedure creation
   | Unit_Val  -- for dummy value
+  deriving (Generic, Typeable)
 
 instance Show ExpVal where
   show (Num_Val num)   = show num
   show (Bool_Val bool) = show bool
   show (Proc_Val proc) = show "<proc>"
-  show (List_Val nums) = show "[" ++ concat (intersperse "," (map show nums)) ++ show "]"
+  show (List_Val val) = "[" ++ intercalate "," (map show val) ++ "]"
   show (Mutex_Val mutex) = show mutex
 --  show (Queue_Val queue) = show "queue"
   show (Actor_Val actor) = "actor" ++ show actor
-  show (String_Val str) = show str
+  show (String_Val str) = str
   show (Loc_Val remoteLoc) = "loc" ++ show (loc remoteLoc) ++ " aid" ++ show (actorId remoteLoc)
   show (Unit_Val) = "dummy"
 
@@ -99,7 +100,7 @@ instance Binary ExpVal where
     put p
   put (List_Val xs) = do
     put (3 :: Word8)
-    put (length xs)
+    put (fromIntegral (length xs) :: Word32)
     mapM_ put xs
   put (Mutex_Val _) =
     error "need to implement"
@@ -122,8 +123,8 @@ instance Binary ExpVal where
       1 -> Bool_Val <$> get
       2 -> Proc_Val <$> get
       3 -> do
-        len <- get
-        List_Val <$> replicateM len get
+        len <- get :: Get Word32
+        List_Val <$> replicateM (fromIntegral len) get
       6 -> Actor_Val <$> get
       7 -> String_Val <$> get
       8 -> do

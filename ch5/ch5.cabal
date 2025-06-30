@@ -41,6 +41,7 @@ executable actors-exe
   main-is: Main.hs
   other-modules:
       ActorName
+      DynamicMessage
       EnvStore
       Expr
       Interp
@@ -147,6 +148,7 @@ test-suite actors-test
   main-is: Spec.hs
   other-modules:
       ActorName
+      DynamicMessage
       EnvStore
       Expr
       Interp
