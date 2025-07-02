@@ -34,6 +34,7 @@ lexerSpec = LexerSpec
         ("\\)"     , mkFn CLOSE_PAREN),
         ("\\,"     , mkFn COMMA),
         ("\\+\\+"  , mkFn PLUSPLUS),
+        ("\\=\\="  , mkFn EQEQ),
         
         ("\\="     , mkFn EQ),
         
@@ -47,7 +48,7 @@ lexerSpec = LexerSpec
         ("null\\?"   , mkFn ISNULL),
         ("actor\\?"  , mkFn EQACTOR),
         
-        ("[_a-zA-Z][_a-zA-Z0-9]*"    , keywordOrIdentifier)
+        ("[@]*[_a-zA-Z][_a-zA-Z0-9]*"    , keywordOrIdentifier)
       ]
   } 
 
