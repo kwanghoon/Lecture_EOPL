@@ -2,7 +2,6 @@ module Token(Token(..)) where
 
 import Prelude hiding(EQ)
 import TokenInterface
-import Expr (Exp(Send_Exp))
 
 data Token =
     END_OF_TOKEN
@@ -51,6 +50,7 @@ data Token =
   | PRINT                       -- print
   | READ                        -- read
   | PLUSPLUS                    -- ++
+  | EQEQ                        -- ==
 
   | TRY                         -- try
   | CATCH                       -- catch
@@ -64,7 +64,7 @@ data Token =
   | LOG
   | STRING
 
-  | APPEND
+  | APPEND                      -- append
 
   deriving (Eq, Show)
 
@@ -116,6 +116,7 @@ tokenStrList =
     (PRINT,  "print"),
     (READ,   "read"),
     (PLUSPLUS, "++"),
+    (EQEQ,     "=="),
 
     (TRY,    "try"),
     (CATCH,  "catch"),

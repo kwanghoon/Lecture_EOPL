@@ -29,7 +29,7 @@ parserSpec = ParserSpec
 
       rule "Expression -> integer_number"
         (\rhs -> return $ PETExp (Const_Exp (read (getText rhs 1) :: Int))),
-      
+
       rule "Expression -> - integer_number"
         (\rhs -> return $ PETExp (Const_Exp (-(read (getText rhs 2) :: Int)))),
 
@@ -37,7 +37,7 @@ parserSpec = ParserSpec
         (\rhs -> let raw = init (tail (getText rhs 1))
                      decoded = decodeEscapes raw
                  in return $ PETExp (Str_Exp decoded)),
-      
+
       rule "Expression -> - ( Expression , Expression )"
         (\rhs -> return $ PETExp (Diff_Exp (expFrom (get rhs 3)) (expFrom (get rhs 5)))),
 
@@ -45,10 +45,10 @@ parserSpec = ParserSpec
         (\rhs -> return $ PETExp (If_Exp (expFrom (get rhs 2)) (expFrom (get rhs 4)) (expFrom (get rhs 6)))),
 
       rule "Expression -> identifier" (\rhs -> return $ PETExp (Var_Exp (getText rhs 1))),
-      
+
       rule "Expression -> let identifier = Expression in Expression"
         (\rhs -> return $ PETExp (Let_Exp (getText rhs 2) (expFrom (get rhs 4)) (expFrom (get rhs 6)))),
-      
+
       rule "Expression -> letrec ArbiNumberOfUnaryProcs in Expression"
         (\rhs -> let Letrec_Exp recbinds _ = (expFrom (get rhs 2)) in
                    return $ PETExp (Letrec_Exp recbinds (expFrom (get rhs 4)))),
@@ -62,7 +62,14 @@ parserSpec = ParserSpec
                  in  return $ PETExp (Letrec_Exp (recbind:theRest) body)),
 
       rule "Expression -> proc OptIdentifier ( identifier ) Expression"
-        (\rhs -> return $ PETExp (Proc_Exp (optIdFrom (get rhs 2)) (getText rhs 4) (expFrom (get rhs 6)))),
+        (\rhs -> return $ 
+            case optIdFrom (get rhs 2) of
+              Nothing -> 
+                PETExp (Proc_Exp (optIdFrom (get rhs 2)) (getText rhs 4) (expFrom (get rhs 6)))     
+              Just ('@':roleVar) ->
+                PETExp (ProcAt_Exp roleVar (Proc_Exp (Just roleVar) (getText rhs 4) (expFrom (get rhs 6))))
+              Just actorName ->
+                PETExp (Proc_Exp (optIdFrom (get rhs 2)) (getText rhs 4) (expFrom (get rhs 6)))),
 
       rule "Expression -> ( Expression Expression )"
         (\rhs -> return $ PETExp (Call_Exp (expFrom (get rhs 2)) (expFrom (get rhs 3)))),
@@ -77,25 +84,10 @@ parserSpec = ParserSpec
         (\rhs -> return $
                    case expFrom (get rhs 3) of
                      Block_Exp exprs -> PETExp (Block_Exp (expFrom (get rhs 1) : exprs))),
-        
+
       rule "Expression -> set identifier = Expression"
         (\rhs -> return $ PETExp (Set_Exp (getText rhs 2) (expFrom (get rhs 4)))),
 
-      rule "Expression -> spawn ( Expression )"    -- key features
-        (\rhs -> return $ PETExp (Spawn_Exp (expFrom (get rhs 3)))),
-
-      rule "Expression -> yield ( )"               -- key features
-        (\rhs -> return $ PETExp Yield_Exp),
-      
-      rule "Expression -> mutex ( )"               -- key features
-        (\rhs -> return $ PETExp Mutex_Exp),
-      
-      rule "Expression -> wait ( Expression )"     -- key features
-        (\rhs -> return $ PETExp (Wait_Exp (expFrom (get rhs 3)))),
-      
-      rule "Expression -> signal ( Expression )"   -- key features
-        (\rhs -> return $ PETExp (Signal_Exp (expFrom (get rhs 3)))),
-      
       rule "Expression -> [ NumberList ]"          -- change: lists => [ ... ]
         (\rhs -> return $ get rhs 2),
 
@@ -107,10 +99,10 @@ parserSpec = ParserSpec
            let num           = read (getText rhs 1) :: Int
                Const_List_Exp nums = expFrom (get rhs 3) 
            in  return $ PETExp (Const_List_Exp (num : nums))),
-      
+
       rule "Expression -> zero? ( Expression )"
         (\rhs -> return $ PETExp (Unary_Exp IsZero (expFrom (get rhs 3)))),
-      
+
       rule "Expression -> null? ( Expression )"
         (\rhs -> return $ PETExp (Unary_Exp IsNull (expFrom (get rhs 3)))),
 
@@ -138,8 +130,8 @@ parserSpec = ParserSpec
       rule "Expression -> read ( )"
         (\rhs -> return $ PETExp (Unary_Exp Read (Const_Exp 0))), -- dummy Exp
 
-      rule "Expression -> log string Expression"
-        (\rhs -> return $ PETExp (Log_Exp (init (tail (getText rhs 2))) (expFrom (get rhs 3)))),
+      rule "Expression -> ( Expression == Expression )"
+        (\rhs -> return $ PETExp (Comp_Exp Eq (expFrom (get rhs 2)) (expFrom (get rhs 4)))),
 
       -- Actors
       rule "Expression -> send ( SendExpressionList )"
@@ -155,13 +147,14 @@ parserSpec = ParserSpec
 
       rule "Expression -> ready ( Expression )"
         (\rhs -> return $ PETExp (Ready_Exp (expFrom (get rhs 3)))),
-      
+
       rule "Expression -> new ( Expression )"
         (\rhs -> return $ PETExp (New_Exp (expFrom (get rhs 3)))),
 
-      rule "Expression -> actor? ( Expression , Expression )"
-        (\rhs -> return $ PETExp (Eq_Actor_Exp (expFrom (get rhs 3)) (expFrom (get rhs 5)))),
+      rule "Expression -> spawn ( Expression )"
+        (\rhs -> return $ PETExp (Spawn_Exp (expFrom (get rhs 3)))),
 
+      -- Tuples
       rule "Expression -> ( TupleExpressionList )"
         (\rhs -> return $ get rhs 2),
 
@@ -170,7 +163,7 @@ parserSpec = ParserSpec
 
       rule "TupleExpressionList -> Expression"
         (\rhs -> return $ PETExp (Tuple_Exp [expFrom (get rhs 1)])),
-      
+
       rule "TupleExpressionList -> Expression , TupleExpressionList"
         (\rhs -> return $
                    case expFrom (get rhs 3) of
@@ -180,19 +173,19 @@ parserSpec = ParserSpec
       rule "Expression -> let ( IdentifierList ) = Expression in Expression"
         (\rhs -> return $ PETExp (LetTuple_Exp (idListFrom (get rhs 3)) (expFrom (get rhs 6)) (expFrom (get rhs 8)))),
 
-      -- Tuple Append
-      rule "Expression -> append ( identifier , Expression )"
-        (\rhs -> return $ PETExp (Append_Exp (getText rhs 3) (expFrom (get rhs 5)))),
-
       -- IdentifierList :: [String]
       rule "IdentifierList -> "
         (\rhs -> return $ PETIdList []),
 
       rule "IdentifierList -> identifier"
         (\rhs -> return $ PETIdList [getText rhs 1]),
-      
+
       rule "IdentifierList -> identifier , IdentifierList"
         (\rhs -> return $ PETIdList (getText rhs 1 : idListFrom (get rhs 3))),
+      
+      -- Tuple Append
+      rule "Expression -> append ( identifier , Expression )"
+        (\rhs -> return $ PETExp (Append_Exp (getText rhs 3) (expFrom (get rhs 5)))),
 
       rule "OptIdentifier -> "
         (\_ -> return $ PETOptIdentifier Nothing),

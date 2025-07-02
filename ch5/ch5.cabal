@@ -41,7 +41,6 @@ executable actors-exe
   main-is: Main.hs
   other-modules:
       ActorName
-      DynamicMessage
       EnvStore
       Expr
       Interp
@@ -52,6 +51,7 @@ executable actors-exe
       Queue
       Scheduler
       Semaphores
+      SystemConstants
       Token
       Paths_ch5
   hs-source-dirs:
@@ -148,7 +148,6 @@ test-suite actors-test
   main-is: Spec.hs
   other-modules:
       ActorName
-      DynamicMessage
       EnvStore
       Expr
       Interp
@@ -160,6 +159,7 @@ test-suite actors-test
       Queue
       Scheduler
       Semaphores
+      SystemConstants
       Token
       Paths_ch5
   hs-source-dirs:

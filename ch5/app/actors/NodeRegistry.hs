@@ -1,6 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 
 module NodeRegistry
   ( NodeMessage(..)
@@ -11,14 +9,12 @@ module NodeRegistry
   , removeNode
   ) where
 
-import Control.Concurrent.STM
-import Control.Concurrent.STM.TVar
-import Control.Distributed.Process
-import Control.Distributed.Process.Closure
-import Data.Binary
-import Data.Typeable
-import GHC.Generics
-import Control.Distributed.Process.Serializable
+import Control.Concurrent.STM (STM)
+import Control.Concurrent.STM.TVar (TVar, newTVarIO, readTVar, writeTVar)
+import GHC.Generics (Generic)
+import Data.Binary (Binary)
+import Data.Typeable (Typeable)
+import Control.Distributed.Process (ProcessId, NodeId)
 
 -- Messages
 data NodeMessage
@@ -26,9 +22,7 @@ data NodeMessage
   | RequestNode ProcessId
   | AssignNode NodeId
   | AssignSelf
-  deriving (Show, Typeable, Generic)
-
-instance Binary NodeMessage
+  deriving (Generic, Binary, Typeable)
 
 type NodeRegistry = TVar [NodeId]
 

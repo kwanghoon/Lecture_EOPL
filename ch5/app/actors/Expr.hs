@@ -1,15 +1,15 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
-module Expr(Program,Exp(..),Identifier,UnaryOp(..)) where
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+module Expr(Program,Exp(..),Identifier,UnaryOp(..),CompOp(..)) where
 
-import ActorName(ActorName)
+import ActorName(ActorName, RoleName)
 import GHC.Generics (Generic)
 import Data.Binary (Binary)
 import Control.Distributed.Process(ProcessId)
 
 type Program = Exp
-  
+
 
 data Exp =
     Const_Exp  Int
@@ -22,40 +22,32 @@ data Exp =
   | Letrec_Exp
       [(Identifier, Maybe ActorName, Identifier,Exp)] Exp   -- letrec { ..., f_i actorName (x_i) = expression_i, ... } in expression
   | Proc_Exp   (Maybe ActorName) Identifier Exp             -- proc actorName ( identifier ) expression
-  | Call_Exp   Exp Exp                    -- ( expression expression)
+  | ProcAt_Exp RoleName Exp               -- proc @roleName ( identifier ) expression
+  | Call_Exp   Exp Exp                    -- ( expression expression )
   | Block_Exp  [ Exp ]                    -- begin exp1; ...; expk end
   | Set_Exp    Identifier Exp             -- set x = expression
-  | Spawn_Exp  Exp                        -- spawn ( expression )
-  | Yield_Exp                             -- yield ()
-  | Mutex_Exp                             -- mutex ()
-  | Wait_Exp  Exp                         -- wait ( expression )
-  | Signal_Exp  Exp                       -- signal ( expression )
-  | Const_List_Exp   [Int]                -- number list : [ number1, ..., numberk ]
+  | Const_List_Exp  [Int]                 -- number list : [ number1, ..., numberk ]
   | Unary_Exp  UnaryOp Exp                -- unop ( expression ) where unop is one of car, cdr, null?, zero? print
-  -- | Try_Exp    Exp Identifier Exp         -- try exp catch exn exp
-  -- | Raise_Exp  Exp                        -- raise exp
+  | Comp_Exp   CompOp Exp Exp             -- ( expression compOp expression )
 
   -- For Actors
-  | Send_Exp [ Exp ]                      -- send ( to , msgs ) -> send ( SendExpressionList )
-  | Ready_Exp Exp                         -- ready ( expression ) 
-  | New_Exp   Exp                         -- new ( expression )
-  | Eq_Actor_Exp Exp Exp                  -- actor? ( actor, actor )
+  | Send_Exp     [ Exp ]                  -- send ( to , msgs ) -> send ( SendExpressionList )
+  | Ready_Exp    Exp                      -- ready ( expression ) 
+  | New_Exp      Exp                      -- new ( expression )
+  | Spawn_Exp  Exp                        -- spawn ( expression )
 
   -- For Tuple
-  | Tuple_Exp [ Exp ]                     -- ( expression1, ..., expressionk )
+  | Tuple_Exp    [ Exp ]                  -- ( expression1, ..., expressionk )
   | LetTuple_Exp [ Identifier ] Exp Exp   -- let x1, ..., xk = expression in expression
-  | Append_Exp Identifier Exp             -- append ( var , exp2 )
+  | Append_Exp   Identifier Exp           -- append ( var , expression )
 
-  -- Logging
-  | Log_Exp String Exp
-  
-  deriving (Show, Generic)
+  deriving (Show, Generic, Binary)
 
-instance Binary Exp
 
-data UnaryOp = IsZero | IsNull | Car | Cdr | Print | Read 
-  deriving (Show, Generic)
+data UnaryOp = IsZero | IsNull | Car | Cdr | Print | Read
+  deriving (Show, Generic, Binary)
 
-instance Binary UnaryOp
+data CompOp = Eq                -- more comparison operators can be added here
+  deriving (Show, Generic, Binary, Eq)
 
 type Identifier = String
