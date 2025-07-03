@@ -77,16 +77,17 @@ toProcMap (Let_Exp id e1 e2) i m =
       (i2, m2, e2') = toProcMap e2 i1 m1
   in (i2, m2, Let_Exp id e1' e2')
 toProcMap (Letrec_Exp binds e) i m =
-  let (i1, m1, binds') = foldl (\(i', m', acc) (id, aname, arg, e1) ->
-        let (i2, m2, e1') = toProcMap e1 i' m'
-        in (i2, m2, (id, aname, arg, e1') : acc)) (i, m, []) binds
+  let (i1, m1, binds') = 
+        foldl (\(i', m', acc) (id, aname, arg, e1) ->
+          let (i2, m2, e1') = toProcMap e1 i' m'
+          in (i2, m2, (id, aname, arg, e1') : acc)) (i, m, []) binds
       (i2, m2, e') = toProcMap e i1 m1
   in (i2, m2, Letrec_Exp (reverse binds') e')
 toProcMap (Proc_Exp aname id e) i m =
   let (i1, m1, e') = toProcMap e i m
       i2 = i1 + 1
       m2 = Map.insert i1 (Proc_Exp aname id e') m1
-  in (i2, m2, PtrTo_Exp i1)
+  in (i2, m2, PtrTo_Exp i1) -- Most important change! 
 toProcMap (ProcAt_Exp role e) i m =
   let (i1, m1, e') = toProcMap e i m
   in (i1, m1, ProcAt_Exp role e')
@@ -95,10 +96,11 @@ toProcMap (Call_Exp e1 e2) i m =
       (i2, m2, e2') = toProcMap e2 i1 m1
   in (i2, m2, Call_Exp e1' e2')
 toProcMap (Block_Exp exps) i m =
-  let (i1, m1, exps') = foldl (\(i', m', acc) e ->
-        let (i2, m2, e') = toProcMap e i' m'
-        in (i2, m2, acc ++ [e'])) (i, m, []) exps
-  in (i1, m1, Block_Exp exps')
+  let (i1, m1, exps') = 
+        foldl (\(i', m', acc) e ->
+          let (i2, m2, e') = toProcMap e i' m'
+          in (i2, m2, e':acc)) (i, m, []) exps
+  in (i1, m1, Block_Exp (reverse exps'))
 toProcMap (Set_Exp id e) i m =
   let (i1, m1, e') = toProcMap e i m
   in (i1, m1, Set_Exp id e')
@@ -111,10 +113,11 @@ toProcMap (Comp_Exp op e1 e2) i m =
       (i2, m2, e2') = toProcMap e2 i1 m1
   in (i2, m2, Comp_Exp op e1' e2')
 toProcMap (Send_Exp exps) i m =
-  let (i1, m1, exps') = foldl (\(i', m', acc) e ->
-        let (i2, m2, e') = toProcMap e i' m'
-        in (i2, m2, acc ++ [e'])) (i, m, []) exps
-  in (i1, m1, Send_Exp exps')
+  let (i1, m1, exps') = 
+        foldl (\(i', m', acc) e ->
+          let (i2, m2, e') = toProcMap e i' m'
+          in (i2, m2, e':acc)) (i, m, []) exps
+  in (i1, m1, Send_Exp (reverse exps'))
 toProcMap (Ready_Exp e) i m =
   let (i1, m1, e') = toProcMap e i m
   in (i1, m1, Ready_Exp e')
