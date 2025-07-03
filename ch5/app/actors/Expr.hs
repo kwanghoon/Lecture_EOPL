@@ -54,14 +54,14 @@ data CompOp = Eq                -- more comparison operators can be added here
 
 type Identifier = String
 
--- expToProcMap
+-- toProcMap
 -- PtrTo_Exp가 없는 Exp를 PtrTo_Exp를 사용하는 Exp로 변환하는 함수
 -- Proc_Exp를 만나면 Proc_Exp를 PtrTo_Exp로 변환하고, 그 Proc_Exp를 Map에 저장한다.
 -- 이때 Map의 키는 Proc_Exp가 생성된 순서대로 증가하는 정수이다.
 toProcMap :: Exp -> Int -> Map.Map Int Exp -> (Int, Map.Map Int Exp, Exp)
 toProcMap (Const_Exp n) i m = (i, m, Const_Exp n)
 toProcMap (Str_Exp s) i m = (i, m, Str_Exp s)
-toProcMap (Pid_Exp p) i m = (i, m, Pid_Exp p) -- Something unexpected!
+toProcMap (Pid_Exp p) i m = (i, m, Pid_Exp p) 
 toProcMap (Diff_Exp e1 e2) i m =
   let (i1, m1, e1') = toProcMap e1 i m
       (i2, m2, e2') = toProcMap e2 i1 m1
@@ -127,4 +127,5 @@ toProcMap (New_Exp e) i m =
 toProcMap (Spawn_Exp e) i m =
   let (i1, m1, e') = toProcMap e i m
   in (i1, m1, Spawn_Exp e')
+toProcMap (PtrTo_Exp n) i m = (i, m, PtrTo_Exp n) -- Should not happen!   
   
