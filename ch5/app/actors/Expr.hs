@@ -7,6 +7,7 @@ import ActorName(ActorName, RoleName)
 import GHC.Generics (Generic)
 import Data.Binary (Binary)
 import Control.Distributed.Process(ProcessId)
+import qualified Data.Map as Map
 
 type Program = Exp
 
@@ -40,6 +41,7 @@ data Exp =
   | Tuple_Exp    [ Exp ]                  -- ( expression1, ..., expressionk )
   | LetTuple_Exp [ Identifier ] Exp Exp   -- let x1, ..., xk = expression in expression
   | Append_Exp   Identifier Exp           -- append ( var , expression )
+  | PtrTo_Exp Int 
 
   deriving (Show, Generic, Binary)
 
@@ -51,3 +53,75 @@ data CompOp = Eq                -- more comparison operators can be added here
   deriving (Show, Generic, Binary, Eq)
 
 type Identifier = String
+
+-- expToProcMap
+-- PtrTo_Exp가 없는 Exp를 PtrTo_Exp를 사용하는 Exp로 변환하는 함수
+-- Proc_Exp를 만나면 Proc_Exp를 PtrTo_Exp로 변환하고, 그 Proc_Exp를 Map에 저장한다.
+-- 이때 Map의 키는 Proc_Exp가 생성된 순서대로 증가하는 정수이다.
+toProcMap :: Exp -> Int -> Map.Map Int Exp -> (Int, Map.Map Int Exp, Exp)
+toProcMap (Const_Exp n) i m = (i, m, Const_Exp n)
+toProcMap (Str_Exp s) i m = (i, m, Str_Exp s)
+toProcMap (Pid_Exp p) i m = (i, m, Pid_Exp p) -- Something unexpected!
+toProcMap (Diff_Exp e1 e2) i m =
+  let (i1, m1, e1') = toProcMap e1 i m
+      (i2, m2, e2') = toProcMap e2 i1 m1
+  in (i2, m2, Diff_Exp e1' e2')
+toProcMap (If_Exp e1 e2 e3) i m =
+  let (i1, m1, e1') = toProcMap e1 i m
+      (i2, m2, e2') = toProcMap e2 i1 m1
+      (i3, m3, e3') = toProcMap e3 i2 m2
+  in (i3, m3, If_Exp e1' e2' e3')
+toProcMap (Var_Exp id) i m = (i, m, Var_Exp id)
+toProcMap (Let_Exp id e1 e2) i m =
+  let (i1, m1, e1') = toProcMap e1 i m
+      (i2, m2, e2') = toProcMap e2 i1 m1
+  in (i2, m2, Let_Exp id e1' e2')
+toProcMap (Letrec_Exp binds e) i m =
+  let (i1, m1, binds') = foldl (\(i', m', acc) (id, aname, arg, e1) ->
+        let (i2, m2, e1') = toProcMap e1 i' m'
+        in (i2, m2, (id, aname, arg, e1') : acc)) (i, m, []) binds
+      (i2, m2, e') = toProcMap e i1 m1
+  in (i2, m2, Letrec_Exp (reverse binds') e')
+toProcMap (Proc_Exp aname id e) i m =
+  let (i1, m1, e') = toProcMap e i m
+      i2 = i1 + 1
+      m2 = Map.insert i1 (Proc_Exp aname id e') m1
+  in (i2, m2, PtrTo_Exp i1)
+toProcMap (ProcAt_Exp role e) i m =
+  let (i1, m1, e') = toProcMap e i m
+  in (i1, m1, ProcAt_Exp role e')
+toProcMap (Call_Exp e1 e2) i m =
+  let (i1, m1, e1') = toProcMap e1 i m
+      (i2, m2, e2') = toProcMap e2 i1 m1
+  in (i2, m2, Call_Exp e1' e2')
+toProcMap (Block_Exp exps) i m =
+  let (i1, m1, exps') = foldl (\(i', m', acc) e ->
+        let (i2, m2, e') = toProcMap e i' m'
+        in (i2, m2, acc ++ [e'])) (i, m, []) exps
+  in (i1, m1, Block_Exp exps')
+toProcMap (Set_Exp id e) i m =
+  let (i1, m1, e') = toProcMap e i m
+  in (i1, m1, Set_Exp id e')
+toProcMap (Const_List_Exp nums) i m = (i, m, Const_List_Exp nums)
+toProcMap (Unary_Exp op e) i m =
+  let (i1, m1, e') = toProcMap e i m
+  in (i1, m1, Unary_Exp op e')
+toProcMap (Comp_Exp op e1 e2) i m =
+  let (i1, m1, e1') = toProcMap e1 i m
+      (i2, m2, e2') = toProcMap e2 i1 m1
+  in (i2, m2, Comp_Exp op e1' e2')
+toProcMap (Send_Exp exps) i m =
+  let (i1, m1, exps') = foldl (\(i', m', acc) e ->
+        let (i2, m2, e') = toProcMap e i' m'
+        in (i2, m2, acc ++ [e'])) (i, m, []) exps
+  in (i1, m1, Send_Exp exps')
+toProcMap (Ready_Exp e) i m =
+  let (i1, m1, e') = toProcMap e i m
+  in (i1, m1, Ready_Exp e')
+toProcMap (New_Exp e) i m =
+  let (i1, m1, e') = toProcMap e i m
+  in (i1, m1, New_Exp e')
+toProcMap (Spawn_Exp e) i m =
+  let (i1, m1, e') = toProcMap e i m
+  in (i1, m1, Spawn_Exp e')
+  

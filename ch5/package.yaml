@@ -24,6 +24,7 @@ dependencies:
 - yapb >= 0.2.3
 - hspec
 - transformers
+- containers
 
 library:
   source-dirs: src

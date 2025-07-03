@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -32,6 +32,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
     , hspec
     , transformers
     , yapb >=0.2.3
@@ -62,6 +63,7 @@ executable actors-exe
     , binary
     , bytestring
     , ch5
+    , containers
     , distributed-process
     , hspec
     , lens
@@ -91,6 +93,7 @@ executable exceptions-exe
   build-depends:
       base >=4.7 && <5
     , ch5
+    , containers
     , hspec
     , transformers
     , yapb >=0.2.3
@@ -113,6 +116,7 @@ executable letreccps-exe
   build-depends:
       base >=4.7 && <5
     , ch5
+    , containers
     , hspec
     , transformers
     , yapb >=0.2.3
@@ -138,6 +142,7 @@ executable threads-exe
   build-depends:
       base >=4.7 && <5
     , ch5
+    , containers
     , hspec
     , transformers
     , yapb >=0.2.3
@@ -171,6 +176,7 @@ test-suite actors-test
     , binary
     , bytestring
     , ch5
+    , containers
     , distributed-process
     , hspec
     , lens
@@ -203,6 +209,7 @@ test-suite exceptions-test
   build-depends:
       base >=4.7 && <5
     , ch5
+    , containers
     , hspec
     , transformers
     , yapb >=0.2.3
@@ -228,6 +235,7 @@ test-suite letreccps-test
   build-depends:
       base >=4.7 && <5
     , ch5
+    , containers
     , hspec
     , transformers
     , yapb >=0.2.3
@@ -256,6 +264,7 @@ test-suite threads-test
   build-depends:
       base >=4.7 && <5
     , ch5
+    , containers
     , hspec
     , transformers
     , yapb >=0.2.3
