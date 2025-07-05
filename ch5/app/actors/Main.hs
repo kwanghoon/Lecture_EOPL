@@ -12,7 +12,7 @@ import Expr
 import EnvStore
 import Interp
 import NodeRegistry
-import SystemConstants
+import SystemMessage
 
 import System.IO
 import System.Environment (getArgs)
@@ -58,6 +58,7 @@ runMainNode addrStr fileName = do
 
   -- 메인과 연결된 노드들 관리용 노드 레지스트리 생성 (STM TVar)
   nodesRegistry <- newRegistry
+  rolesRegistry <- newRoleRegistry 
 
   mvar <- newEmptyMVar                      -- just for prompt
   interpRun <- atomically $ newTVar False   -- just for prompt
@@ -98,11 +99,26 @@ runMainNode addrStr fileName = do
                   Nothing -> do
                     send requester AssignSelf
                     liftIO $ putStrLn $ "[Main@" ++ show mNid ++ "] No available node"
+
+              RegisterRole role pid -> do
+                _ <- monitor pid
+                liftIO $ atomically $ registerRole rolesRegistry role pid
+                liftIO $ putStrLn $ "\n[Main@" ++ show mNid ++ "] Registered role: " ++ show pid
+              
+              RequestRole role requester -> do
+                pids <- liftIO $ atomically $ getPidByRoles role rolesRegistry
+                case pids of
+                  [] -> send requester NotFound
+                  _  -> send requester (RoleFound pids)
           ,
           -- 다운된 노드 감지 시 레지스트리에서 제거
-          match $ \(NodeMonitorNotification reason downedNode _) -> do
+          match $ \(NodeMonitorNotification _ downedNode _) -> do
             liftIO $ atomically $ removeNode downedNode nodesRegistry
             liftIO $ putStrLn $ "\n[Main@" ++ show mNid ++ "] Node down: " ++ show downedNode ++ " removed"
+          ,
+          match $ \(ProcessMonitorNotification _ deadPid _) -> do
+            liftIO $ atomically $ removeProcess rolesRegistry deadPid
+            liftIO $ putStrLn $ "\n[Main@" ++ show mNid ++ "] Role down: " ++ show deadPid ++ " removed"
         ]
 
   mNid <- takeMVar mvar       -- just for prompt
@@ -126,12 +142,12 @@ runMainNode addrStr fileName = do
         (fromToken (endOfToken lexerSpec))
     
     let expression = expFrom pet
-        expression' = letBindingSystemConstants expression
-    liftIO $ print expression'
+        --expression' = letBindingSystemConstants expression
+    liftIO $ print expression
 
     liftIO $ atomically $ writeTVar interpRun True   -- just for prompt
 
-    result <- value_of_program expression'
+    result <- value_of_program expression
     liftIO $ putStrLn ("[Main@" ++ show pid ++ "] Final result: " ++ show result)
 
     forever $ liftIO $ threadDelay maxBound
@@ -236,25 +252,24 @@ runNodeByRole role addrStr mainAddrStr = do
           case mPid of
             Just pid -> do
               -- 메인 노드에 자신의 NodeId 등록 요청
-              send pid (RegisterNode myNode)
+              send pid (RegisterRole role self)
               liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] Successfully registered.")
             Nothing  -> 
               liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] nodeRegistry not found.")
       ]
     
     whereisRemoteAsync mainNodeId "mainInterp"
-    interpPid <- expect
-    case interpPid of
-      WhereIsReply "mainInterp" (Just pid) -> do
-        let exp = readyRoleExp role self pid
-        _ <- value_of_k exp initEnv End_Main_Thread_Cont initStore (initActorState mainNodeId)
-        forever $ liftIO $ threadDelay maxBound
-      WhereIsReply "mainInterp" Nothing -> do
-        liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] mainInterp not found.")
-        error "mainInterp not found"
+    receiveWait
+      [ match $ \(WhereIsReply "mainInterp" mPid) ->
+          case mPid of
+            Just pid -> do
+              send pid (CONNECT role self)
+              _ <- value_of_k readyExp initEnv End_Main_Thread_Cont initStore (initActorState mainNodeId)
+              forever $ liftIO $ threadDelay maxBound
+            Nothing  -> do
+              liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] mainInterp not found.")
+              error "mainInterp not found"
+        ]
 
-readyRoleExp :: String -> ProcessId -> ProcessId -> Exp
-readyRoleExp behav self main = 
-  letBindingSystemConstants
-    (Let_Exp "dummy" (Send_Exp [(Pid_Exp main),(Tuple_Exp [(Var_Exp "__CONNECT"), (Str_Exp behav), (Pid_Exp self)])])
-    (Ready_Exp (Proc_Exp Nothing "d" (Var_Exp "d"))))
+readyExp :: Exp
+readyExp = Ready_Exp (Proc_Exp Nothing "d" (Var_Exp "d"))

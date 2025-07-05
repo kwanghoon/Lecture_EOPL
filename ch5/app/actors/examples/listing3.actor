@@ -1,0 +1,2 @@
+let f = proc @a (cmd) print(-(cmd,456)) 
+in  (f 123)

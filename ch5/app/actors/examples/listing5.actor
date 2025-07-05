@@ -1,0 +1,3 @@
+let n = 123 in 
+let f = proc @a (cmd) print(-(cmd, n)) 
+in (f 456)

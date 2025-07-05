@@ -52,7 +52,7 @@ executable actors-exe
       Queue
       Scheduler
       Semaphores
-      SystemConstants
+      SystemMessage
       Token
       Paths_ch5
   hs-source-dirs:
@@ -164,7 +164,7 @@ test-suite actors-test
       Queue
       Scheduler
       Semaphores
-      SystemConstants
+      SystemMessage
       Token
       Paths_ch5
   hs-source-dirs:
