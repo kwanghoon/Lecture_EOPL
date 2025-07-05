@@ -66,18 +66,4 @@ let clientBehavior = proc @client (self)
                                 send(server, (JOIN, self));
                                 ready(listen)
                            end
-in 
-letrec mainBehavior (msg) = 
-            let (systemMsg, role, pid) = msg in
-            if (systemMsg == __CONNECT)
-            then 
-                if (role == "client")
-                then
-                    begin
-                        print("__CONNECT received\n");
-                        new ((clientBehavior pid));
-                        ready(mainBehavior)
-                    end
-                else ready(mainBehavior)
-            else ready(mainBehavior)
-in ready(mainBehavior)
+in ready(proc(d)d)

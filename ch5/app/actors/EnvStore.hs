@@ -4,7 +4,8 @@
 module EnvStore where
 
 import Expr (Exp,Identifier)
-import Data.List(intercalate)
+import Data.List(intercalate,find)
+import Data.Maybe(listToMaybe)
 
 import Control.Distributed.Process (ProcessId, NodeId)
 
@@ -190,6 +191,10 @@ setref store@(next,s) loc v = (next,update s)
 initStore :: Store
 initStore = (1,[])
 
+lookup_store :: String -> Store -> Maybe ProcAt
+lookup_store role (_,store) =
+  let matching = [ p | (_, ProcAt_Val p) <- reverse store, role_var p == role ]
+  in listToMaybe matching
 
 -- Actors
 type ActorId = ProcessId
@@ -204,8 +209,12 @@ data ActorBehavior = ActorBehavior Identifier Exp Env ActorState
   deriving (Generic, Binary, Typeable)
 
 data ActorMessage = 
-    StartActor ActorBehavior ActorId    -- stack run actors-exe node ...
-  | SelectedBehavior Location           -- stack run actors-exe role ...
+  -- stack run actors-exe node ...
+    StartActor ActorBehavior ActorId
+  -- stack run actors-exe role ...
+  | ProcAt1 Exp Env ActorId             -- 원격 함수 호출로 액터 실행 위함
+  | ProcAt2 Exp Env ActorId             -- SelectedBehavior로 액터 실행 위함
+  | SelectedBehavior Location
   deriving (Generic, Binary, Typeable)
 
 
@@ -214,7 +223,6 @@ data RemoteMessage =
     RemoteVar (Exp, Env) ActorId
   | RemoteSet (Identifier, ExpVal) ActorId
   | RemoteProc Exp ActorId
-  | RemoteProcAt Exp Env ActorId
   | RemoteCall (ExpVal, ExpVal) ActorId
   deriving (Generic, Binary, Typeable)
 

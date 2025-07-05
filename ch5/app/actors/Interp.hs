@@ -4,12 +4,14 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE BlockArguments #-}
 
 module Interp where
 
 import Expr
 import EnvStore
 import NodeRegistry(NodeMessage(..))
+import SystemMessage
 
 import Debug.Trace
 import System.IO (hFlush, stdout)
@@ -24,6 +26,7 @@ import Control.Concurrent (threadDelay)
 
 data Cont =
     End_Main_Thread_Cont
+  | Init_Main_Actor_Cont Cont
   | Zero1_Cont Cont
   | Let_Exp_Cont Identifier Exp Env Cont
   | If_Test_Cont Exp Exp Env Cont
@@ -39,6 +42,7 @@ data Cont =
   | Send_Cont [Exp] [ExpVal] Env Cont
   | Ready_Cont Cont
   | RemoteReady_Cont Cont
+  | RoleReady_Cont Env Cont
   | New_Cont Cont
   | Spawn_Cont Cont
 
@@ -50,6 +54,12 @@ apply_cont :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Sto
 
 apply_cont End_Main_Thread_Cont v store actors = do
   return (v, store)
+
+apply_cont (Init_Main_Actor_Cont cont) v store actors = do
+  current <- getSelfPid
+  let p = expval_proc v
+      v1 = Actor_Val current
+  apply_procedure_k p v1 cont store actors
 
 apply_cont (Zero1_Cont cont) num1 store actors =
   apply_cont cont
@@ -92,26 +102,54 @@ apply_cont (Comp2_Cont op val1 cont) val2 store actors =
   in apply_cont cont res store actors
 
 apply_cont (Rator_Cont rand env cont) ratorVal store actors = do
-  value_of_k rand env (Rand_Cont ratorVal env cont) store actors
+  current <- getSelfPid
+  case ratorVal of
+    ProcAt_Val _ -> do
+      -- main 노드의 레지스트리에 role 프로세스 있는지 조회
+      let mainNid = mainNode actors
+          procAt = expval_procAt ratorVal
+          savedRole = (role_var procAt)
+      whereisRemoteAsync mainNid "nodeRegistry"
+      pidReply <- expectTimeout 5000000
+      case pidReply of
+        Just (WhereIsReply "nodeRegistry" (Just registryPid)) -> do
+          send registryPid (RequestRole savedRole current)
+          receiveWait
+            [ match $ \(msg :: NodeMessage) -> do
+                case msg of
+                  NotFound -> 
+                    -- 아직 stack run actors-exe <role> 실행 전이므로 대기
+                    apply_cont (RoleReady_Cont env (Rator_Cont rand env cont)) ratorVal store actors
+                  RoleFound pids -> error $ "RoleFound pids Not yet completed"
+                    -- pids 들은 리턴할 proc이 없음 이미 behavior body 실행 중
+                    -- 그냥 ProcAt_Val을 pid들에 대해 Proc_Val로 만들어서
+                    -- RemoteCall 반복하게 할까? 
+            ]
+    _ -> value_of_k rand env (Rand_Cont ratorVal env cont) store actors
+
+apply_cont (RoleReady_Cont env cont) val store actors = do
+  current <- getSelfPid
+  let procAt = expval_procAt val
+      savedExp = (delayed_exp procAt)
+      savedEnv = (delayed_env procAt)
+  receiveWait
+    [ match $ \(msg :: SystemMessage) -> do
+        case msg of
+          CONNECT role pid -> do
+            send pid (ProcAt1 savedExp savedEnv current)  -- Proc_Val 기대
+            apply_cont (RemoteReady_Cont cont) (Proc_Val (procedure current "$dummy" (Const_Exp 42) env)) store actors
+    ]
 
 apply_cont (Rand_Cont ratorVal env cont) randVal store actors = do
   current <- getSelfPid
-  case ratorVal of
-    Proc_Val _ -> do
-      let proc = expval_proc ratorVal
-          actorId = saved_actor proc
-      if actorId == current
-      then apply_procedure_k proc randVal cont store actors
-      else do
-        send actorId (RemoteCall (ratorVal, randVal) current)
-        apply_cont (RemoteReady_Cont cont) (Proc_Val (procedure current "$dummy" (Const_Exp 42) env)) store actors
-    ProcAt_Val _ -> do
-      let procAt = expval_procAt ratorVal
-          savedExp = (delayed_exp procAt)
-          savedEnv = (delayed_env procAt)
-          actorId = expval_actor randVal
-      send actorId (RemoteProcAt savedExp savedEnv current)
-      apply_cont (RemoteReady_Cont cont) (Proc_Val (procedure current "$dummy" (Const_Exp 42) env)) store actors
+  let proc = expval_proc ratorVal
+      actorId = saved_actor proc
+  if actorId == current
+  then apply_procedure_k proc randVal cont store actors
+  else do
+    send actorId (RemoteCall (ratorVal, randVal) current)
+    liftIO $ putStrLn $ "RemoteCall : apply_cont RemoteReady_Cont"
+    apply_cont (RemoteReady_Cont cont) (Proc_Val (procedure current "$dummy" (Const_Exp 42) env)) store actors
 
 apply_cont (Set_Rhs_Cont var env cont) val store actors = do
   let saved_actor = lookup_env env var
@@ -167,13 +205,6 @@ apply_cont (Ready_Cont saved_cont) val store actors = do
                 returnVal' = Loc_Val (remoteLocation loc current)
             send requester (ReturnMessage returnVal')
             apply_cont (Ready_Cont saved_cont) val store2 actors
-          -- 프로시저 생성 (ProcAt) 요청 처리
-          RemoteProcAt (Proc_Exp _ var body) savedEnv requester -> do
-            (returnVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
-            let (loc,store2) = newref store1 returnVal
-                returnVal' = Loc_Val (remoteLocation loc current)
-            send requester (ReturnMessage returnVal')
-            apply_cont (Ready_Cont saved_cont) val store2 actors
           -- 프로시저 호출 요청 처리
           RemoteCall (ratorVal, randVal) requester -> do
             let proc = expval_proc ratorVal
@@ -181,30 +212,85 @@ apply_cont (Ready_Cont saved_cont) val store actors = do
             send requester (ReturnMessage returnVal)
             apply_cont (Ready_Cont saved_cont) val store1 actors
       ,
+      match $ \(msg :: ActorMessage) -> case msg of
+          -- Role Behavior (ProcAt) 요청 처리 1 --> RPC style 액터 실행
+          ProcAt1 (Proc_Exp _ var body) savedEnv requester -> do
+            (returnVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
+            send requester (ReturnMessage returnVal)
+            apply_cont (Ready_Cont saved_cont) val store1 actors
+          -- Role Behavior (ProcAt) 요청 처리 2 --> Actor style 액터 실행 step1
+          ProcAt2 (Proc_Exp _ var body) savedEnv requester -> do
+            (returnVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
+            let (loc,store2) = newref store1 returnVal
+                returnVal' = Loc_Val (remoteLocation loc current)
+            send requester returnVal'
+            apply_cont (Ready_Cont saved_cont) val store2 actors
+          SelectedBehavior loc -> do            -- Actor style 액터 실행 step2
+            let proc = deref store loc
+                Procedure _ x body env' = expval_proc proc
+                (loc1, store1) = newref store (Actor_Val current)
+                env1 = extend_env current x loc1 env'
+            value_of_k body env1 End_Main_Thread_Cont store1 actors
+      ,
       match $ \(msg :: ExpVal) -> do
         let Procedure _ x body env = expval_proc val
             (loc, store1) = newref store msg
         let env1 = extend_env current x loc env
         value_of_k body env1 saved_cont store1 actors
       ,
-      match $ \(SelectedBehavior loc :: ActorMessage) -> do
-        let proc = deref store loc
-            Procedure _ x body env' = expval_proc proc
-            (loc1, store1) = newref store (Actor_Val current)
-            env1 = extend_env current x loc1 env'
-        value_of_k body env1 End_Main_Thread_Cont store1 actors
+      match $ \(msg :: SystemMessage) ->
+        case msg of
+          CONNECT role pid ->
+            case lookup_store role store of
+              Just procAt -> do
+                let savedExp = (delayed_exp procAt)
+                    savedEnv = (delayed_env procAt)
+                send pid (ProcAt2 savedExp savedEnv current)  -- Loc_Val 기대
+                Loc_Val remoteLoc <- expect
+                send pid (SelectedBehavior (loc remoteLoc))
+                apply_cont (Ready_Cont saved_cont) val store actors
+              Nothing ->
+                error $ "Role procedure not found : " ++ show role
     ]
 
 apply_cont (RemoteReady_Cont saved_cont) val store actors = do
+  current <- getSelfPid
   let Procedure _ _ _ env = expval_proc val
   receiveWait
     [ match $ \(msg :: ReturnMessage) -> do
         let ReturnMessage returnVal = msg
         apply_cont saved_cont returnVal store actors
+      ,
+      match $ \(msg :: RemoteMessage) -> do
+        case msg of
+          RemoteVar (Var_Exp var, savedEnv) requester -> do
+            (returnVal, store1) <- value_of_k (Var_Exp var) savedEnv End_Main_Thread_Cont store actors
+            send requester (ReturnMessage returnVal)
+            apply_cont (RemoteReady_Cont saved_cont) val store1 actors
+
+          RemoteSet (var, val') requester -> do
+            (_, updatedStore) <- let (loc, store1) = apply_env env store var
+                                     store2 = setref store1 loc val'
+                                 in apply_cont End_Main_Thread_Cont Unit_Val store2 actors
+            send requester (ReturnMessage Unit_Val)
+            apply_cont (RemoteReady_Cont saved_cont) val updatedStore actors
+
+          RemoteProc (Proc_Exp Nothing var body) requester -> do
+            (returnVal, store1) <- value_of_k (Proc_Exp Nothing var body) env End_Main_Thread_Cont store actors
+            let (loc, store2) = newref store1 returnVal
+            send requester (ReturnMessage (Loc_Val (remoteLocation loc current)))
+            apply_cont (RemoteReady_Cont saved_cont) val store2 actors
+
+          RemoteCall (ratorVal, randVal) requester -> do
+            let proc = expval_proc ratorVal
+            (returnVal, store1) <- apply_procedure_k proc randVal End_Main_Thread_Cont store actors
+            send requester (ReturnMessage returnVal)
+            apply_cont (RemoteReady_Cont saved_cont) val store1 actors
     ]
 
 apply_cont (New_Cont saved_cont) val store actors = do
   current <- getSelfPid
+  liftIO $ putStrLn $ "apply_cont (New_Cont saved_cont)"
   case val of
     Proc_Val _ -> do
       let Procedure _ x body env = expval_proc val
@@ -430,7 +516,7 @@ value_of_k exp _ _ _ _ =
 value_of_program :: Exp -> Process FinalAnswer
 value_of_program exp = do
   nid <- getSelfNode
-  (finalVal, _ ) <- value_of_k exp initEnv End_Main_Thread_Cont initStore (initActorState nid)
+  (finalVal, _ ) <- value_of_k exp initEnv (Init_Main_Actor_Cont End_Main_Thread_Cont) initStore (initActorState nid)
   return finalVal
 
 --
