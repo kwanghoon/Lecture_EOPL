@@ -1,0 +1,7 @@
+let n = 123 in
+let a = new ( proc(self)
+                letrec f(msg) = 
+                    let (cmd, n) = msg in
+                    print(-(cmd, n))
+                in ready(f) )
+in send(a, (456, n))

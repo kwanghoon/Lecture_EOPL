@@ -11,6 +11,7 @@ module NodeRegistry
   , registerRole
   , getPidByRoles
   , removeProcess
+  , getAllPids
   ) where
 
 import Control.Concurrent.STM (STM)
@@ -86,3 +87,8 @@ removeProcess registry pid = do
   table <- readTVar registry
   let updated = Map.map (filter (/= pid)) table
   writeTVar registry updated
+
+getAllPids :: RoleRegistry -> STM [ProcessId]
+getAllPids registry = do
+  table <- readTVar registry
+  return $ concat (Map.elems table)
