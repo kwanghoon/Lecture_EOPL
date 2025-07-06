@@ -32,6 +32,8 @@ import Data.Char (toLower)
 -- Entrypoint :
 --    stack run actors-exe 시 전달받는 인자에 따라
 --    main 노드 또는 원격 노드를 실행
+-- stack run actors-exe main <ip:port> <file>
+
 main :: IO ()
 main = do
   args <- getArgs
@@ -39,7 +41,7 @@ main = do
     ("main":addrStr:fileName:_)     -> runMainNode addrStr fileName
     ("node":addrStr:mainAddrStr:_)  -> runRemoteNode addrStr mainAddrStr
     (role:addrStr:mainAddrStr:_)    -> runNodeByRole role addrStr mainAddrStr
-    _                               -> putStrLn "Usage:\n  actors-exe main <ip:port> <file>\n actors-exe node <ip:port> <ip:port>\n actors-exe dynamic-node <ip:port> <ip:port>"
+    _                               -> putStrLn "Usage:\n  actors-exe main <ip:port> <file>\n actors-exe node <ip:port> <ip:port>\n actors-exe role <ip:port> <ip:port>"
 
 
 -- Main Node :
@@ -82,34 +84,38 @@ runMainNode addrStr fileName = do
         [ match $ \(msg :: NodeMessage) -> 
             case msg of
               -- 새 노드 등록 요청 처리
-              RegisterNode nid -> do
-                _ <- monitorNode nid
-                liftIO $ atomically $ registerNode nid nodesRegistry
+              RegisterNode requesterNid -> do
+                _ <- monitorNode requesterNid
+                liftIO $ atomically $ registerNode requesterNid nodesRegistry
                 liftIO $ do
-                  putStrLn $ "\n[Main@" ++ show mNid ++ "] Registered node: " ++ show nid
+                  putStrLn $ "\n[Main@" ++ show mNid ++ "] Registered node: " ++ show requesterNid
                   printPrompt interpRun mNid
 
-              -- 노드 할당 요청 처리
-              RequestNode requester -> do
+              -- 액터 생성을 담당할 노드 선택
+              -- case 1 : main 노드만 있는 경우, main 노드에 액터 생성
+              -- case 2 : main 노드와 하나 이상의 원격 노드가 있는 경우, 원격 노드 중 랜덤하게 선택하여 액터 생성
+              RequestNode requesterPid -> do
                 nids <- liftIO $ atomically $ assignNode nodesRegistry
                 case nids of
                   Just nid -> do
-                    send requester (AssignNode nid)
+                    send requesterPid (AssignNode nid)
                     liftIO $ putStrLn $ "[Main@" ++ show mNid ++ "] Assigned node: " ++ show nid
                   Nothing -> do
-                    send requester AssignSelf
+                    send requesterPid AssignSelf
                     liftIO $ putStrLn $ "[Main@" ++ show mNid ++ "] No available node"
 
-              RegisterRole role pid -> do
-                _ <- monitor pid
-                liftIO $ atomically $ registerRole rolesRegistry role pid
-                liftIO $ putStrLn $ "\n[Main@" ++ show mNid ++ "] Registered role: " ++ show pid
+              -- role을 지정하여 새 노드 등록 요청 처리
+              RegisterRole role requesterPid -> do
+                _ <- monitor requesterPid
+                liftIO $ atomically $ registerRole rolesRegistry role requesterPid
+                liftIO $ putStrLn $ "\n[Main@" ++ show mNid ++ "] Registered role: " ++ show requesterPid
               
-              RequestRole role requester -> do
+              -- 액터 생성을 담당할 노드 선택 (지정한 역할에 매칭되는 노드 선택)
+              RequestRole role requesterPid -> do
                 pids <- liftIO $ atomically $ getPidByRoles role rolesRegistry
                 case pids of
-                  [] -> send requester NotFound
-                  _  -> send requester (RoleFound pids)
+                  [] -> send requesterPid NotFound
+                  _  -> send requesterPid (RoleFound pids)
           ,
           -- 다운된 노드 감지 시 레지스트리에서 제거
           match $ \(NodeMonitorNotification _ downedNode _) -> do
@@ -124,13 +130,13 @@ runMainNode addrStr fileName = do
   mNid <- takeMVar mvar       -- just for prompt
 
   -- wait for user command (start or status)
-  putStrLn $ "[Main@" ++ show mNid ++ "] Waiting for command ..."
-  waitForStartCommand mNid nodesRegistry
+  -- putStrLn $ "[Main@" ++ show mNid ++ "] Waiting for command ..."
+  -- waitForStartCommand mNid nodesRegistry
 
   -- Run the interpreter (by start command)
   runProcess node $ do
     pid <- getSelfPid
-    register "mainInterp" pid
+    register "mainInterp" pid   -- main 액터의 pid 이름
     liftIO $ putStrLn fileName
     text <- liftIO $ readFile fileName
 
@@ -142,7 +148,6 @@ runMainNode addrStr fileName = do
         (fromToken (endOfToken lexerSpec))
     
     let expression = expFrom pet
-        --expression' = letBindingSystemConstants expression
     liftIO $ print expression
 
     liftIO $ atomically $ writeTVar interpRun True   -- just for prompt
@@ -176,7 +181,8 @@ printPrompt runningFlag mNid = do
 
 
 -- Remote node :
---    메인 노드에 자신의 존재를 등록하고 작업 대기
+-- stack run actors-exe node <ip:port> <ip:port>
+-- 메인 노드에 자신의 존재를 등록하고 작업 대기
 runRemoteNode :: String -> String -> IO ()
 runRemoteNode addrStr mainAddrStr = do
   let (host, portStr)         = break (== ':') addrStr
@@ -231,6 +237,7 @@ nodeListener = do
 
 
 -- Remote node with Role :
+-- stack run actors-exe role <ip:port> <ip:port>
 --    메인 노드에 자신의 존재를 등록하고 
 --    인터프리터로 readyRoleExp를 실행시켜 Role에 해당하는 동작 받음
 runNodeByRole :: String -> String -> String -> IO ()
@@ -265,7 +272,7 @@ runNodeByRole role addrStr mainAddrStr = do
             Just pid -> do
               send pid (CONNECT role self)
               _ <- value_of_k readyExp initEnv End_Main_Thread_Cont initStore (initActorState mainNodeId)
-              forever $ liftIO $ threadDelay maxBound
+              forever $ liftIO $ threadDelay maxBound -- todo : 삭제 여부 확인
             Nothing  -> do
               liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] mainInterp not found.")
               error "mainInterp not found"

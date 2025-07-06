@@ -20,6 +20,7 @@ import Control.Distributed.Process
 import Control.Distributed.Process.Node
 import Control.Monad (forever)
 import Control.Concurrent (threadDelay)
+import Distribution.Simple.PackageIndex (deletePackageName)
 
 
 -- Continuation
@@ -121,9 +122,13 @@ apply_cont (Rator_Cont rand env cont) ratorVal store actors = do
                     -- 아직 stack run actors-exe <role> 실행 전이므로 대기
                     apply_cont (RoleReady_Cont env (Rator_Cont rand env cont)) ratorVal store actors
                   RoleFound pids -> error $ "RoleFound pids Not yet completed"
-                    -- pids 들은 리턴할 proc이 없음 이미 behavior body 실행 중
-                    -- 그냥 ProcAt_Val을 pid들에 대해 Proc_Val로 만들어서
-                    -- RemoteCall 반복하게 할까? 
+                    -- todo : 선택 방법
+                    -- 랜덤하게
+                    case pids of
+                      [] -> apply_cont (RoleReady_Cont env (Rator_Cont rand env cont)) ratorVal store actors
+                      (pid:_) -> do
+                        send pid (ProcAt1 (delayed_exp procAt) (delayed_env procAt) current)  -- Proc_Val 기대
+                        apply_cont (RemoteReady_Cont cont) (Proc_Val (procedure current "$dummy" (Const_Exp 42) env)) store actors
             ]
     _ -> value_of_k rand env (Rand_Cont ratorVal env cont) store actors
 
