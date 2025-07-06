@@ -4,6 +4,7 @@
 module EnvStore where
 
 import Expr (Exp,Identifier)
+import ActorName(RoleName)
 import Data.List(intercalate,find)
 import Data.Maybe(listToMaybe)
 
@@ -19,6 +20,7 @@ data Env =
     Empty_env
   | Extend_env ActorId Identifier DenVal Env
   | Extend_env_rec [(Identifier,ActorId,Identifier,Exp)] Env
+  | Extend_env_behv (RoleName,Exp,Env) Env
   deriving (Generic, Binary)
 
 empty_env :: Env
@@ -36,12 +38,17 @@ apply_env (Extend_env_rec idActoridIdExpList saved_env) store search_var
   where isIn      = or [ p_name==search_var | (p_name,saved_actor,b_var,p_body) <- idActoridIdExpList ]
         procVal = head [ Proc_Val (procedure saved_actor b_var p_body (Extend_env_rec idActoridIdExpList saved_env)) 
                        | (p_name,saved_actor,b_var,p_body) <- idActoridIdExpList, p_name==search_var ]
+apply_env (Extend_env_behv _ saved_env) store search_var =
+  apply_env saved_env store search_var
 
 extend_env :: ActorId -> Identifier -> DenVal -> Env -> Env
 extend_env a x v env = Extend_env a x v env
 
 extend_env_rec :: [(Identifier, ActorId, Identifier, Exp)] -> Env -> Env
 extend_env_rec idActoridIdExpList env = Extend_env_rec idActoridIdExpList env
+
+extend_env_behv :: RoleName -> Exp -> Env -> Env
+extend_env_behv roleName procExp savedEnv = Extend_env_behv (roleName,procExp,savedEnv) savedEnv
 
 -- lookup_env: 변수가 정의된 위치(액터 id)만 반환
 lookup_env :: Env -> Identifier -> ActorId
@@ -53,7 +60,17 @@ lookup_env (Extend_env_rec idActoridIdExpList saved_env) search_var =
   case [ saved_actor | (p_name, saved_actor, _, _) <- idActoridIdExpList, p_name == search_var ] of
     (saved_actor:_) -> saved_actor
     []     -> lookup_env saved_env search_var
+lookup_env (Extend_env_behv _ env) search_var =
+  lookup_env env search_var
 
+--
+lookup_behvs :: RoleName -> Env -> [(Exp, Env)]
+lookup_behvs _ Empty_env = []
+lookup_behvs role (Extend_env_behv (r, e, savedEnv) rest)
+  | role == r = (e, savedEnv) : lookup_behvs role rest
+  | otherwise = lookup_behvs role rest
+lookup_behvs role (Extend_env _ _ _ rest) = lookup_behvs role rest
+lookup_behvs role (Extend_env_rec _ rest) = lookup_behvs role rest
 
 -- Expressed values
 data ExpVal =
@@ -62,7 +79,6 @@ data ExpVal =
   | Actor_Val  {expval_actor :: ActorId}
   | Bool_Val   {expval_bool :: Bool}
   | Proc_Val   {expval_proc :: Proc}
-  | ProcAt_Val {expval_procAt :: ProcAt}
   | List_Val   {expval_list :: [ExpVal]}
   | Loc_Val    {expval_loc :: RemoteLocation} -- location that returned by remote procedure creation
   | Unit_Val  -- for dummy value
@@ -74,7 +90,6 @@ instance Show ExpVal where
   show (Actor_Val aid) = show aid
   show (Bool_Val bool) = show bool
   show (Proc_Val proc) = show "<proc>"
-  show (ProcAt_Val procAt) = show "<procAt>"
   show (List_Val val)  = "[" ++ intercalate "," (map show val) ++ "]"
   show (Loc_Val remoteLoc) = "loc" ++ show (loc remoteLoc) ++ " at" ++ show (actorId remoteLoc)
   show (Unit_Val) = "dummy"
@@ -95,19 +110,16 @@ instance Binary ExpVal where
   put (Proc_Val p) = do
     put (4 :: Word8)
     put p
-  put (ProcAt_Val p) = do
-    put (5 :: Word8)
-    put p
   put (List_Val xs) = do
-    put (6 :: Word8)
+    put (5 :: Word8)
     put (fromIntegral (length xs) :: Word32)
     mapM_ put xs
   put (Loc_Val remoteLoc) = do
-    put (7 :: Word8)
+    put (6 :: Word8)
     put (loc remoteLoc)
     put (actorId remoteLoc)
   put Unit_Val = do
-    put (8 :: Word8)
+    put (7 :: Word8)
 
   get = do
     tag <- get :: Get Word8
@@ -117,15 +129,14 @@ instance Binary ExpVal where
       2 -> Actor_Val <$> get
       3 -> Bool_Val <$> get
       4 -> Proc_Val <$> get
-      5 -> ProcAt_Val <$> get
-      6 -> do
+      5 -> do
         len <- get :: Get Word32
         List_Val <$> replicateM (fromIntegral len) get
-      7 -> do
+      6 -> do
         loc <- get
         aid <- get
         return $ Loc_Val (RemoteLocation loc aid)
-      8 -> return Unit_Val
+      7 -> return Unit_Val
       _ -> error "Binary instance for ExpVal: unknown tag"
 
 instance Eq ExpVal where
@@ -151,14 +162,6 @@ data Proc = Procedure {saved_actor :: ActorId, var :: Identifier, body :: Exp, s
 
 procedure :: ActorId -> Identifier -> Exp -> Env -> Proc
 procedure actorId var body env = Procedure actorId var body env
-
-
--- delayed values
-data ProcAt = ProcAt { role_var :: Identifier, delayed_exp :: Exp, delayed_env :: Env }
-  deriving (Generic, Binary)
-
-procedureAt :: Identifier -> Exp -> Env -> ProcAt
-procedureAt var exp env = ProcAt { role_var = var, delayed_exp = exp, delayed_env = env }
 
 
 -- Remote location : location + actor id
@@ -191,10 +194,6 @@ setref store@(next,s) loc v = (next,update s)
 initStore :: Store
 initStore = (1,[])
 
-lookup_store :: String -> Store -> Maybe ProcAt
-lookup_store role (_,store) =
-  let matching = [ p | (_, ProcAt_Val p) <- reverse store, role_var p == role ]
-  in listToMaybe matching
 
 -- Actors
 type ActorId = ProcessId
@@ -208,22 +207,18 @@ initActorState mainNid = ActorState { mainNode = mainNid }
 data ActorBehavior = ActorBehavior Identifier Exp Env ActorState
   deriving (Generic, Binary, Typeable)
 
-data ActorMessage = 
-  -- stack run actors-exe node ...
-    StartActor ActorBehavior ActorId
-  -- stack run actors-exe role ...
-  | ProcAt1 Exp Env ActorId             -- 원격 함수 호출로 액터 실행 위함
-  | ProcAt2 Exp Env ActorId             -- SelectedBehavior로 액터 실행 위함
-  | SelectedBehavior Location
+data ActorMessage =
+    StartActor ActorBehavior ActorId    -- stack run actors-exe node ..
+  | SelectedBehavior Location           -- stack run actors-exe role ...
   deriving (Generic, Binary, Typeable)
 
 
 -- Messages
 data RemoteMessage = 
-    RemoteVar (Exp, Env) ActorId
-  | RemoteSet (Identifier, ExpVal) ActorId
-  | RemoteProc Exp ActorId
-  | RemoteCall (ExpVal, ExpVal) ActorId
+    RemoteVar Location ActorId              -- 원격 store 주소
+  | RemoteSet (Location, ExpVal) ActorId    -- (원격 store 주소, 할당할 값)
+  | RemoteProc Exp Env ActorId              -- 생성할 Proc_Exp, Env
+  | RemoteCall (Location, ExpVal) ActorId   -- (원격 store 주소, 인자 값)
   deriving (Generic, Binary, Typeable)
 
 data ReturnMessage = ReturnMessage ExpVal

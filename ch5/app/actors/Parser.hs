@@ -65,11 +65,14 @@ parserSpec = ParserSpec
         (\rhs -> return $ 
             case optIdFrom (get rhs 2) of
               Nothing -> 
-                PETExp (Proc_Exp (optIdFrom (get rhs 2)) (getText rhs 4) (expFrom (get rhs 6)))     
+                PETExp (Proc_Exp Nothing (getText rhs 4) (expFrom (get rhs 6)))
               Just ('@':roleVar) ->
-                PETExp (ProcAt_Exp roleVar (Proc_Exp (Just roleVar) (getText rhs 4) (expFrom (get rhs 6))))
+                let param   = getText rhs 4 in
+                if param == "self"
+                then PETExp (BehavAt_Exp roleVar (Proc_Exp (Just roleVar) (getText rhs 4) (expFrom (get rhs 6))))
+                else PETExp (ProcAt_Exp roleVar (Proc_Exp (Just roleVar) (getText rhs 4) (expFrom (get rhs 6))))
               Just actorName ->
-                PETExp (Proc_Exp (optIdFrom (get rhs 2)) (getText rhs 4) (expFrom (get rhs 6)))),
+                PETExp (Proc_Exp (Just actorName) (getText rhs 4) (expFrom (get rhs 6)))),
 
       rule "Expression -> ( Expression Expression )"
         (\rhs -> return $ PETExp (Call_Exp (expFrom (get rhs 2)) (expFrom (get rhs 3)))),

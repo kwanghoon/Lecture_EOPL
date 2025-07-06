@@ -1,7 +1,0 @@
-proc(main)
-  let a = new (proc (self)
-            letrec f(msg) =
-              let (cmd, from) = msg in
-               print(-(cmd, 123))
-            in ready(f))
-  in send(a, (456, main))

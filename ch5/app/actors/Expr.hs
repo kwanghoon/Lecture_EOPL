@@ -24,6 +24,7 @@ data Exp =
       [(Identifier, Maybe ActorName, Identifier,Exp)] Exp   -- letrec { ..., f_i actorName (x_i) = expression_i, ... } in expression
   | Proc_Exp   (Maybe ActorName) Identifier Exp             -- proc actorName ( identifier ) expression
   | ProcAt_Exp RoleName Exp               -- proc @roleName ( identifier ) expression
+  | BehavAt_Exp RoleName Exp              -- proc @roleName ( self ) expression
   | Call_Exp   Exp Exp                    -- ( expression expression )
   | Block_Exp  [ Exp ]                    -- begin exp1; ...; expk end
   | Set_Exp    Identifier Exp             -- set x = expression
