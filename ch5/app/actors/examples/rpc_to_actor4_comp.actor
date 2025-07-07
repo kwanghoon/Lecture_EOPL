@@ -1,3 +1,14 @@
+// ch3:rpc: rpc_to_actor4.rpc
+//
+// let k= proc a (x)
+//         proc b (y)
+//             x
+// in let s = proc a (f)
+//             proc b (g)
+//                 proc c (z)
+//                     ((f a z) b (g a z))
+//     in (((s a k) b k ) c 1) 
+
 proc (main)
   let CREATECLO = 1 in
   let CALLCLO = 2 in
