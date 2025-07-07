@@ -112,7 +112,7 @@ instance Show ExpVal where
   show (Str_Val str)   = str
   show (Actor_Val aid) = show aid
   show (Bool_Val bool) = show bool
-  show (Proc_Val proc) = show "<proc>"
+  show (Proc_Val proc) = show "<proc> var : " ++ show (var proc)
   show (List_Val val)  = "[" ++ intercalate "," (map show val) ++ "]"
   show (Loc_Val remoteLoc) = "loc" ++ show (loc remoteLoc) ++ " at" ++ show (actorId remoteLoc)
   show (Unit_Val) = "dummy"

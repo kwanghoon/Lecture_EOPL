@@ -28,7 +28,7 @@ import Control.Monad.Cont (MonadIO(liftIO))
 
 data Cont =
     End_Main_Thread_Cont
-  -- | Init_Main_Actor_Cont Cont
+  | Init_Main_Actor_Cont Cont
   | Zero1_Cont Cont
   | Let_Exp_Cont Identifier Exp Env Cont
   | If_Test_Cont Exp Exp Env Cont
@@ -54,7 +54,7 @@ data Cont =
     
 instance Show Cont where
   show End_Main_Thread_Cont = "End_Main_Thread_Cont"
-  -- show (Init_Main_Actor_Cont cont) = "Init_Main_Actor_Cont " ++ show cont
+  show (Init_Main_Actor_Cont cont) = "Init_Main_Actor_Cont " ++ show cont
   show (Zero1_Cont _) = "Zero1_Cont"
   show (Let_Exp_Cont var body _ _) = "Let_Exp_Cont " ++ var 
   show (If_Test_Cont exp2 exp3 _ _) = "If_Test_Cont " 
@@ -90,7 +90,7 @@ apply_cont :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Sto
 
 apply_cont cont expval store actors = 
   do current <- getSelfPid
-     liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "apply_cont: " ++ show cont 
+     -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "apply_cont: " ++ show cont 
      apply_cont' cont expval store actors 
 
 apply_cont' :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Store)
@@ -98,11 +98,11 @@ apply_cont' :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, St
 apply_cont' End_Main_Thread_Cont v store actors = do
   return (v, store)
 
--- apply_cont (Init_Main_Actor_Cont cont) v store actors = do
---   current <- getSelfPid
---   let p = expval_proc v
---       v1 = Actor_Val current
---   apply_procedure_k p v1 cont store actors
+apply_cont' (Init_Main_Actor_Cont cont) v store actors = do
+  current <- getSelfPid
+  let p = expval_proc v
+      v1 = Actor_Val current
+  apply_procedure_k p v1 cont store actors
 
 apply_cont' (Zero1_Cont cont) num1 store actors =
   apply_cont cont
@@ -115,8 +115,10 @@ apply_cont' (Let_Exp_Cont var body env cont) val1 store actors = do
   case val1 of
     Loc_Val remoteLoc ->
       value_of_k body (extend_env (actorId remoteLoc) var (loc remoteLoc) env) cont store actors
-    Actor_Val aid -> 
-      value_of_k body (extend_env_with_actorId var aid env) cont store actors
+    Actor_Val aid -> do
+      let (loc,store') = newref store val1
+          env1 = extend_env current var loc env
+      value_of_k body (extend_env_with_actorId var aid env1) cont store' actors
     _ -> do
       let (loc,store') = newref store val1
       value_of_k body (extend_env current var loc env) cont store' actors
@@ -415,7 +417,7 @@ apply_unop op rand = error ("Unknown unary operator: :" ++ show op ++ " " ++ sho
 value_of_k :: Exp -> Env -> Cont -> Store -> ActorState -> Process (FinalAnswer, Store)
 value_of_k exp env cont store actors = 
   do current <- getSelfPid
-     liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "value_of_k: " ++ show exp
+     -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "value_of_k: " ++ show exp
      value_of_k' exp env cont store actors 
 
 value_of_k' :: Exp -> Env -> Cont -> Store -> ActorState -> Process (FinalAnswer, Store)
@@ -589,11 +591,11 @@ value_of_k' exp _ _ _ _ =
 
 
 --
-value_of_program :: Exp -> Process (FinalAnswer, Store)
+value_of_program :: Exp -> Process FinalAnswer
 value_of_program exp = do
   nid <- getSelfNode
-  (finalVal, store) <- value_of_k exp initEnv End_Main_Thread_Cont initStore (initActorState nid)
-  return (finalVal,store)
+  (finalVal, store) <- value_of_k exp initEnv (Init_Main_Actor_Cont End_Main_Thread_Cont) initStore (initActorState nid)
+  return finalVal
 
 --
 initEnv = empty_env
