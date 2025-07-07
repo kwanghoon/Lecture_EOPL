@@ -17,6 +17,4 @@ let s = proc a (f)
 let k = proc a (y)
              proc b (z) 
                y in
-let identity = ((s k) k) in
-let n = 1 in
-  print (identity n)
+  print ( (((s k) k) 1) )
