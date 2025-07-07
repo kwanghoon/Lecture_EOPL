@@ -1,0 +1,327 @@
+proc (main)
+  let CREATECLO = 1 in
+  let CALLCLO = 2 in
+  let F0 = 0 in
+  let f0 = proc (fvs1)
+            let (a, b) = fvs1 in 
+                proc (x2) begin send (b, CREATECLO, (4, (b, x2), a)); ready (proc (clo7) clo7) end 
+  in
+  let F4 = 4 in
+  let f4 = proc (fvs5) let (b, x2) = fvs5 in proc (y6) x2 
+  in
+  let F9 = 9 in
+  let f9 = proc (fvs10)
+            let (a, b, c) = fvs10 in
+                proc (f11) begin send (b, CREATECLO, (13, (a, b, c, f11), a)); ready (proc (clo16) clo16) end 
+  in
+  let F13 = 13 in
+  let f13 = proc (fvs14)
+             let (a, b, c, f11) = fvs14 in
+                proc (g15) begin send (c, CREATECLO, (17, (a, b, c, f11, g15), b)); ready (proc (clo20) clo20) end 
+  in
+  let F17 = 17 in
+  let f17 = proc (fvs18)
+             let (a, b, c, f11, g15) = fvs18 in
+                proc (z19)
+                    begin 
+                        send (a, CALLCLO, (f11, z19, c));
+                        ready (proc (ret21)
+                                begin 
+                                    send (a, CALLCLO, (g15, z19, c));
+                                    ready (proc (ret22)
+                                            begin 
+                                                send (b, CALLCLO, (ret21, ret22, c)); 
+                                                ready (proc (ret23) ret23) 
+                                            end) 
+                                end) 
+                    end
+  in
+  let dispatch = proc (fNO)
+                    if zero? (-(fNO , 0))
+                    then f0
+                    else if zero? (-(fNO , 4))
+                         then f4
+                         else if zero? (-(fNO , 9))
+                              then f9
+                              else if zero? (-(fNO , 13))
+                                   then f13
+                                   else if zero? (-(fNO , 17))
+                                        then f17
+                                        else 0 
+  in
+  letrec
+        mainLoop (msg) = if zero? (-(msg , CREATECLO))
+                        then ready (createClo)
+                        else if zero? (-(msg , CALLCLO))
+                            then ready (callClo)
+                            else ready (mainLoop)
+
+        createClo (msg) =  let (fNO, fvs, sender) = msg in
+                        let f = (dispatch fNO) in
+                        let clo = (f, fvs) in
+                        begin send (sender, clo); ready (mainLoop) end
+
+        callClo (msg) =  let (clo, arg, sender) = msg in
+                        let (f, fvs) = clo in
+                        let ffvs = (f fvs) in
+                        let ret = (ffvs arg) in
+                        begin send (sender, ret); ready (mainLoop) end
+  in
+  let behavioura = proc (self)
+                    let CREATECLO = 1 in
+                    let CALLCLO = 2 in
+                    let F0 = 0 in
+                    let f0 = proc (fvs1)
+                                let (a, b) = fvs1 in
+                                    proc (x2)
+                                        begin 
+                                            send (b, CREATECLO, (4, (b, x2), a));
+                                            ready (proc (clo7) clo7)
+                                        end 
+                    in
+                    let F4 = 4 in
+                    let f4 = proc (fvs5)
+                                let (b, x2) = fvs5 in proc (y6) x2 
+                    in
+                    let F9 = 9 in
+                    let f9 = proc (fvs10)
+                                let (a, b, c) = fvs10 in
+                                    proc (f11)
+                                        begin 
+                                            send (b, CREATECLO, (13, (a, b, c, f11), a));
+                                            ready (proc (clo16) clo16)
+                                        end 
+                    in
+                    let F13 = 13 in
+                    let f13 = proc (fvs14)
+                                let (a, b, c, f11) = fvs14 in
+                                    proc (g15) 
+                                        begin 
+                                            send (c, CREATECLO, (17, (a, b, c, f11, g15), b));
+                                            ready (proc (clo20) clo20) 
+                                        end 
+                    in
+                    let F17 = 17 in
+                    let f17 = proc (fvs18)
+                                let (a, b, c, f11, g15) = fvs18 in
+                                    proc (z19) 
+                                        begin 
+                                            send (a, CALLCLO, (f11, z19, c));
+                                            ready (proc (ret21)
+                                                    begin 
+                                                        send (a, CALLCLO, (g15, z19, c));
+                                                        ready (proc (ret22)
+                                                                begin 
+                                                                    send (b, CALLCLO, (ret21, ret22, c));
+                                                                    ready (proc (ret23) ret23) 
+                                                                end) 
+                                                    end)
+                                        end 
+                    in
+                    let dispatch = proc (fNO)
+                                    if zero? (-(fNO , 0))
+                                    then f0
+                                    else if zero? (-(fNO , 4))
+                                        then f4
+                                        else if zero? (-(fNO , 9))
+                                                then f9
+                                                else if zero? (-(fNO , 13))
+                                                    then f13
+                                                    else if zero? (-(fNO , 17))
+                                                        then f17
+                                                        else 0 
+                    in
+                    letrec
+                        mainLoop (msg) = if zero? (-(msg , CREATECLO))
+                                        then ready (createClo)
+                                        else if zero? (-(msg , CALLCLO))
+                                            then ready (callClo)
+                                            else ready (mainLoop)
+
+                        createClo (msg) = let (fNO, fvs, sender) = msg in
+                                        let f = (dispatch fNO) in
+                                        let clo = (f, fvs) in
+                                        begin send (sender, clo); ready (mainLoop) end
+
+                        callClo (msg) = let (clo, arg, sender) = msg in
+                                        let (f, fvs) = clo in
+                                        let ffvs = (f fvs) in
+                                        let ret = (ffvs arg) in
+                                        begin send (sender, ret); ready (mainLoop) end
+                    in ready (mainLoop) 
+  in
+  let a = new (behavioura) in
+  let behaviourb = proc (self)
+                        let CREATECLO = 1 in
+                        let CALLCLO = 2 in
+                        let F0 = 0 in
+                        let f0 = proc (fvs1)
+                                    let (a, b) = fvs1 in
+                                        proc (x2) begin send (b, CREATECLO, (4, (b, x2), a)); ready (proc (clo7) clo7) end 
+                        in
+                        let F4 = 4 in
+                        let f4 = proc (fvs5)
+                                    let (b, x2) = fvs5 in proc (y6) x2 
+                        in
+                        let F9 = 9 in
+                        let f9 = proc (fvs10)
+                                    let (a, b, c) = fvs10 in
+                                        proc (f11) begin send (b, CREATECLO, (13, (a, b, c, f11), a)); ready (proc (clo16) clo16) end 
+                        in
+                        let F13 = 13 in
+                        let f13 = proc (fvs14)
+                                    let (a, b, c, f11) = fvs14 in
+                                        proc (g15) begin send (c, CREATECLO, (17, (a, b, c, f11, g15), b)); ready (proc (clo20) clo20) end 
+                        in
+                        let F17 = 17 in
+                        let f17 = proc (fvs18)
+                                    let (a, b, c, f11, g15) = fvs18 in
+                                        proc (z19) 
+                                            begin send (a, CALLCLO, (f11, z19, c)); 
+                                            ready (proc (ret21)
+                                                        begin 
+                                                            send (a, CALLCLO, (g15, z19, c));
+                                                            ready (proc (ret22)
+                                                                        begin 
+                                                                            send (b, CALLCLO, (ret21, ret22, c));
+                                                                            ready (proc (ret23) ret23)
+                                                                        end)
+                                                        end)
+                                            end 
+                        in
+                        let dispatch = proc (fNO)
+                                            if zero? (-(fNO , 0))
+                                            then f0
+                                            else if zero? (-(fNO , 4))
+                                                 then f4
+                                                 else if zero? (-(fNO , 9))
+                                                      then f9
+                                                      else if zero? (-(fNO , 13))
+                                                           then f13
+                                                           else if zero? (-(fNO , 17))
+                                                                then f17
+                                                                else 0 
+                        in
+                        letrec
+                            mainLoop (msg) = 
+                                if zero? (-(msg , CREATECLO))
+                                then ready (createClo)
+                                else if zero? (-(msg , CALLCLO))
+                                     then ready (callClo)
+                                     else ready (mainLoop)
+
+                            createClo (msg) = 
+                                let (fNO, fvs, sender) = msg in
+                                let f = (dispatch fNO) in
+                                let clo = (f, fvs) in
+                                begin send (sender, clo); ready (mainLoop) end
+
+                            callClo (msg) =
+                                let (clo, arg, sender) = msg in
+                                let (f, fvs) = clo in
+                                let ffvs = (f fvs) in
+                                let ret = (ffvs arg) in
+                                begin send (sender, ret); ready (mainLoop) end
+                        in
+                        ready (mainLoop) 
+  in
+  let b = new (behaviourb) in
+  let behaviourc = proc (self)
+                        let CREATECLO = 1 in
+                        let CALLCLO = 2 in
+                        let F0 = 0 in
+                        let f0 = proc (fvs1)
+                                    let (a, b) = fvs1 in
+                                        proc (x2) begin send (b, CREATECLO, (4, (b, x2), a)); ready (proc (clo7) clo7) end 
+                        in
+                        let F4 = 4 in
+                        let f4 = proc (fvs5)
+                                    let (b, x2) = fvs5 in proc (y6) x2 
+                        in
+                        let F9 = 9 in
+                        let f9 = proc (fvs10)
+                                    let (a, b, c) = fvs10 in
+                                        proc (f11) begin send (b, CREATECLO, (13, (a, b, c, f11), a)); ready (proc (clo16) clo16) end 
+                        in
+                        let F13 = 13 in
+                        let f13 = proc (fvs14)
+                                    let (a, b, c, f11) = fvs14 in
+                                        proc (g15) begin send (c, CREATECLO, (17, (a, b, c, f11, g15), b)); ready (proc (clo20) clo20) end 
+                        in
+                        let F17 = 17 in
+                        let f17 = proc (fvs18)
+                                    let (a, b, c, f11, g15) = fvs18 in
+                                        proc (z19) 
+                                            begin 
+                                                send (a, CALLCLO, (f11, z19, c)); 
+                                                ready (proc (ret21)
+                                                            begin 
+                                                                send (a, CALLCLO, (g15, z19, c)); 
+                                                                ready (proc (ret22)
+                                                                            begin 
+                                                                                send (b, CALLCLO, (ret21, ret22, c));
+                                                                                ready (proc (ret23) ret23) 
+                                                                            end) 
+                                                            end) 
+                                            end 
+                        in
+                        let dispatch = proc (fNO)
+                                            if zero? (-(fNO , 0))
+                                            then f0
+                                            else if zero? (-(fNO , 4))
+                                                 then f4
+                                                 else if zero? (-(fNO , 9))
+                                                      then f9
+                                                      else if zero? (-(fNO , 13))
+                                                           then f13
+                                                           else if zero? (-(fNO , 17))
+                                                                then f17
+                                                                else 0 
+                        in
+                        letrec
+                            mainLoop (msg) = 
+                                if zero? (-(msg , CREATECLO))
+                                then ready (createClo)
+                                else if zero? (-(msg , CALLCLO))
+                                    then ready (callClo)
+                                    else ready (mainLoop)
+
+                            createClo (msg) = 
+                                let (fNO, fvs, sender) = msg in
+                                let f = (dispatch fNO) in
+                                let clo = (f, fvs) in
+                                begin send (sender, clo); ready (mainLoop) end
+
+                            callClo (msg) =
+                                let (clo, arg, sender) = msg in
+                                let (f, fvs) = clo in
+                                let ffvs = (f fvs) in
+                                let ret = (ffvs arg) in
+                                begin send (sender, ret); ready (mainLoop) end
+                        in
+                        ready (mainLoop) 
+  in
+  let c = new (behaviourc) in
+    begin 
+        send (a, CREATECLO, (0, (a, b), main));
+        ready (proc (clo3)
+                    let k8 = clo3 in 
+                    begin 
+                        send (a, CREATECLO, (9, (a, b, c), main));
+                        ready (proc (clo12)
+                                    let s24 = clo12 in
+                                    begin 
+                                        send (a, CALLCLO, (s24, k8, main)); 
+                                        ready (proc (ret25)
+                                                    begin 
+                                                        send (b, CALLCLO, (ret25, k8, main));
+                                                        ready (proc (ret26)
+                                                                begin 
+                                                                    send (c, CALLCLO, (ret26, 1, main)); 
+                                                                    ready (proc (ret27)
+                                                                                begin print(ret27); ret27 end)
+                                                                end) 
+                                                    end) 
+                                    end) 
+                    end) 
+    end

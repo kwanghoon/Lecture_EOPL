@@ -156,7 +156,7 @@ runMainNode addrStr fileName = do
 
     liftIO $ atomically $ writeTVar interpRun True   -- just for prompt
 
-    (result,store) <- value_of_program expression
+    result <- value_of_program expression
     -- runReadyServiceLoop store (initActorState mNid)
     liftIO $ putStrLn ("[Main@" ++ show pid ++ "] Final result: " ++ show result)
 
