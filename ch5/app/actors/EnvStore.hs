@@ -21,6 +21,7 @@ data Env =
   | Extend_env ActorId Identifier DenVal Env
   | Extend_env_rec [(Identifier,ActorId,Identifier,Exp)] Env
   | Extend_env_behv (RoleName,Exp,Env) Env
+  | Extend_env_with_actorId Identifier ActorId Env   -- No location! 
   deriving (Generic, Binary)
 
 empty_env :: Env
@@ -40,6 +41,8 @@ apply_env (Extend_env_rec idActoridIdExpList saved_env) store search_var
                        | (p_name,saved_actor,b_var,p_body) <- idActoridIdExpList, p_name==search_var ]
 apply_env (Extend_env_behv _ saved_env) store search_var =
   apply_env saved_env store search_var
+apply_env (Extend_env_with_actorId _ _ saved_env) store search_var =
+  apply_env saved_env store search_var  
 
 extend_env :: ActorId -> Identifier -> DenVal -> Env -> Env
 extend_env a x v env = Extend_env a x v env
@@ -49,6 +52,9 @@ extend_env_rec idActoridIdExpList env = Extend_env_rec idActoridIdExpList env
 
 extend_env_behv :: RoleName -> Exp -> Env -> Env
 extend_env_behv roleName procExp savedEnv = Extend_env_behv (roleName,procExp,savedEnv) savedEnv
+
+extend_env_with_actorId :: Identifier -> ActorId -> Env -> Env
+extend_env_with_actorId var aid env = Extend_env_with_actorId var aid env
 
 -- lookup_env: 변수가 정의된 위치(액터 id)만 반환
 lookup_env :: Env -> Identifier -> ActorId
@@ -62,6 +68,8 @@ lookup_env (Extend_env_rec idActoridIdExpList saved_env) search_var =
     []     -> lookup_env saved_env search_var
 lookup_env (Extend_env_behv _ env) search_var =
   lookup_env env search_var
+lookup_env (Extend_env_with_actorId _ _ env) search_var =
+  lookup_env env search_var  
 
 --
 lookup_behvs :: RoleName -> Env -> [(Exp, Env)]
@@ -71,6 +79,21 @@ lookup_behvs role (Extend_env_behv (r, e, savedEnv) rest)
   | otherwise = lookup_behvs role rest
 lookup_behvs role (Extend_env _ _ _ rest) = lookup_behvs role rest
 lookup_behvs role (Extend_env_rec _ rest) = lookup_behvs role rest
+lookup_behvs role (Extend_env_with_actorId _ _ rest) = lookup_behvs role rest
+
+--
+lookup_actorId :: Env -> Identifier -> ActorId 
+lookup_actorId Empty_env search_aname = error (search_aname ++ " is not found.")
+lookup_actorId (Extend_env saved_actor _ _ saved_env) search_aname =
+  lookup_actorId saved_env search_aname
+lookup_actorId (Extend_env_rec _ saved_env) search_aname =
+  lookup_actorId saved_env search_aname
+lookup_actorId (Extend_env_behv _ saved_env) search_aname =
+  lookup_actorId saved_env search_aname
+lookup_actorId (Extend_env_with_actorId saved_aname saved_actor saved_env) search_aname
+  | search_aname == saved_aname = saved_actor  
+  | otherwise = lookup_actorId saved_env search_aname
+
 
 -- Expressed values
 data ExpVal =
@@ -220,6 +243,12 @@ data RemoteMessage =
   | RemoteProc Exp Env ActorId              -- 생성할 Proc_Exp, Env
   | RemoteCall (Location, ExpVal) ActorId   -- (원격 store 주소, 인자 값)
   deriving (Generic, Binary, Typeable)
+
+instance Show RemoteMessage where
+  show (RemoteVar loc aid) = "RemoteVar loc: " ++ show loc ++ " from: " ++ show aid
+  show (RemoteSet (loc, val) aid) = "RemoteSet loc: " ++ show loc ++ " value: " ++ show val ++ " to: " ++ show aid
+  show (RemoteProc exp env aid) = "RemoteProc exp: " ++ show exp ++ " to: " ++ show aid
+  show (RemoteCall (loc, val) aid) = "RemoteCall loc: " ++ show loc ++ " value: " ++ show val ++ " to: " ++ show aid  
 
 data ReturnMessage = ReturnMessage ExpVal
   deriving (Generic, Binary, Typeable)

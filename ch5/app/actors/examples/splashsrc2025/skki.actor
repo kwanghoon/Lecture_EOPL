@@ -1,15 +1,16 @@
 let a = new (
           proc (self)
-            letrec f(msg) = print(msg) in
+            letrec f(msg) = begin print(msg); ready(f) end in
               ready(f) ) in
 let b = new (
           proc (self)
-            letrec f(msg) = print(msg) in
+            letrec f(msg) = begin print(msg); ready(f) end in
               ready(f) ) in
 let c = new (
           proc (self)
-            letrec f(msg) = print(msg) in
+            letrec f(msg) = begin print(msg); ready(f) end in
               ready(f) ) in
+
 let s = proc a (f) 
              proc b (g) 
                proc c (x)
