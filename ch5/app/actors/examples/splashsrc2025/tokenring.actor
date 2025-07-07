@@ -1,0 +1,69 @@
+
+proc(main)
+let START = 1 in
+let TOKEN = 2 in 
+let beh = proc(name)
+            proc(token)
+                proc(self) 
+                    let tmpToken = token in 
+                    letrec h (msg) = 
+                        let (cmd, payload) = msg in 
+                            if (cmd == START) then 
+                                begin 
+                                    print("[START]" ++ name);
+                                    let next = payload in 
+
+                                        begin 
+                                            if (name == token) then
+                                                print("\n" ++ name ++ "\n")
+                                            else 
+                                                send (next, (TOKEN, token)); 
+
+                                            letrec h1(msg) = 
+                                                let (cmd, payload) = msg in 
+                                                    if (cmd == TOKEN) then 
+                                                        begin 
+                                                            let senttoken = payload in 
+                                                                if (name == senttoken) then
+                                                                    begin 
+                                                                        set token = senttoken ;
+                                                                        print("\n" ++ name ++ "\n")
+                                                                    end
+                                                                else 
+                                                                    send (next, (TOKEN, senttoken));
+                                                            ready(h1)
+                                                        end
+                                                    else 
+                                                        ready(h1)
+                                            in ready(h1)
+                                        end
+                                end 
+                            else 
+                                ready(h) // protocol error!
+                    in 
+                        ready(h) 
+in
+let node1 = 
+    new ( ((beh "kim") "jo") )
+in
+let node2 = 
+    new ( ((beh "choi" ) "park") )
+in
+let node3 = 
+    new ( ((beh "park") "lee") )
+in
+let node4 = 
+    new ( ((beh "lee") "choi") )
+in
+let node5 = 
+    new ( ((beh  "jo") "kim") )
+in
+    begin 
+        send (node1, (START, node2));
+        send (node2, (START, node3));
+        send (node3, (START, node4));
+        send (node4, (START, node5));
+        send (node5, (START, node1));
+
+        ready(proc(d) d)
+    end

@@ -90,7 +90,7 @@ apply_cont :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Sto
 
 apply_cont cont expval store actors = 
   do current <- getSelfPid
-     liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "apply_cont: " ++ show cont 
+     -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "apply_cont: " ++ show cont 
      apply_cont' cont expval store actors 
 
 apply_cont' :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Store)
@@ -426,7 +426,7 @@ apply_unop op rand = error ("Unknown unary operator: :" ++ show op ++ " " ++ sho
 value_of_k :: Exp -> Env -> Cont -> Store -> ActorState -> Process (FinalAnswer, Store)
 value_of_k exp env cont store actors = 
   do current <- getSelfPid
-     liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "value_of_k: " ++ take 100 (show exp)
+     -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "value_of_k: " ++ take 100 (show exp)
      value_of_k' exp env cont store actors 
 
 value_of_k' :: Exp -> Env -> Cont -> Store -> ActorState -> Process (FinalAnswer, Store)
