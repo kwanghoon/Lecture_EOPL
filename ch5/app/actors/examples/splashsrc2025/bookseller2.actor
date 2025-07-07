@@ -1,0 +1,104 @@
+proc(main) 
+
+let START = 0 in
+let TITLE = 1 in
+let PRICE = 2 in 
+let DECISION = 3 in 
+let DELIVERYDATE = 4 in 
+let CONTRIB = 5 in
+let buyer1 = 
+    new (proc (self) 
+        letrec h (msg) = 
+            let (cmd, payload) = msg in 
+                if (cmd == START) then 
+                    let (buyer2, seller) = payload in 
+                    begin 
+                        send (seller, (TITLE, "The Adventures of Tom Sawyer\n", self));
+                        letrec h1 (msg) =
+                            let (cmd, payload) = msg in 
+                                if (cmd == PRICE) then
+                                    let price = payload in 
+                                    let budget = 1000 in 
+                                    begin 
+                                        send (buyer2, (PRICE, (price, self)));
+                                        letrec h3 (msg) = 
+                                            let (cmd, payload) = msg in 
+                                                if (cmd == CONTRIB) then 
+                                                    let contrib = payload in 
+                                                    let budgetSum = -(budget, -(0,contrib)) in
+
+                                                        if (price == budgetSum) then 
+                                                            begin 
+                                                                send (seller, (DECISION, (price==budgetSum)));
+                                                                letrec h2 (msg) = 
+                                                                    let (cmd, payload) = msg in 
+                                                                        if (cmd == DELIVERYDATE) then 
+                                                                            let date = payload in 
+                                                                                print (date) 
+                                                                        else
+                                                                            ready(h) // protocol error!
+                                                                in ready(h2)
+                                                            end
+                                                        else 
+                                                            print("Can't buy\n")
+                                                else 
+                                                    ready(h) // protocol error!                                                            
+
+                                        in ready(h3) 
+                                    end 
+                                else
+                                    ready(h) // protocol error!
+                        in 
+                            ready(h1)
+                    end
+                else 
+                    ready(h) // protocol error! 
+        in ready (h)
+    )
+in 
+let buyer2 = 
+        new (proc (self)
+            letrec h (msg) = 
+                let (cmd, payload) = msg in 
+                    if (cmd == PRICE) then 
+                        let (price, buyer) = payload in 
+                            begin 
+                                print (price);
+                                let contrib = 500 in 
+                                    send (buyer, (CONTRIB, contrib))
+                            end
+                    else
+                        ready(h) // protocol error!
+            in ready(h) 
+    )
+in
+let seller = 
+   new (proc (self)
+    letrec h (msg) = 
+        let (cmd, title, buyer) = msg in 
+            if (cmd == TITLE) then 
+                begin
+                    print (title);
+                    let price = readInt() in 
+                        begin 
+                            send (buyer, (PRICE, price));
+                            letrec h1 (msg) = 
+                                let (cmd, decision) = msg in 
+                                    if decision then 
+                                        let date = "2025 08 01\n" in 
+                                            send (buyer, (DELIVERYDATE, date))
+                                    else 
+                                        print( "no deal..." )
+                            in ready(h1)
+                        end
+                end
+            else 
+                ready(h)
+    in ready (h)
+   )
+
+in 
+    begin
+        send (buyer1, (START, (buyer2, seller)));
+        ready(proc(d) d)  // for remote services
+    end

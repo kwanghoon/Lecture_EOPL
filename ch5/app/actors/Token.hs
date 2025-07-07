@@ -49,6 +49,7 @@ data Token =
   | CDR                         -- cdr
   | PRINT                       -- print
   | READ                        -- read
+  | READINT                     -- readInt
   | PLUSPLUS                    -- ++
   | EQEQ                        -- ==
 
@@ -115,6 +116,7 @@ tokenStrList =
     (CDR,    "cdr"),
     (PRINT,  "print"),
     (READ,   "read"),
+    (READINT,   "readInt"),
     (PLUSPLUS, "++"),
     (EQEQ,     "=="),
 

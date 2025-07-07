@@ -47,7 +47,7 @@ data Exp =
   deriving (Show, Generic, Binary)
 
 
-data UnaryOp = IsZero | IsNull | Car | Cdr | Print | Read
+data UnaryOp = IsZero | IsNull | Car | Cdr | Print | Read | ReadInt
   deriving (Show, Generic, Binary)
 
 data CompOp = Eq                -- more comparison operators can be added here

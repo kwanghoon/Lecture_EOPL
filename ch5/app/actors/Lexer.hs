@@ -76,6 +76,7 @@ keywords =
   , ("cdr",    CDR)
   , ("print",  PRINT)
   , ("read",   READ)
+  , ("readInt",   READINT)
   , ("in",     IN)
   , ("send",   SEND)
   , ("ready",  READY)

@@ -133,6 +133,9 @@ parserSpec = ParserSpec
       rule "Expression -> read ( )"
         (\rhs -> return $ PETExp (Unary_Exp Read (Const_Exp 0))), -- dummy Exp
 
+      rule "Expression -> readInt ( )"
+        (\rhs -> return $ PETExp (Unary_Exp ReadInt (Const_Exp 0))), -- dummy Exp        
+
       rule "Expression -> ( Expression == Expression )"
         (\rhs -> return $ PETExp (Comp_Exp Eq (expFrom (get rhs 2)) (expFrom (get rhs 4)))),
 

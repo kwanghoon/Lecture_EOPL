@@ -90,7 +90,7 @@ apply_cont :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Sto
 
 apply_cont cont expval store actors = 
   do current <- getSelfPid
-     -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "apply_cont: " ++ show cont 
+     liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "apply_cont: " ++ show cont 
      apply_cont' cont expval store actors 
 
 apply_cont' :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Store)
@@ -410,6 +410,15 @@ apply_unop Read _ = do
   liftIO $ putStr "\ESC[2K"   -- 줄 전체 지우기
   liftIO $ hFlush stdout
   return $ Str_Val line
+apply_unop ReadInt _ = do
+  liftIO $ hFlush stdout
+  line <- liftIO getLine
+  -- 입력 받은 직후, 이전 줄 지우기(ANSI escape code)
+  -- 커서를 한 줄 위로 올리고, 줄 전체 지우기
+  liftIO $ putStr "\ESC[A"    -- 커서 위로 한 줄
+  liftIO $ putStr "\ESC[2K"   -- 줄 전체 지우기
+  liftIO $ hFlush stdout
+  return $ Num_Val (read line :: Int)
 apply_unop op rand = error ("Unknown unary operator: :" ++ show op ++ " " ++ show rand)
 
 
@@ -417,7 +426,7 @@ apply_unop op rand = error ("Unknown unary operator: :" ++ show op ++ " " ++ sho
 value_of_k :: Exp -> Env -> Cont -> Store -> ActorState -> Process (FinalAnswer, Store)
 value_of_k exp env cont store actors = 
   do current <- getSelfPid
-     -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "value_of_k: " ++ show exp
+     liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "value_of_k: " ++ take 100 (show exp)
      value_of_k' exp env cont store actors 
 
 value_of_k' :: Exp -> Env -> Cont -> Store -> ActorState -> Process (FinalAnswer, Store)

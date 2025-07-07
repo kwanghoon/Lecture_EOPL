@@ -17,7 +17,7 @@ let buyer =
                             let (cmd, payload) = msg in 
                                 if (cmd == PRICE) then
                                     let price = payload in 
-                                    let budget = "1000" in 
+                                    let budget = 1000 in 
                                     if (price == budget) then 
                                     begin 
                                         send (seller, (DECISION, (price==budget)));
@@ -49,7 +49,7 @@ let seller =
             if (cmd == TITLE) then 
                 begin
                     print (title);
-                    let price = read() in 
+                    let price = readInt() in 
                         begin 
                             send (buyer, (PRICE, price));
                             letrec h1 (msg) = 
