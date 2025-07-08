@@ -216,7 +216,6 @@ apply_cont' (Ready_Cont saved_cont) val store actors = do
   current <- getSelfPid
   receiveWait
     [ match $ \(msg :: RemoteMessage) -> do
-        liftIO $ putStrLn $ "[" ++ show current ++ "] " ++ show msg
         case msg of
           -- 변수 read 요청 처리
           RemoteVar varLoc requester -> do

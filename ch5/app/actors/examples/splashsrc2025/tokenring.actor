@@ -5,29 +5,27 @@ let TOKEN = 2 in
 let beh = proc(name)
             proc(token)
                 proc(self) 
-                    let tmpToken = token in 
                     letrec h (msg) = 
                         let (cmd, payload) = msg in 
                             if (cmd == START) then 
                                 begin 
-                                    print("[START]" ++ name);
-                                    let next = payload in 
-
+                                    print("\n[START] " ++ name ++ "\n");
+                                    let next = payload in
                                         begin 
                                             if (name == token) then
-                                                print("\n" ++ name ++ "\n")
+                                                print("\nreceived : " ++ name ++ "\n")
                                             else 
-                                                send (next, (TOKEN, token)); 
+                                                send (next, (TOKEN, token));
 
                                             letrec h1(msg) = 
                                                 let (cmd, payload) = msg in 
                                                     if (cmd == TOKEN) then 
-                                                        begin 
+                                                        begin
                                                             let senttoken = payload in 
                                                                 if (name == senttoken) then
                                                                     begin 
                                                                         set token = senttoken ;
-                                                                        print("\n" ++ name ++ "\n")
+                                                                        print("\nreceived : " ++ senttoken ++ "\n")
                                                                     end
                                                                 else 
                                                                     send (next, (TOKEN, senttoken));
