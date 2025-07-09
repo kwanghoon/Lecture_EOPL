@@ -1,0 +1,91 @@
+proc(main) 
+
+let START = 0 in
+let TITLE = 1 in
+let PRICE = 2 in 
+let DECISION = 3 in 
+let DELIVERYDATE = 4 in 
+let CONTRIB = 5 in
+let generalBuyer = 
+    proc (mkDecision) 
+    new (proc (self) 
+        letrec h (msg) = 
+            let (cmd, payload) = msg in 
+                if (cmd == START) then 
+                    let seller = payload in 
+                    begin 
+                        send (seller, (TITLE, "The Adventures of Tom Sawyer\n", self));
+                        letrec h1 (msg) =
+                            let (cmd, payload) = msg in 
+                                if (cmd == PRICE) then
+                                    let price = payload in 
+                                    let decision = ((mkDecision price) self) in 
+                                    
+                                        if decision then 
+                                            begin 
+                                                print("decision is True");
+                                                send (seller, (DECISION, decision));
+                                                letrec h2 (msg) = 
+                                                    let (cmd, payload) = msg in 
+                                                        if (cmd == DELIVERYDATE) then 
+                                                            let date = payload in 
+                                                                print (date) 
+                                                        else
+                                                            ready(h) // protocol error!
+                                                in ready(h2)
+                                            end
+                                        else 
+                                            print("Can't buy\n")
+                                              
+                                else
+                                    ready(h) // protocol error!
+                        in 
+                            ready(h1)
+                    end
+                else 
+                    ready(h) // protocol error! 
+        in ready (h)
+    )
+in 
+
+let seller = 
+   new (proc (self)
+    letrec h (msg) = 
+        let (cmd, title, buyer) = msg in 
+            if (cmd == TITLE) then 
+                begin
+                    print (title);
+                    let price = readInt() in 
+                        begin 
+                            send (buyer, (PRICE, price));
+                            letrec h1 (msg) = 
+                                let (cmd, decision) = msg in 
+                                    if decision then 
+                                        let date = "2025 08 01\n" in 
+                                            send (buyer, (DELIVERYDATE, date))
+                                    else 
+                                        print( "no deal..." )
+                            in ready(h1)
+                        end
+                end
+            else 
+                ready(h)
+    in ready (h)
+   )
+in
+
+// One buyer
+let mkDecision1 = 
+        proc(price) 
+        proc(arb) 
+            let budget = 1000 in 
+                (price == budget)
+ in 
+ let buyer1 = (generalBuyer mkDecision1) 
+ in 
+    begin
+        // One buyer
+        send ((generalBuyer mkDecision1), (START, seller));
+
+        ready(proc(d) d)  // for remote services
+    end
