@@ -1,0 +1,119 @@
+proc(main)
+
+let JOIN = 1 in 
+let BEGINTASK = 2 in 
+let ENDTASK = 3 in 
+
+let taskList = [ 3, 7, 1, 9, 11, 0, 67, 49, 53, 12 ] in 
+
+let nextTask = proc (d) 
+    let h = car (taskList) in 
+    let t = cdr (taskList) in 
+    begin 
+      set taskList = t; 
+      h
+    end 
+in
+let done = proc(d) null?(taskList) in 
+
+let master = new (
+    proc(self)
+    let status1 = -1 in    // -1 Not connected, 0 Idle, 1 Busy 
+    let status2 = -1 in 
+    let status3 = -1 in 
+
+    let join = proc (w) proc(wid) 
+                 if (wid == 1) then 
+                    set status1 = 0 
+                 else if(wid == 2) then 
+                    set status2 = 0
+                 else if(wid == 3) then 
+                    set status3 = 0
+                 else 0 
+    in 
+    let assign = proc(w) proc(wid) proc(taskArg) 
+                    begin 
+                        if (wid == 1) then
+                            set status1 = 1
+                        else if (wid == 2) then 
+                            set status2 = 1 
+                        else if (wid == 3) then 
+                            set status3 = 1 
+                        else 0 ;
+
+                        send(w, (BEGINTASK, taskArg))
+                    end
+    in
+    let completed = proc(wid)
+            if (wid == 1) then
+                begin print ("Done: 1"); set status1 = 0 end 
+            else if (wid == 2) then
+                begin print ("Done: 2"); set status2 = 0 end 
+            else if (wid == 3) then
+                begin print ("Done: 3"); set status3 = 0 end                 
+            else 0 
+    in 
+    letrec h (msg) =
+        let (cmd, payload) = msg in 
+            if (cmd == JOIN) then 
+                let (w, wid) = payload in  
+                  begin 
+                    print ("Join:");
+
+                    ( (join w) wid );
+                    
+                    if (done 0) then
+                        print ("Done.")
+                    else 
+                        let nextTaskArg = (nextTask 0) in 
+                            (((assign w) wid) nextTaskArg) ;
+
+                    ready(h)
+                  end 
+            else if (cmd == ENDTASK) then 
+                let (res, w, wid) = payload in 
+                begin 
+                    (completed wid);
+
+                    if (done 0) then
+                        print ("Done.")
+                    else 
+                        let nextTaskArg = (nextTask 0) in 
+                            (((assign w) wid) nextTaskArg);
+                    
+                    ready(h)
+                end
+            else 
+                ready(h) // protocol error!
+    in ready(h)
+    ) 
+in
+let workerBeh = 
+    proc(id)
+    proc (self) 
+    let task = proc(x) -(x,2) in
+    letrec h (msg) = 
+        let (cmd, payload) = msg in 
+            if (cmd == BEGINTASK) then 
+                let taskArg = payload in 
+                let taskRes = (task taskArg) in 
+                    begin 
+                        send(master, (ENDTASK, (taskRes, self, id)));
+                        ready(h) 
+                    end 
+            else 
+                ready(h) // procol error! 
+    in begin 
+        print("Send JOIN to master");
+        print (self);
+        send(master, (JOIN, (self, id)));
+        ready(h)
+       end
+in
+
+let worker1 = new( (workerBeh 1) ) in 
+let worker2 = new( (workerBeh 2) ) in 
+let worker3 = new( (workerBeh 3) ) in 
+
+ready(proc(d) d)
+
