@@ -1,3 +1,4 @@
+proc(main)
 let a = new (
           proc (self)
             letrec f(msg) = begin print(msg); ready(f) end in
