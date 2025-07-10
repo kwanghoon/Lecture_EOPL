@@ -14,7 +14,6 @@ import ActorName(RoleName)
 import NodeRegistry(NodeMessage(..))
 import SystemMessage
 
-import Debug.Trace
 import System.IO (hFlush, stdout)
 
 import Control.Distributed.Process
@@ -23,7 +22,7 @@ import Control.Monad (forever)
 import Control.Concurrent (threadDelay)
 import Control.Monad.Cont (MonadIO(liftIO))
 
-
+import Debug.Trace (traceM)
 -- Continuation
 
 data Cont =
@@ -219,6 +218,7 @@ apply_cont' (Ready_Cont saved_cont) val store actors = do
         case msg of
           -- 변수 read 요청 처리
           RemoteVar varLoc requester -> do
+            -- traceM $ "RemoteVar received" 
             let returnVal = deref store varLoc
             case returnVal of
               Proc_Val _ -> do
@@ -228,11 +228,13 @@ apply_cont' (Ready_Cont saved_cont) val store actors = do
             apply_cont (Ready_Cont saved_cont) val store actors
           -- 변수 write 요청 처리
           RemoteSet (varLoc, val') requester -> do
+            -- traceM $ "Remotset received"
             let store1 = setref store varLoc val'
             send requester (ReturnMessage Unit_Val)
             apply_cont (Ready_Cont saved_cont) val store1 actors
           -- 프로시저 생성 (Proc) 요청 처리
           RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
+            -- traceM $ "RemoteProc received"
             (returnVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
             let (loc,store2) = newref store1 returnVal
                 returnVal' = Loc_Val (remoteLocation loc current)
@@ -240,11 +242,19 @@ apply_cont' (Ready_Cont saved_cont) val store actors = do
             apply_cont (Ready_Cont saved_cont) val store2 actors
           -- 프로시저 호출 요청 처리
           RemoteCall (ratorLoc, randVal) requester -> do
+            -- traceM $ "RemoteCall received"
             let procVal = deref store ratorLoc
                 proc = expval_proc procVal
             (returnVal, store1) <- apply_procedure_k proc randVal End_Main_Thread_Cont store actors
-            send requester (ReturnMessage returnVal)
-            apply_cont (Ready_Cont saved_cont) val store1 actors
+            case returnVal of
+              Proc_Val _ -> do
+                let (loc,store2) = newref store1 returnVal
+                    returnVal' = Loc_Val (remoteLocation loc current)
+                send requester (ReturnMessage returnVal')
+                apply_cont (Ready_Cont saved_cont) val store2 actors
+              _ -> do
+                send requester (ReturnMessage returnVal)
+                apply_cont (Ready_Cont saved_cont) val store1 actors
       ,
       match $ \(msg :: ActorMessage) -> case msg of
         SelectedBehavior loc -> do
@@ -279,6 +289,7 @@ apply_cont' (RemoteReady_Cont saved_cont) val store actors = do
   receiveWait
     [ match $ \(msg :: ReturnMessage) -> do
         let ReturnMessage returnVal = msg
+        -- liftIO $ putStrLn $ "apply_cont (RemoteReady) receieved " ++ show returnVal
         apply_cont saved_cont returnVal store actors
       ,
       match $ \(msg :: RemoteMessage) -> do
@@ -485,21 +496,11 @@ value_of_k' (Letrec_Exp nameActorNameArgBodyList letrec_body) env cont store act
 
 value_of_k' (Proc_Exp (Just actorName) var body) env cont store actors = do
   current <- getSelfPid
-
-  liftIO $ putStrLn $ "[" ++ show current ++ "] " ++ "actorName: " ++ actorName
-
-  -- let (loc, store1) = apply_env env store actorName
-  --     actorId = expval_actor (deref store1 loc)
   let actorId = lookup_actorId env actorName
-
-  liftIO $ putStrLn $ "[" ++ show current ++ "] " ++ "actorId: " ++ show actorId
-
   if actorId == current
   then apply_cont cont (Proc_Val (procedure current var body env)) store actors
   else do
-    liftIO $ putStrLn $ "[" ++ show current ++ "] " ++ "[BEFORE] send to " ++ show actorId
     send actorId (RemoteProc (Proc_Exp Nothing var body) env current)
-    liftIO $ putStrLn $ "[" ++ show current ++ "] " ++ "[AFTER] send to " ++ show actorId
     apply_cont (RemoteReady_Cont cont) Unit_Val store actors
 
 value_of_k' (Proc_Exp Nothing var body) env cont store actors = do

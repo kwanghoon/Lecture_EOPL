@@ -1,6 +1,6 @@
+proc(main)
 let a = new (proc (self)
-            letrec f(msg) =
-              let (cmd) = msg in
-               print(-(cmd, 123))
-            in ready(f))
-  in send(a, (456))
+            letrec h(arg) =
+               print(-(arg, -(0,456)))
+            in ready(h))
+  in send(a, 123)

@@ -1,2 +1,12 @@
-let f = proc @a (cmd) print(-(cmd,123)) 
-in (f 456)
+proc(main)
+let n = 456 in
+let f = proc(x) proc(y) -(x,-(0,y)) in
+let a = new ( proc(self)
+                letrec h(cmd) = 
+                        print (((f cmd) n))
+                in ready(h) ) in
+let g = proc a (z) 123
+in begin
+    send(a, (g 0));
+    ready(proc(d) d)
+   end
