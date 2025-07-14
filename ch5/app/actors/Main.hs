@@ -291,36 +291,36 @@ readyExp :: Exp
 readyExp = Ready_Exp (Proc_Exp Nothing "d" (Var_Exp "d"))
 
 -- Remote 메시지 처리 서비스 루프
-runReadyServiceLoop :: Store -> ActorState -> Process ()
-runReadyServiceLoop store actors = do
-  store' <- runReadyService store actors
-  runReadyServiceLoop store' actors
+-- runReadyServiceLoop :: Store -> ActorState -> Process ()
+-- runReadyServiceLoop store actors = do
+--   store' <- runReadyService store actors
+--   runReadyServiceLoop store' actors
 
--- RemoteMessage 한 번 처리하고 업데이트된 Store 반환
-runReadyService :: Store -> ActorState -> Process Store
-runReadyService store actors = do
-  liftIO $ putStrLn $ "runReadyService"
-  current <- getSelfPid
-  receiveWait
-    [ match $ \(msg :: RemoteMessage) -> case msg of
-        RemoteVar varLoc requester -> do
-          let returnVal = deref store varLoc
-          send requester (ReturnMessage returnVal)
-          return store
-        RemoteSet (varLoc, val') requester -> do
-          let store1 = setref store varLoc val'
-          send requester (ReturnMessage Unit_Val)
-          return store1
-        RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
-          -- make Proc_Val from the Proc_Exp
-          (procVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
-          let (loc, store2) = newref store1 procVal
-          send requester (ReturnMessage (Loc_Val (remoteLocation loc current)))
-          return store2
-        RemoteCall (ratorLoc, randVal) requester -> do
-          let procVal = deref store ratorLoc
-              proc = expval_proc procVal
-          (returnVal, store1) <- apply_procedure_k proc randVal End_Main_Thread_Cont store actors
-          send requester (ReturnMessage returnVal)
-          return store1
-    ]
+-- -- RemoteMessage 한 번 처리하고 업데이트된 Store 반환
+-- runReadyService :: Store -> ActorState -> Process Store
+-- runReadyService store actors = do
+--   liftIO $ putStrLn $ "runReadyService"
+--   current <- getSelfPid
+--   receiveWait
+--     [ match $ \(msg :: RemoteMessage) -> case msg of
+--         RemoteVar varLoc requester -> do
+--           let returnVal = deref store varLoc
+--           send requester (ReturnMessage returnVal)
+--           return store
+--         RemoteSet (varLoc, val') requester -> do
+--           let store1 = setref store varLoc val'
+--           send requester (ReturnMessage Unit_Val)
+--           return store1
+--         RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
+--           -- make Proc_Val from the Proc_Exp
+--           (procVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
+--           let (loc, store2) = newref store1 procVal
+--           send requester (ReturnMessage (Loc_Val (remoteLocation loc current)))
+--           return store2
+--         RemoteCall (ratorLoc, randVal) requester -> do
+--           let procVal = deref store ratorLoc
+--               proc = expval_proc procVal
+--           (returnVal, store1) <- apply_procedure_k proc randVal End_Main_Thread_Cont store actors
+--           send requester (ReturnMessage returnVal)
+--           return store1
+--     ]

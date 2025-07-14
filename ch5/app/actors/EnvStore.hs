@@ -103,7 +103,6 @@ data ExpVal =
   | Bool_Val   {expval_bool :: Bool}
   | Proc_Val   {expval_proc :: Proc}
   | List_Val   {expval_list :: [ExpVal]}
-  | Loc_Val    {expval_loc :: RemoteLocation} -- location that returned by remote procedure creation
   | Unit_Val  -- for dummy value
   deriving (Generic, Typeable)
 
@@ -114,7 +113,6 @@ instance Show ExpVal where
   show (Bool_Val bool) = show bool
   show (Proc_Val proc) = show "<proc> var : " ++ show (var proc)
   show (List_Val val)  = "[" ++ intercalate "," (map show val) ++ "]"
-  show (Loc_Val remoteLoc) = "loc" ++ show (loc remoteLoc) ++ " at" ++ show (actorId remoteLoc)
   show (Unit_Val) = "dummy"
 
 instance Binary ExpVal where
@@ -137,12 +135,8 @@ instance Binary ExpVal where
     put (5 :: Word8)
     put (fromIntegral (length xs) :: Word32)
     mapM_ put xs
-  put (Loc_Val remoteLoc) = do
-    put (6 :: Word8)
-    put (loc remoteLoc)
-    put (actorId remoteLoc)
   put Unit_Val = do
-    put (7 :: Word8)
+    put (6 :: Word8)
 
   get = do
     tag <- get :: Get Word8
@@ -155,11 +149,7 @@ instance Binary ExpVal where
       5 -> do
         len <- get :: Get Word32
         List_Val <$> replicateM (fromIntegral len) get
-      6 -> do
-        loc <- get
-        aid <- get
-        return $ Loc_Val (RemoteLocation loc aid)
-      7 -> return Unit_Val
+      6 -> return Unit_Val
       _ -> error "Binary instance for ExpVal: unknown tag"
 
 instance Eq ExpVal where
@@ -185,14 +175,6 @@ data Proc = Procedure {saved_actor :: ActorId, var :: Identifier, body :: Exp, s
 
 procedure :: ActorId -> Identifier -> Exp -> Env -> Proc
 procedure actorId var body env = Procedure actorId var body env
-
-
--- Remote location : location + actor id
-data RemoteLocation = RemoteLocation { loc :: Location, actorId :: ActorId }
-  deriving (Generic, Binary)
-
-remoteLocation :: Location -> ActorId -> RemoteLocation
-remoteLocation loc aid = RemoteLocation { loc = loc, actorId = aid }
 
 
 -- Store
@@ -232,7 +214,7 @@ data ActorBehavior = ActorBehavior Identifier Exp Env ActorState
 
 data ActorMessage =
     StartActor ActorBehavior ActorId    -- stack run actors-exe node ..
-  | SelectedBehavior Location           -- stack run actors-exe role ...
+  | SelectedBehavior Exp Env            -- stack run actors-exe role ...
   deriving (Generic, Binary, Typeable)
 
 
@@ -241,14 +223,14 @@ data RemoteMessage =
     RemoteVar Location ActorId              -- 원격 store 주소
   | RemoteSet (Location, ExpVal) ActorId    -- (원격 store 주소, 할당할 값)
   | RemoteProc Exp Env ActorId              -- 생성할 Proc_Exp, Env
-  | RemoteCall (Location, ExpVal) ActorId   -- (원격 store 주소, 인자 값)
+  | RemoteCall (ExpVal, ExpVal) ActorId     -- (ratorVal, randVal)
   deriving (Generic, Binary, Typeable)
 
 instance Show RemoteMessage where
   show (RemoteVar loc aid) = "RemoteVar loc: " ++ show loc ++ " from: " ++ show aid
   show (RemoteSet (loc, val) aid) = "RemoteSet loc: " ++ show loc ++ " value: " ++ show val ++ " to: " ++ show aid
   show (RemoteProc exp env aid) = "RemoteProc exp: " ++ show exp ++ " to: " ++ show aid
-  show (RemoteCall (loc, val) aid) = "RemoteCall loc: " ++ show loc ++ " value: " ++ show val ++ " to: " ++ show aid  
+  show (RemoteCall (val1, val2) aid) = "RemoteCall rator: " ++ show val1 ++ " value: " ++ show val2 ++ " to: " ++ show aid  
 
 data ReturnMessage = ReturnMessage ExpVal
   deriving (Generic, Binary, Typeable)
