@@ -46,11 +46,11 @@ let master = new (
     in
     let completed = proc(wid)
             if (wid == 1) then
-                begin print ("Done: 1"); set status1 = 0 end 
+                begin print ("Done: 1\n"); set status1 = 0 end 
             else if (wid == 2) then
-                begin print ("Done: 2"); set status2 = 0 end 
+                begin print ("Done: 2\n"); set status2 = 0 end 
             else if (wid == 3) then
-                begin print ("Done: 3"); set status3 = 0 end                 
+                begin print ("Done: 3\n"); set status3 = 0 end                 
             else 0 
     in 
     letrec h (msg) =
@@ -58,7 +58,7 @@ let master = new (
             if (cmd == JOIN) then 
                 let (w, wid) = payload in  
                   begin 
-                    print ("Join:");
+                    print ("Join:" ++ wid);
 
                     ( (join w) wid );
                     
@@ -74,7 +74,6 @@ let master = new (
                 let (res, w, wid) = payload in 
                 begin 
                     (completed wid);
-
                     if (done 0) then
                         print ("Done.")
                     else 
@@ -115,5 +114,4 @@ let worker1 = new( (workerBeh 1) ) in
 let worker2 = new( (workerBeh 2) ) in 
 let worker3 = new( (workerBeh 3) ) in 
 
-ready(proc(d) d)
-
+200

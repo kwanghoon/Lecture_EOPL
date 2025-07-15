@@ -61,7 +61,5 @@ in
         send (node2, (START, node3));
         send (node3, (START, node4));
         send (node4, (START, node5));
-        send (node5, (START, node1));
-
-        ready(proc(d) d)
+        send (node5, (START, node1))
     end

@@ -67,8 +67,4 @@ let seller =
     in ready (h)
    )
 
-in 
-    begin
-        send (buyer, (START, seller ));
-        ready(proc(d) d)  // for remote services
-    end
+in send (buyer, (START, seller))
