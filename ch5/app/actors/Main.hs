@@ -32,8 +32,6 @@ import Data.Char (toLower)
 -- Entrypoint :
 --    stack run actors-exe 시 전달받는 인자에 따라
 --    main 노드 또는 원격 노드를 실행
--- stack run actors-exe main <ip:port> <file>
-
 main :: IO ()
 main = do
   args <- getArgs
@@ -156,11 +154,10 @@ runMainNode addrStr fileName = do
 
     liftIO $ atomically $ writeTVar interpRun True   -- just for prompt
 
-    result <- value_of_program expression
-    -- runReadyServiceLoop store (initActorState mNid)
+    (result,store) <- value_of_program expression
     liftIO $ putStrLn ("[Main@" ++ show pid ++ "] Final result: " ++ show result)
+    runReadyServiceLoop store (initActorState mNid)
 
-    forever $ liftIO $ threadDelay maxBound
 
 waitForStartCommand :: NodeId -> NodeRegistry -> IO ()
 waitForStartCommand mNid nodesRegistry = do
@@ -216,9 +213,8 @@ runRemoteNode addrStr mainAddrStr = do
     -- 노드 내 작업 수신 대기 프로세스 생성
     _ <- spawnLocal nodeListener
     liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] nodeListener started and waiting...")
-
-    -- 무한 대기 (프로세스 종료 방지)
     forever $ liftIO $ threadDelay maxBound
+
 
 -- 원격 노드 내에서 메시지 대기 및 액터 시작 요청 처리하는 프로세스
 nodeListener :: Process ()
@@ -235,8 +231,8 @@ nodeListener = do
               liftIO $ putStrLn $ "[Process@" ++ show self ++ "] SpawnLocal"
               let (loc, store1) = newref initStore (Actor_Val self)
                   env1 = extend_env self x loc env
-              _ <- value_of_k body env1 End_Main_Thread_Cont store1 actors
-              forever $ liftIO $ threadDelay maxBound )
+              (_,store2) <- value_of_k body env1 End_Main_Thread_Cont store1 actors
+              runReadyServiceLoop store2 actors )
           whereisRemoteAsync (mainNode actors) "nodeRegistry"
           receiveWait
             [ match $ \(WhereIsReply "nodeRegistry" (Just mPid)) -> 
@@ -281,46 +277,46 @@ runNodeByRole role addrStr mainAddrStr = do
           case mPid of
             Just pid -> do
               (_,store) <- value_of_k readyExp initEnv End_Main_Thread_Cont initStore (initActorState mainNodeId)
-              forever $ liftIO $ threadDelay maxBound -- todo : 삭제 여부 확인
+              runReadyServiceLoop store (initActorState mainNodeId)
             Nothing  -> do
               liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] mainInterp not found.")
               error "mainInterp not found"
         ]
 
+
 readyExp :: Exp
 readyExp = Ready_Exp (Proc_Exp Nothing "d" (Var_Exp "d"))
 
 -- Remote 메시지 처리 서비스 루프
--- runReadyServiceLoop :: Store -> ActorState -> Process ()
--- runReadyServiceLoop store actors = do
---   store' <- runReadyService store actors
---   runReadyServiceLoop store' actors
+runReadyServiceLoop :: Store -> ActorState -> Process ()
+runReadyServiceLoop store actors = do
+  store' <- runReadyService store actors
+  runReadyServiceLoop store' actors
 
 -- -- RemoteMessage 한 번 처리하고 업데이트된 Store 반환
--- runReadyService :: Store -> ActorState -> Process Store
--- runReadyService store actors = do
---   liftIO $ putStrLn $ "runReadyService"
---   current <- getSelfPid
---   receiveWait
---     [ match $ \(msg :: RemoteMessage) -> case msg of
---         RemoteVar varLoc requester -> do
---           let returnVal = deref store varLoc
---           send requester (ReturnMessage returnVal)
---           return store
---         RemoteSet (varLoc, val') requester -> do
---           let store1 = setref store varLoc val'
---           send requester (ReturnMessage Unit_Val)
---           return store1
---         RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
---           -- make Proc_Val from the Proc_Exp
---           (procVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
---           let (loc, store2) = newref store1 procVal
---           send requester (ReturnMessage (Loc_Val (remoteLocation loc current)))
---           return store2
---         RemoteCall (ratorLoc, randVal) requester -> do
---           let procVal = deref store ratorLoc
---               proc = expval_proc procVal
---           (returnVal, store1) <- apply_procedure_k proc randVal End_Main_Thread_Cont store actors
---           send requester (ReturnMessage returnVal)
---           return store1
---     ]
+runReadyService :: Store -> ActorState -> Process Store
+runReadyService store actors = do
+  current <- getSelfPid
+  receiveWait
+    [ match $ \(msg :: RemoteMessage) -> case msg of
+          RemoteVar varLoc requester -> do
+            let returnVal = deref store varLoc
+            send requester (ReturnMessage returnVal)
+            return store
+
+          RemoteSet (varLoc, val') requester -> do
+            let store1 = setref store varLoc val'
+            send requester (ReturnMessage Unit_Val)
+            return store1
+
+          RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
+            (returnVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
+            send requester (ReturnMessage returnVal)
+            return store1
+
+          RemoteCall (ratorVal, randVal) requester -> do
+            let proc = expval_proc ratorVal
+            (returnVal, store1) <- apply_procedure_k proc randVal End_Main_Thread_Cont store actors
+            send requester (ReturnMessage returnVal)
+            return store1
+    ]

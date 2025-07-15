@@ -1,0 +1,117 @@
+proc (main)
+
+let START = 0 in
+let TITLE = 1 in
+let PRICE = 2 in 
+let DECISION = 3 in 
+let DELIVERYDATE = 4 in 
+let CONTRIB = 5 in
+
+let mainBuyer = 
+    new ( proc(self)
+        letrec h (msg) =
+            let (cmd, payload) = msg in
+                if (cmd == START) then
+                    let (seller, mkDecision) = payload in
+                    begin
+                        send(seller, (TITLE, "The Adventures of Tom Sawyer\n", self));
+                        letrec h1 (msg) =
+                            let (cmd, payload) = msg in
+                            if (cmd == PRICE) then
+                                let price = payload in
+                                let decision = ((mkDecision price) self) in
+
+                                    begin
+                                        send(seller, (DECISION, decision));
+                                        letrec h2 (msg) =
+                                            let (cmd, payload) = msg in
+                                            if (cmd == DELIVERYDATE) then
+                                                let date = payload in 
+                                                    print(date)
+                                            else
+                                                ready(h2)
+                                        in 
+                                            ready(h2)
+                                    end
+                            else
+                                ready(h1)
+                        in 
+                            ready(h1)
+                    end
+                else
+                    ready(h)
+        in 
+            ready(h)
+    )
+in
+let seller = new ( proc (self)
+    letrec h (msg) =
+        let (cmd, title, buyer) = msg in
+        if (cmd == TITLE) then
+            begin
+                print(title);
+                let price = readInt() in
+                begin
+                    send(buyer, (PRICE, price));
+                    letrec h1 (msg) =
+                        let (cmd, decision) = msg in
+                        if (cmd == DECISION) then
+                            if decision then
+                                let date = "2025 08 01\n" in
+                                send (buyer, (DELIVERYDATE, date))
+                            else
+                                begin
+                                    print("no deal...\n");
+                                    send (buyer, (DELIVERYDATE, "Can't buy\n"))
+                                end
+                        else
+                            ready(h1)
+                    in ready(h1)
+                end
+            end
+        else
+            ready(h)
+    in ready(h)
+)
+in
+
+let mkDecision1 = proc(price) proc(d)
+    let budget = 1000 in
+    (price == budget)
+in
+
+let mkDecision2 = 
+    proc mainBuyer (price) 
+    proc mainBuyer (buyer)
+
+    let buyer2 = new ( proc(self)
+        letrec h (msg) =
+            let (cmd, payload) = msg in
+            if (cmd == START) then
+                let (price, buyer) = payload in
+                begin 
+                    print("Goal : " ++ price ++ "\n");
+                    let contrib = readInt() in
+                        send(buyer, (CONTRIB, contrib))
+                end
+            else
+                ready(h)
+        in ready(h)
+    )
+    in
+    begin
+        send(buyer2, (START,(price,buyer)));
+        ready ( proc(msg) 
+            let (cmd, payload) = msg in
+            if (cmd == CONTRIB) then
+                let contrib = payload in
+                let budget = -(contrib, -(0,500)) in
+                (price == budget)
+            else
+                send(buyer2, (START,(price,buyer)))
+        )
+    end
+
+in
+// send (mainBuyer, (START, (seller, mkDecision1)))
+send (mainBuyer, (START, (seller, mkDecision2)))

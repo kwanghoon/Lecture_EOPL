@@ -1,3 +1,4 @@
+proc(main)
 let JOIN = 1 in
 let SEND = 2 in
 let INPUT = 3 in
@@ -66,4 +67,4 @@ let clientBehavior = proc @client (self)
                                 send(server, (JOIN, self));
                                 ready(listen)
                            end
-in ready(proc(d)d)
+in 200

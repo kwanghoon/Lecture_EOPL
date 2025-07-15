@@ -82,10 +82,4 @@ let mkDecision1 =
                 (price == budget)
  in 
  let buyer1 = (generalBuyer mkDecision1) 
- in 
-    begin
-        // One buyer
-        send ((generalBuyer mkDecision1), (START, seller));
-
-        ready(proc(d) d)  // for remote services
-    end
+ in send ((generalBuyer mkDecision1), (START, seller))

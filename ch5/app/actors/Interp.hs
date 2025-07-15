@@ -569,11 +569,11 @@ value_of_k' exp _ _ _ _ =
 
 
 --
-value_of_program :: Exp -> Process FinalAnswer
+value_of_program :: Exp -> Process (FinalAnswer, Store)
 value_of_program exp = do
   nid <- getSelfNode
   (finalVal, store) <- value_of_k exp initEnv (Init_Main_Actor_Cont End_Main_Thread_Cont) initStore (initActorState nid)
-  return finalVal
+  return (finalVal, store)
 
 --
 initEnv = empty_env
