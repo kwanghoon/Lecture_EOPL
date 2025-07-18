@@ -22,7 +22,8 @@ import Control.Monad (forever)
 import Control.Concurrent (threadDelay)
 import Control.Monad.Cont (MonadIO(liftIO))
 
-import Debug.Trace (traceM)
+import qualified Data.Map as Map
+
 -- Continuation
 
 data Cont =
@@ -43,7 +44,6 @@ data Cont =
   | Send_Cont [Exp] [ExpVal] Env Cont
   | Ready_Cont Cont
   | RemoteReady_Cont Cont
-  | RoleReady_Cont Identifier RoleName Exp Env Cont
   | New_Cont Cont
   | Spawn_Cont Cont
 
@@ -74,7 +74,6 @@ instance Show Cont where
   show (Ready_Cont _) = "Ready_Cont"
 
   show (RemoteReady_Cont _) = "RemoteReady_Cont"    
-  show (RoleReady_Cont id roleName _ _ _) = "RoleReady_Cont " ++ id ++ " " ++ show roleName
   show (New_Cont _) = "New_Cont"
   show (Spawn_Cont _) = "Spawn_Cont"
   show (Tuple_Cont explist vals _ _) =
@@ -188,24 +187,6 @@ apply_cont' (Send_Cont explist vals env saved_cont) val store actors = do
                   mapM_ (\pid -> mapM_ (send pid) vs) maybePids
                   apply_cont saved_cont Unit_Val store actors
 
-apply_cont' (RoleReady_Cont id roleName exp env cont) val store actors = do
-  current <- getSelfPid
-  receiveWait
-    [ match $ \(msg :: SystemMessage) -> do
-        case msg of
-          CONNECT role pid -> do
-            if role == roleName  -- 기대하는 role과 일치하는 CONNECT 메시지만 처리
-            then 
-              if id == "behv"
-              then do 
-                send pid (SelectedBehavior exp env)
-                apply_cont cont (Actor_Val pid) store actors
-              else do
-                send pid (RemoteProc exp env current)
-                apply_cont (RemoteReady_Cont cont) Unit_Val store actors
-            else apply_cont (RoleReady_Cont id roleName exp env cont) Unit_Val store actors
-    ]
-
 apply_cont' (Ready_Cont saved_cont) val store actors = do
   current <- getSelfPid
   receiveWait
@@ -238,22 +219,6 @@ apply_cont' (Ready_Cont saved_cont) val store actors = do
             (loc, store1) = newref store msg
         let env1 = extend_env current x loc env
         value_of_k body env1 saved_cont store1 actors
-      ,
-      match $ \(msg :: SystemMessage) ->
-        let Procedure _ _ _ env = expval_proc val in
-        case msg of
-          CONNECT role pid -> do
-            case lookup_behvs role env of
-              [] -> apply_cont (Ready_Cont saved_cont) val store actors
-              ((procExp,savedEnv):_) -> do
-                send pid (SelectedBehavior procExp savedEnv)
-                apply_cont (Ready_Cont saved_cont) val store actors
-      ,
-      match $ \(msg :: ActorMessage) -> case msg of
-        SelectedBehavior (Proc_Exp _ var body) savedEnv -> do
-          let (loc, store1) = newref store (Actor_Val current)
-              env1 = extend_env current var loc savedEnv
-          value_of_k body env1 End_Main_Thread_Cont store1 actors
     ]
 
 apply_cont' (RemoteReady_Cont saved_cont) val store actors = do
@@ -261,7 +226,6 @@ apply_cont' (RemoteReady_Cont saved_cont) val store actors = do
   receiveWait
     [ match $ \(msg :: ReturnMessage) -> do
         let ReturnMessage returnVal = msg
-        -- liftIO $ putStrLn $ "apply_cont (RemoteReady) receieved " ++ show returnVal
         apply_cont saved_cont returnVal store actors
       ,
       match $ \(msg :: RemoteMessage) -> do
@@ -269,23 +233,23 @@ apply_cont' (RemoteReady_Cont saved_cont) val store actors = do
           RemoteVar varLoc requester -> do
             let returnVal = deref store varLoc
             send requester (ReturnMessage returnVal)
-            apply_cont (Ready_Cont saved_cont) val store actors
+            apply_cont (RemoteReady_Cont saved_cont) val store actors
 
           RemoteSet (varLoc, val') requester -> do
             let store1 = setref store varLoc val'
             send requester (ReturnMessage Unit_Val)
-            apply_cont (Ready_Cont saved_cont) val store1 actors
+            apply_cont (RemoteReady_Cont saved_cont) val store1 actors
 
           RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
             (returnVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
             send requester (ReturnMessage returnVal)
-            apply_cont (Ready_Cont saved_cont) val store1 actors
+            apply_cont (RemoteReady_Cont saved_cont) val store1 actors
 
           RemoteCall (ratorVal, randVal) requester -> do
             let proc = expval_proc ratorVal
             (returnVal, store1) <- apply_procedure_k proc randVal End_Main_Thread_Cont store actors
             send requester (ReturnMessage returnVal)
-            apply_cont (Ready_Cont saved_cont) val store1 actors
+            apply_cont (RemoteReady_Cont saved_cont) val store1 actors
     ]
 
 apply_cont' (New_Cont saved_cont) val store actors = do
@@ -474,58 +438,9 @@ value_of_k' (Proc_Exp Nothing var body) env cont store actors = do
   current <- getSelfPid
   apply_cont cont (Proc_Val (procedure current var body env)) store actors
 
--- 원격 함수 정의 : proc @roleName (/*arg*/) ... 
-value_of_k' (ProcAt_Exp roleName savedExp) env cont store actors = do
-  current <- getSelfPid
-  let mainNid = mainNode actors
-  whereisRemoteAsync mainNid "nodeRegistry"
-  pidReply <- expectTimeout 5000000
-  case pidReply of
-    Just (WhereIsReply "nodeRegistry" (Just registryPid)) -> do
-      send registryPid (RequestRole roleName current)    -- main의 nodeRegistry에게 role 프로세스 조회 요청
-      receiveWait
-        [ match $ \(msg :: NodeMessage) -> do
-            case msg of
-              NotFound ->
-                -- stack run actors-exe <role> 실행 전이므로 대기
-                apply_cont (RoleReady_Cont "rpc" roleName savedExp env cont) Unit_Val store actors
-              RoleFound pids ->
-                -- 랜덤하게 선택
-                case pids of
-                  [] -> apply_cont (RoleReady_Cont "rpc" roleName savedExp env cont) Unit_Val store actors
-                  (pid:_) -> do
-                    send pid (RemoteProc savedExp env current)
-                    apply_cont (RemoteReady_Cont cont) Unit_Val store actors
-        ]
-
--- 원격 액터 behavior 정의 : proc @roleName (self)
-value_of_k' (BehavAt_Exp roleName savedExp) env cont store actors = do    -- 액터 Behavior
-  current <- getSelfPid
-  let env1 = extend_env_behv roleName savedExp env
-      mainNid = mainNode actors
-  whereisRemoteAsync mainNid "nodeRegistry"
-  pidReply <- expectTimeout 5000000
-  case pidReply of
-    Just (WhereIsReply "nodeRegistry" (Just registryPid)) -> do
-      send registryPid (RequestRole roleName current)    -- main의 nodeRegistry에게 role 프로세스 조회 요청
-      receiveWait
-        [ match $ \(msg :: NodeMessage) -> do
-            case msg of
-              NotFound ->
-                -- stack run actors-exe <role> 실행 전이므로 대기
-                apply_cont (RoleReady_Cont "behv" roleName savedExp env1 cont) Unit_Val store actors
-              RoleFound pids ->
-                -- 랜덤하게 선택
-                case pids of
-                  [] -> apply_cont (RoleReady_Cont "behv" roleName savedExp env1 cont) Unit_Val store actors
-                  (pid:_) -> do
-                    send pid (RemoteProc savedExp env1 current)
-                    apply_cont (RemoteReady_Cont cont) Unit_Val store actors
-        ]
-
 value_of_k' (Call_Exp rator rand) env cont store actors =
   value_of_k rator env (Rator_Cont rand env cont) store actors
-  
+
 value_of_k' (Block_Exp [exp]) env cont store actors =
   value_of_k exp env cont store actors
 
@@ -569,10 +484,10 @@ value_of_k' exp _ _ _ _ =
 
 
 --
-value_of_program :: Exp -> Process (FinalAnswer, Store)
-value_of_program exp = do
+value_of_program :: Exp -> Map.Map Int Exp -> Process (FinalAnswer, Store)
+value_of_program exp procMap = do
   nid <- getSelfNode
-  (finalVal, store) <- value_of_k exp initEnv (Init_Main_Actor_Cont End_Main_Thread_Cont) initStore (initActorState nid)
+  (finalVal, store) <- value_of_k exp initEnv (Init_Main_Actor_Cont End_Main_Thread_Cont) initStore (initActorState nid procMap)
   return (finalVal, store)
 
 --

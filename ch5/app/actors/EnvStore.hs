@@ -14,6 +14,7 @@ import GHC.Generics (Generic)
 import Data.Binary
 import Data.Typeable (Typeable)
 import Control.Monad (replicateM)
+import qualified Data.Map as Map
 
 -- Environment
 data Env =
@@ -203,11 +204,17 @@ initStore = (1,[])
 -- Actors
 type ActorId = ProcessId
 
-data ActorState = ActorState { mainNode :: NodeId } 
+data ActorState = ActorState 
+  { mainNode :: NodeId
+  , procMap :: Map.Map Int Exp 
+  } 
   deriving (Generic, Binary)
 
-initActorState :: NodeId -> ActorState
-initActorState mainNid = ActorState { mainNode = mainNid }
+initActorState :: NodeId -> Map.Map Int Exp -> ActorState
+initActorState mainNid procMap = ActorState 
+  { mainNode = mainNid
+  , procMap = procMap
+  }
 
 data ActorBehavior = ActorBehavior Identifier Exp Env ActorState
   deriving (Generic, Binary, Typeable)

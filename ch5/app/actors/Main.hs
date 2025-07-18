@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE BlockArguments #-}
 
 module Main where
 
@@ -27,6 +28,7 @@ import Network.Transport (EndPointAddress(..))
 import qualified Data.ByteString.Char8 as BS
 
 import Data.Char (toLower)
+import qualified Data.Map as Map
 
 
 -- Entrypoint :
@@ -36,10 +38,15 @@ main :: IO ()
 main = do
   args <- getArgs
   case args of
-    ("main":addrStr:fileName:_)     -> runMainNode addrStr fileName
-    ("node":addrStr:mainAddrStr:_)  -> runRemoteNode addrStr mainAddrStr
-    (role:addrStr:mainAddrStr:_)    -> runNodeByRole role addrStr mainAddrStr
-    _                               -> putStrLn "Usage:\n  actors-exe main <ip:port> <file>\n actors-exe node <ip:port> <ip:port>\n actors-exe role <ip:port> <ip:port>"
+    ("main":addrStr:fileName:_)        -> runMainNode addrStr fileName
+    ("node":addrStr:mainAddrStr:fileName:_) -> runRemoteNode addrStr mainAddrStr fileName
+    (role:addrStr:mainAddrStr:fileName:_)   -> runNodeByRole role addrStr mainAddrStr fileName
+    _ -> putStrLn $ unlines
+      [ "Usage:"
+      , "  actors-exe main <ip:port> <file>"
+      , "  actors-exe node <ip:port> <main-ip:port> <file>"
+      , "  actors-exe <role> <ip:port> <main-ip:port> <file>"
+      ]
 
 
 -- Main Node :
@@ -108,15 +115,8 @@ runMainNode addrStr fileName = do
                 liftIO $ atomically $ registerRole rolesRegistry role requesterPid
                 allPids <- liftIO $ atomically $ getAllPids rolesRegistry
                 forM_ allPids $ \pid ->
-                  when (pid /= requesterPid) $ send pid (CONNECT role requesterPid)
+                  when (pid /= requesterPid) $ send pid (List_Val [(Str_Val "CONNECT"), List_Val [(Str_Val role), (Actor_Val requesterPid)]])
                 liftIO $ putStrLn $ "\n[Main@" ++ show mNid ++ "] Registered role: " ++ show requesterPid
-              
-              -- @roleName 을 가진 프로세스 조회 요청 처리
-              RequestRole role requesterPid -> do
-                pids <- liftIO $ atomically $ getPidByRoles role rolesRegistry
-                case pids of
-                  [] -> send requesterPid NotFound
-                  _  -> send requesterPid (RoleFound pids)
           ,
           -- 다운된 노드 감지 시 레지스트리에서 제거
           match $ \(NodeMonitorNotification _ downedNode _) -> do
@@ -150,13 +150,13 @@ runMainNode addrStr fileName = do
         (fromToken (endOfToken lexerSpec))
     
     let expression = expFrom pet
-    liftIO $ print expression
+        (_,procMap,transformedExp) = toProcMap expression 0 Map.empty
 
     liftIO $ atomically $ writeTVar interpRun True   -- just for prompt
 
-    (result,store) <- value_of_program expression
+    (result,store) <- value_of_program expression procMap
     liftIO $ putStrLn ("[Main@" ++ show pid ++ "] Final result: " ++ show result)
-    runReadyServiceLoop store (initActorState mNid)
+    runReadyServiceLoop store (initActorState mNid procMap)
 
 
 waitForStartCommand :: NodeId -> NodeRegistry -> IO ()
@@ -185,8 +185,8 @@ printPrompt runningFlag mNid = do
 -- Remote node :
 -- stack run actors-exe node <ip:port> <ip:port>
 -- 메인 노드에 자신의 존재를 등록하고 작업 대기
-runRemoteNode :: String -> String -> IO ()
-runRemoteNode addrStr mainAddrStr = do
+runRemoteNode :: String -> String -> FilePath ->IO ()
+runRemoteNode addrStr mainAddrStr fileName = do
   let (host, portStr)         = break (== ':') addrStr
       (mainHost, mainPortStr) = break (== ':') mainAddrStr
   Right transport <- createTransport (defaultTCPAddr host (tail portStr)) defaultTCPParameters
@@ -246,46 +246,58 @@ nodeListener = do
 -- stack run actors-exe role <ip:port> <ip:port>
 --    메인 노드에 자신의 존재를 등록하고 
 --    인터프리터로 readyRoleExp를 실행시켜 Role에 해당하는 동작 받음
-runNodeByRole :: String -> String -> String -> IO ()
-runNodeByRole role addrStr mainAddrStr = do
+runNodeByRole :: String -> String -> String -> FilePath -> IO ()
+runNodeByRole role addrStr mainAddrStr fileName = do
   let (host, portStr) = break (== ':') addrStr
   Right transport <- createTransport (defaultTCPAddr host (tail portStr)) defaultTCPParameters
   node <- newLocalNode transport initRemoteTable
 
   runProcess node $ do
     self <- getSelfPid
-    myNode <- getSelfNode
-    liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] Registering with main node.")
     let mainNodeId = NodeId (EndPointAddress (BS.pack $ mainAddrStr ++ ":0"))   -- 메인 노드 주소로 NodeId 생성
+
+    text <- liftIO $ readFile fileName
+
+    let debugFlag = False
+    pet <- liftIO $
+      parsing debugFlag
+        parserSpec ((), 1, 1, text)
+        (aLexer lexerSpec)
+        (fromToken (endOfToken lexerSpec))
     
+    let expression = expFrom pet
+        (_,procMap,_) = toProcMap expression 0 Map.empty
+
     -- 메인 노드에 nodeRegistry 프로세스 위치 요청
     whereisRemoteAsync mainNodeId "nodeRegistry"
     receiveWait
       [ match $ \(WhereIsReply "nodeRegistry" mPid) ->
           case mPid of
             Just pid -> do
-              -- 메인 노드에 자신의 NodeId 등록 요청
+              liftIO $ putStrLn ("[Process@" ++ show self ++ "] Registering with main node.")
               send pid (RegisterRole role self)
-              liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] Successfully registered.")
+              let loop = receiveWait
+                    [ match $ \(msg :: RemoteMessage) -> case msg of
+                        RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
+                          let returnVal = Proc_Val (procedure self var body savedEnv)
+                          send requester (ReturnMessage returnVal)
+                          loop
+
+                    , match $ \(msg :: ActorMessage) -> case msg of
+                        SelectedBehavior (Proc_Exp _ var body) savedEnv -> do
+                          liftIO $ putStrLn ("[Process@" ++ show self ++ "] Received SelectedBehavior.")
+                          let (loc, store1) = newref initStore (Actor_Val self)
+                              env1 = extend_env self var loc savedEnv
+                          (_,store) <- value_of_k body env1 End_Main_Thread_Cont store1 (initActorState mainNodeId procMap)
+                          runReadyServiceLoop store (initActorState mainNodeId procMap)
+
+                    , matchAny $ \_ -> loop
+                    ]
+              loop
             Nothing  -> 
-              liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] nodeRegistry not found.")
+              liftIO $ putStrLn ("[Process@" ++ show self ++ "] nodeRegistry not found.")
       ]
-    
-    whereisRemoteAsync mainNodeId "mainInterp"
-    receiveWait
-      [ match $ \(WhereIsReply "mainInterp" mPid) ->
-          case mPid of
-            Just pid -> do
-              (_,store) <- value_of_k readyExp initEnv End_Main_Thread_Cont initStore (initActorState mainNodeId)
-              runReadyServiceLoop store (initActorState mainNodeId)
-            Nothing  -> do
-              liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] mainInterp not found.")
-              error "mainInterp not found"
-        ]
 
-
-readyExp :: Exp
-readyExp = Ready_Exp (Proc_Exp Nothing "d" (Var_Exp "d"))
 
 -- Remote 메시지 처리 서비스 루프
 runReadyServiceLoop :: Store -> ActorState -> Process ()

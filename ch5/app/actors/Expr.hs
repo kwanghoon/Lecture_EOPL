@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
 {-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
-module Expr(Program,Exp(..),Identifier,UnaryOp(..),CompOp(..)) where
+module Expr(Program,Exp(..),Identifier,UnaryOp(..),CompOp(..),toProcMap) where
 
 import ActorName(ActorName, RoleName)
 import GHC.Generics (Generic)
@@ -23,8 +23,6 @@ data Exp =
   | Letrec_Exp
       [(Identifier, Maybe ActorName, Identifier,Exp)] Exp   -- letrec { ..., f_i actorName (x_i) = expression_i, ... } in expression
   | Proc_Exp   (Maybe ActorName) Identifier Exp             -- proc actorName ( identifier ) expression
-  | ProcAt_Exp RoleName Exp               -- proc @roleName ( identifier ) expression
-  | BehavAt_Exp RoleName Exp              -- proc @roleName ( self ) expression
   | Call_Exp   Exp Exp                    -- ( expression expression )
   | Block_Exp  [ Exp ]                    -- begin exp1; ...; expk end
   | Set_Exp    Identifier Exp             -- set x = expression
@@ -89,9 +87,6 @@ toProcMap (Proc_Exp aname id e) i m =
       i2 = i1 + 1
       m2 = Map.insert i1 (Proc_Exp aname id e') m1
   in (i2, m2, PtrTo_Exp i1) -- Most important change! 
-toProcMap (ProcAt_Exp role e) i m =
-  let (i1, m1, e') = toProcMap e i m
-  in (i1, m1, ProcAt_Exp role e')
 toProcMap (Call_Exp e1 e2) i m =
   let (i1, m1, e1') = toProcMap e1 i m
       (i2, m2, e2') = toProcMap e2 i1 m1
@@ -128,5 +123,18 @@ toProcMap (New_Exp e) i m =
 toProcMap (Spawn_Exp e) i m =
   let (i1, m1, e') = toProcMap e i m
   in (i1, m1, Spawn_Exp e')
+toProcMap (Tuple_Exp exps) i m =
+  let (i1, m1, exps') =
+        foldl (\(i', m', acc) e ->
+                let (i2, m2, e') = toProcMap e i' m'
+                in (i2, m2, acc ++ [e'])) (i, m, []) exps
+  in (i1, m1, Tuple_Exp exps')
+toProcMap (LetTuple_Exp ids e1 e2) i m =
+  let (i1, m1, e1') = toProcMap e1 i m
+      (i2, m2, e2') = toProcMap e2 i1 m1
+  in (i2, m2, LetTuple_Exp ids e1' e2')
+toProcMap (Append_Exp id e) i m =
+  let (i1, m1, e') = toProcMap e i m
+  in (i1, m1, Append_Exp id e') 
 toProcMap (PtrTo_Exp n) i m = (i, m, PtrTo_Exp n) -- Should not happen!   
   

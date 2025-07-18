@@ -1,0 +1,79 @@
+proc(main)
+let JOIN = 1 in
+let SEND = 2 in
+let INPUT = 3 in
+let RECV = 4 in
+let server = new ( proc (self)
+                        let registry = () in
+                        letrec listen (msg) =
+                            let (tag, from) = msg in
+                            if (tag == JOIN)
+                            then begin 
+                                    append(registry, from);
+                                    send(registry, (JOIN, registry));
+                                    print(registry ++ "\n");
+                                    ready(listen)
+                                end
+                            else if (tag == SEND)
+                                then begin
+                                        send(registry, (RECV,from));
+                                        ready(listen)
+                                    end
+                                else
+                                    ready(listen)
+                        in ready(listen) )
+
+in
+let clientBehavior = proc @client (self)
+                        let clientInput = spawn( proc(d)
+                                            letrec input (d) = 
+                                                let msg = read() in
+                                                begin
+                                                    send(self, (INPUT, msg));
+                                                    (input 0)
+                                                end
+                                            in (input 0) )
+                        in
+                        letrec listen(msg) =
+                            let (tag, content) = msg in
+                            if (tag == JOIN)
+                            then begin
+                                    print("\n" ++ content ++ ": joined\n");
+                                    ready(listen)
+                                 end
+                            else
+                                if (tag == INPUT)
+                                then begin
+                                        send(server, (SEND, (content, self)));
+                                        ready(listen)
+                                     end
+                                else 
+                                    if (tag == RECV)
+                                    then
+                                        let (recvMsg, recvFrom) = content in 
+                                        begin
+                                            print("\n" ++ recvFrom ++ ": " ++ recvMsg ++ "\n");
+                                            ready(listen)
+                                        end
+                                    else
+                                        ready(listen)
+                        in begin
+                                send(server, (JOIN, self));
+                                ready(listen)
+                           end
+in 
+letrec mainBehavior (msg) = 
+            let (tag, payload) = msg in
+            if (tag == "CONNECT")
+            then 
+                let (role, pid) = payload in
+                if (role == "client")
+                then
+                    begin
+                        print("[SYSTEM] CONNECT received\n");
+                        new ((clientBehavior pid));
+                        ready(mainBehavior)
+                    end
+                else ready(mainBehavior)
+            else ready(mainBehavior)
+in ready(mainBehavior)

@@ -6,7 +6,4 @@ let a = new ( proc(self)
                         print (((f cmd) n))
                 in ready(h) ) in
 let g = proc a (z) 123
-in begin
-    send(a, (g 0));
-    ready(proc(d) d)
-   end
+in send(a, (g 0))
