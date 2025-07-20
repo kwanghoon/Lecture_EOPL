@@ -67,10 +67,7 @@ parserSpec = ParserSpec
               Nothing -> 
                 PETExp (Proc_Exp Nothing (getText rhs 4) (expFrom (get rhs 6)))
               Just ('@':roleVar) ->
-                let param   = getText rhs 4 in
-                if param == "self"
-                then PETExp (BehavAt_Exp roleVar (Proc_Exp (Just roleVar) (getText rhs 4) (expFrom (get rhs 6))))
-                else PETExp (ProcAt_Exp roleVar (Proc_Exp (Just roleVar) (getText rhs 4) (expFrom (get rhs 6))))
+                PETExp (Proc_Exp Nothing roleVar (Proc_Exp (Just roleVar) (getText rhs 4) (expFrom (get rhs 6))))
               Just actorName ->
                 PETExp (Proc_Exp (Just actorName) (getText rhs 4) (expFrom (get rhs 6)))),
 
