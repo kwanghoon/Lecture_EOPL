@@ -216,14 +216,6 @@ initActorState mainNid procMap = ActorState
   , procMap = procMap
   }
 
-data ActorBehavior = ActorBehavior Identifier Exp Env ActorState
-  deriving (Generic, Binary, Typeable)
-
-data ActorMessage =
-    StartActor ActorBehavior ActorId    -- stack run actors-exe node ..
-  | SelectedBehavior Exp Env            -- stack run actors-exe role ...
-  deriving (Generic, Binary, Typeable)
-
 
 -- Messages
 data RemoteMessage = 

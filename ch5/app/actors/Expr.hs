@@ -34,7 +34,7 @@ data Exp =
   | Send_Exp     [ Exp ]                  -- send ( to , msgs ) -> send ( SendExpressionList )
   | Ready_Exp    Exp                      -- ready ( expression ) 
   | New_Exp      Exp                      -- new ( expression )
-  | Spawn_Exp  Exp                        -- spawn ( expression )
+  -- | Spawn_Exp  Exp                        -- spawn ( expression )
 
   -- For Tuple
   | Tuple_Exp    [ Exp ]                  -- ( expression1, ..., expressionk )
@@ -120,9 +120,9 @@ toProcMap (Ready_Exp e) i m =
 toProcMap (New_Exp e) i m =
   let (i1, m1, e') = toProcMap e i m
   in (i1, m1, New_Exp e')
-toProcMap (Spawn_Exp e) i m =
-  let (i1, m1, e') = toProcMap e i m
-  in (i1, m1, Spawn_Exp e')
+-- toProcMap (Spawn_Exp e) i m =
+--   let (i1, m1, e') = toProcMap e i m
+--   in (i1, m1, Spawn_Exp e')
 toProcMap (Tuple_Exp exps) i m =
   let (i1, m1, exps') =
         foldl (\(i', m', acc) e ->
