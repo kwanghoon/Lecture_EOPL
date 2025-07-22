@@ -201,10 +201,14 @@ apply_cont' (Ready_Cont saved_cont) val store actors = do
             send requester (ReturnMessage Unit_Val)
             apply_cont (Ready_Cont saved_cont) val store1 actors
           -- 프로시저 생성 (Proc) 요청 처리
-          RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
-            let returnVal = Proc_Val (procedure current var body savedEnv)
-            send requester (ReturnMessage returnVal)
-            apply_cont (Ready_Cont saved_cont) val store actors
+          RemoteProc idx savedEnv requester -> do
+            let m = procMap actors
+            case Map.lookup idx m of
+              Just (Proc_Exp _ var body) -> do
+                let returnVal = Proc_Val (procedure current var body savedEnv)
+                send requester (ReturnMessage returnVal)
+                apply_cont (Ready_Cont saved_cont) val store actors
+              Nothing -> error $ "Invalid RemoteProc index: " ++ show idx
           -- 프로시저 호출 요청 처리
           RemoteCall (ratorVal, randVal) requester -> do
             let proc = expval_proc ratorVal
@@ -238,10 +242,14 @@ apply_cont' (RemoteReady_Cont saved_cont) val store actors = do
             send requester (ReturnMessage Unit_Val)
             apply_cont (RemoteReady_Cont saved_cont) val store1 actors
 
-          RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
-            let returnVal = Proc_Val (procedure current var body savedEnv)
-            send requester (ReturnMessage returnVal)
-            apply_cont (RemoteReady_Cont saved_cont) val store actors
+          RemoteProc idx savedEnv requester -> do
+            let m = procMap actors
+            case Map.lookup idx m of
+              Just (Proc_Exp _ var body) -> do
+                let returnVal = Proc_Val (procedure current var body savedEnv)
+                send requester (ReturnMessage returnVal)
+                apply_cont (Ready_Cont saved_cont) val store actors
+              Nothing -> error $ "Invalid RemoteProc index: " ++ show idx
 
           RemoteCall (ratorVal, randVal) requester -> do
             let proc = expval_proc ratorVal
@@ -389,18 +397,33 @@ value_of_k' (Letrec_Exp nameActorNameArgBodyList letrec_body) env cont store act
           | (p_name,maybeActorName,b_var,p_body) <- nameActorNameArgBodyList ]
   value_of_k letrec_body (extend_env_rec nameActorIdArgBodyList env) cont store actors
 
-value_of_k' (Proc_Exp (Just actorName) var body) env cont store actors = do
-  current <- getSelfPid
-  let actorId = lookup_actorId env actorName
-  if actorId == current
-  then apply_cont cont (Proc_Val (procedure current var body env)) store actors
-  else do
-    send actorId (RemoteProc (Proc_Exp Nothing var body) env current)
-    apply_cont (RemoteReady_Cont cont) Unit_Val store actors
+-- value_of_k' (Proc_Exp (Just actorName) var body) env cont store actors = do
+--   current <- getSelfPid
+--   let actorId = lookup_actorId env actorName
+--   if actorId == current
+--   then apply_cont cont (Proc_Val (procedure current var body env)) store actors
+--   else do
+--     send actorId (RemoteProc (Proc_Exp Nothing var body) env current)
+--     apply_cont (RemoteReady_Cont cont) Unit_Val store actors
 
 value_of_k' (Proc_Exp Nothing var body) env cont store actors = do
   current <- getSelfPid
   apply_cont cont (Proc_Val (procedure current var body env)) store actors
+
+value_of_k' (PtrTo_Exp i) env cont store actors = do
+  current <- getSelfPid
+  let m = procMap actors
+  case Map.lookup i m of
+    Just (Proc_Exp (Just actorName) var body) -> do
+      let actorId = lookup_actorId env actorName
+      if actorId == current
+      then apply_cont cont (Proc_Val (procedure current var body env)) store actors
+      else do
+        send actorId (RemoteProc i env current)
+        apply_cont (RemoteReady_Cont cont) Unit_Val store actors
+    Just (Proc_Exp Nothing var body) -> do
+      apply_cont cont (Proc_Val (procedure current var body env)) store actors
+    _ -> error $ "Invalid PtrTo_Exp index: " ++ show i
 
 value_of_k' (Call_Exp rator rand) env cont store actors =
   value_of_k rator env (Rator_Cont rand env cont) store actors

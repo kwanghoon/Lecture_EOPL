@@ -118,7 +118,7 @@ runMainNode addrStr fileName = do
     let expression = expFrom pet
         (_,procMap,transformedExp) = toProcMap expression 0 Map.empty
 
-    (result,store) <- value_of_program expression procMap
+    (result,store) <- value_of_program transformedExp procMap
     liftIO $ putStrLn ("[Main@" ++ show pid ++ "] Final result: " ++ show result)
     runReadyServiceLoop store (initActorState mNid procMap)
 
@@ -158,11 +158,14 @@ runNodeByRole role addrStr mainAddrStr fileName = do
             send pid (RegisterRole role self)
             let loop = receiveWait
                   [ match $ \(msg :: RemoteMessage) -> case msg of
-                      RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
-                        let returnVal = Proc_Val (procedure self var body savedEnv)
-                        send requester (ReturnMessage returnVal)
-                        loop
-                        
+                      RemoteProc idx savedEnv requester -> do
+                        case Map.lookup idx procMap of
+                          Just (Proc_Exp _ var body) -> do
+                            let returnVal = Proc_Val (procedure self var body savedEnv)
+                            send requester (ReturnMessage returnVal)
+                            loop
+                          Nothing -> error $ "Invalid RemoteProc index: " ++ show idx
+
                       RemoteCall (ratorVal, randVal) _ -> do
                         let proc = expval_proc ratorVal
                         (returnVal, store) <- apply_procedure_k proc randVal End_Main_Thread_Cont initStore (initActorState mainNodeId procMap)
@@ -197,10 +200,14 @@ runReadyService store actors = do
             send requester (ReturnMessage Unit_Val)
             return store1
 
-          RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
-            let returnVal = Proc_Val (procedure current var body savedEnv)
-            send requester (ReturnMessage returnVal)
-            return store
+          RemoteProc idx savedEnv requester -> do
+            let m = procMap actors
+            case Map.lookup idx m of
+              Just (Proc_Exp _ var body) -> do
+                let returnVal = Proc_Val (procedure current var body savedEnv)
+                send requester (ReturnMessage returnVal)
+                return store
+              Nothing -> error $ "Invalid RemoteProc index: " ++ show idx
 
           RemoteCall (ratorVal, randVal) requester -> do
             let proc = expval_proc ratorVal

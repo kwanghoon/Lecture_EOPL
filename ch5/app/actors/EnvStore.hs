@@ -221,14 +221,14 @@ initActorState mainNid procMap = ActorState
 data RemoteMessage = 
     RemoteVar Location ActorId              -- 원격 store 주소
   | RemoteSet (Location, ExpVal) ActorId    -- (원격 store 주소, 할당할 값)
-  | RemoteProc Exp Env ActorId              -- 생성할 Proc_Exp, Env
+  | RemoteProc Int Env ActorId              -- 생성할 Proc_Exp, Env
   | RemoteCall (ExpVal, ExpVal) ActorId     -- (ratorVal, randVal)
   deriving (Generic, Binary, Typeable)
 
 instance Show RemoteMessage where
   show (RemoteVar loc aid) = "RemoteVar loc: " ++ show loc ++ " from: " ++ show aid
   show (RemoteSet (loc, val) aid) = "RemoteSet loc: " ++ show loc ++ " value: " ++ show val ++ " to: " ++ show aid
-  show (RemoteProc exp env aid) = "RemoteProc exp: " ++ show exp ++ " to: " ++ show aid
+  show (RemoteProc idx env aid) = "RemoteProc Ptr: " ++ show idx ++ " to: " ++ show aid
   show (RemoteCall (val1, val2) aid) = "RemoteCall rator: " ++ show val1 ++ " value: " ++ show val2 ++ " to: " ++ show aid  
 
 data ReturnMessage = ReturnMessage ExpVal
