@@ -2,11 +2,7 @@
 
 module NodeRegistry
   ( NodeMessage(..)
-  , NodeRegistry
-  , newRegistry
-  , registerNode
-  , assignNode
-  , removeNode
+  , RoleRegistry
   , newRoleRegistry
   , registerRole
   , getPidByRoles
@@ -25,43 +21,11 @@ import Control.Distributed.Process (ProcessId, NodeId)
 
 -- Messages
 data NodeMessage
-  = RegisterNode NodeId
-  | RequestNode ProcessId
-  | AssignNode NodeId
-  | AssignSelf
-
-  | RegisterRole String ProcessId
+  = RegisterRole String ProcessId
   | RequestRole String ProcessId
   | RoleFound [ProcessId]
   | NotFound
   deriving (Generic, Binary, Typeable)
-
--- node Registry functions
-type NodeRegistry = TVar [NodeId]
-
-newRegistry :: IO NodeRegistry
-newRegistry = newTVarIO []
-
-registerNode :: NodeId -> NodeRegistry -> STM ()
-registerNode nid registry = do
-  nids <- readTVar registry
-  if nid `elem` nids
-  then return ()
-  else writeTVar registry (nid : nids)
-
-assignNode :: NodeRegistry -> STM (Maybe NodeId)
-assignNode registry = do
-  nids <- readTVar registry
-  case nids of
-    (nid:rest) -> do
-      writeTVar registry (rest)
-      return (Just nid)
-    [] -> return Nothing
-
-removeNode :: NodeId -> NodeRegistry -> STM ()
-removeNode nid registry = do
-  nids <- readTVar registry
-  writeTVar registry (filter (/= nid) nids)
 
 
 -- role Registry

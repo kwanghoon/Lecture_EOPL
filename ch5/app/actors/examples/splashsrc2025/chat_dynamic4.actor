@@ -25,7 +25,7 @@ let server = new ( proc (self)
 
 in
 let clientBehavior = proc @client (self)
-                        let clientInput = spawn( proc(d)
+                        let clientInput = new ( proc(d)
                                             letrec input (d) = 
                                                 let msg = read() in
                                                 begin

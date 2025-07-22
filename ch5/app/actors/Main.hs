@@ -39,12 +39,10 @@ main = do
   args <- getArgs
   case args of
     ("main":addrStr:fileName:_)        -> runMainNode addrStr fileName
-    ("node":addrStr:mainAddrStr:fileName:_) -> runRemoteNode addrStr mainAddrStr fileName
     (role:addrStr:mainAddrStr:fileName:_)   -> runNodeByRole role addrStr mainAddrStr fileName
     _ -> putStrLn $ unlines
       [ "Usage:"
       , "  actors-exe main <ip:port> <file>"
-      , "  actors-exe node <ip:port> <main-ip:port> <file>"
       , "  actors-exe <role> <ip:port> <main-ip:port> <file>"
       ]
 
@@ -63,12 +61,10 @@ runMainNode addrStr fileName = do
       putStrLn $ "Transport creation failed: " ++ show err
       error "Failed to create transport"
 
-  -- 메인과 연결된 노드들 관리용 노드 레지스트리 생성 (STM TVar)
-  nodesRegistry <- newRegistry
+  -- 메인과 연결된 프로세스들 레지스트리 생성 (STM TVar)
   rolesRegistry <- newRoleRegistry 
 
-  mvar <- newEmptyMVar                      -- just for prompt
-  interpRun <- atomically $ newTVar False   -- just for prompt
+  mvar <- newEmptyMVar              -- just for prompt
 
   -- Background listener : 노드 레지스트리 프로세스
   _ <- forkIO $ runProcess node $ do
@@ -81,34 +77,12 @@ runMainNode addrStr fileName = do
     liftIO $ putStrLn $ "[Main@" ++ show mNid ++ "] Node registry process started."
 
     -- 무한 루프 : 
-    --    1. 노드 등록 (stack run actors-exe node ...)
-    --    2. 할당 요청 (New_Exp)
-    --    3. 노드 다운 모니터링
+    --    1. 노드 등록 (stack run actors-exe <role> ...)
+    --    2. 노드 다운 모니터링
     forever $ do
       receiveWait
         [ match $ \(msg :: NodeMessage) -> 
             case msg of
-              -- 새 노드 등록 요청 처리
-              RegisterNode requesterNid -> do
-                _ <- monitorNode requesterNid
-                liftIO $ atomically $ registerNode requesterNid nodesRegistry
-                liftIO $ do
-                  putStrLn $ "\n[Main@" ++ show mNid ++ "] Registered node: " ++ show requesterNid
-                  printPrompt interpRun mNid
-
-              -- 액터 생성을 담당할 노드 선택
-              -- case 1 : main 노드만 있는 경우, main 노드에 액터 생성
-              -- case 2 : main 노드와 하나 이상의 원격 노드가 있는 경우, 원격 노드 중 랜덤하게 선택하여 액터 생성
-              RequestNode requesterPid -> do
-                nids <- liftIO $ atomically $ assignNode nodesRegistry
-                case nids of
-                  Just nid -> do
-                    send requesterPid (AssignNode nid)
-                    liftIO $ putStrLn $ "[Main@" ++ show mNid ++ "] Assigned node: " ++ show nid
-                  Nothing -> do
-                    send requesterPid AssignSelf
-                    liftIO $ putStrLn $ "[Main@" ++ show mNid ++ "] No available node"
-
               -- role을 지정하여 새 노드 등록 요청 처리
               RegisterRole role requesterPid -> do
                 _ <- monitor requesterPid
@@ -119,20 +93,12 @@ runMainNode addrStr fileName = do
                 liftIO $ putStrLn $ "\n[Main@" ++ show mNid ++ "] Registered role: " ++ show requesterPid
           ,
           -- 다운된 노드 감지 시 레지스트리에서 제거
-          match $ \(NodeMonitorNotification _ downedNode _) -> do
-            liftIO $ atomically $ removeNode downedNode nodesRegistry
-            liftIO $ putStrLn $ "\n[Main@" ++ show mNid ++ "] Node down: " ++ show downedNode ++ " removed"
-          ,
           match $ \(ProcessMonitorNotification _ deadPid _) -> do
             liftIO $ atomically $ removeProcess rolesRegistry deadPid
             liftIO $ putStrLn $ "\n[Main@" ++ show mNid ++ "] Role down: " ++ show deadPid ++ " removed"
         ]
 
-  mNid <- takeMVar mvar       -- just for prompt
-
-  -- wait for user command (start or status)
-  -- putStrLn $ "[Main@" ++ show mNid ++ "] Waiting for command ..."
-  -- waitForStartCommand mNid nodesRegistry
+  mNid <- takeMVar mvar
 
   -- Run the interpreter (by start command)
   runProcess node $ do
@@ -152,100 +118,15 @@ runMainNode addrStr fileName = do
     let expression = expFrom pet
         (_,procMap,transformedExp) = toProcMap expression 0 Map.empty
 
-    liftIO $ atomically $ writeTVar interpRun True   -- just for prompt
-
     (result,store) <- value_of_program expression procMap
     liftIO $ putStrLn ("[Main@" ++ show pid ++ "] Final result: " ++ show result)
     runReadyServiceLoop store (initActorState mNid procMap)
 
 
-waitForStartCommand :: NodeId -> NodeRegistry -> IO ()
-waitForStartCommand mNid nodesRegistry = do
-  putStrLn $ "[Main@" ++ show mNid ++ "] Type 'start' or 'status'"
-  hFlush stdout
-  line <- getLine
-  case map toLower line of
-    "start" -> putStrLn $ "[Main@" ++ show mNid ++ "] Starting interpreter..."
-    "status" -> do
-      nodeCount <- atomically $ length <$> readTVar nodesRegistry
-      putStrLn $ "[Main@" ++ show mNid ++ "] Currently registered nodes: " ++ show nodeCount
-      waitForStartCommand mNid nodesRegistry
-    _ -> do
-      putStrLn $ "[Main@" ++ show mNid ++ "] Unknown command. Try again."
-      waitForStartCommand mNid nodesRegistry
-
-printPrompt :: TVar Bool -> NodeId -> IO ()
-printPrompt runningFlag mNid = do
-  isRunning <- atomically $ readTVar runningFlag
-  unless isRunning $ do
-    putStrLn $ "[Main@" ++ show mNid ++ "] Type 'start' or 'status'"
-    hFlush stdout
-
-
--- Remote node :
--- stack run actors-exe node <ip:port> <ip:port>
--- 메인 노드에 자신의 존재를 등록하고 작업 대기
-runRemoteNode :: String -> String -> FilePath ->IO ()
-runRemoteNode addrStr mainAddrStr fileName = do
-  let (host, portStr)         = break (== ':') addrStr
-      (mainHost, mainPortStr) = break (== ':') mainAddrStr
-  Right transport <- createTransport (defaultTCPAddr host (tail portStr)) defaultTCPParameters
-  node <- newLocalNode transport initRemoteTable
-
-  runProcess node $ do
-    myNode <- getSelfNode
-    liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] Registering with main node.")
-    let mainNodeId = NodeId (EndPointAddress (BS.pack $ mainAddrStr ++ ":0"))   -- 메인 노드 주소로 NodeId 생성
-    
-    -- 메인 노드에 nodeRegistry 프로세스 위치 요청
-    whereisRemoteAsync mainNodeId "nodeRegistry"
-    receiveWait
-      [ match $ \(WhereIsReply "nodeRegistry" mPid) ->
-          case mPid of
-            Just pid -> do
-              -- 메인 노드에 자신의 NodeId 등록 요청
-              send pid (RegisterNode myNode)
-              liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] Successfully registered.")
-            Nothing  -> 
-              liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] nodeRegistry not found.")
-      ]
-    
-    -- 노드 내 작업 수신 대기 프로세스 생성
-    _ <- spawnLocal nodeListener
-    liftIO $ putStrLn ("[Node@" ++ show myNode ++ "] nodeListener started and waiting...")
-    forever $ liftIO $ threadDelay maxBound
-
-
--- 원격 노드 내에서 메시지 대기 및 액터 시작 요청 처리하는 프로세스
-nodeListener :: Process ()
-nodeListener = do
-  self <- getSelfPid
-  register "nodeListener" self
-  liftIO $ putStrLn $ "[Process@" ++ show self ++ "] nodeListener started."
-  forever $ do
-    receiveWait
-      [ match $ \(StartActor (ActorBehavior x body env actors) requester) -> do
-          liftIO $ putStrLn $ "[Process@" ++ show self ++ "] Received StartActor message"
-          pid <- spawnLocal ( do
-              self <- getSelfPid
-              liftIO $ putStrLn $ "[Process@" ++ show self ++ "] SpawnLocal"
-              let (loc, store1) = newref initStore (Actor_Val self)
-                  env1 = extend_env self x loc env
-              (_,store2) <- value_of_k body env1 End_Main_Thread_Cont store1 actors
-              runReadyServiceLoop store2 actors )
-          whereisRemoteAsync (mainNode actors) "nodeRegistry"
-          receiveWait
-            [ match $ \(WhereIsReply "nodeRegistry" (Just mPid)) -> 
-                send mPid (RegisterRole "node" pid)
-            ]
-          send requester pid
-      ]
-
-
 -- Remote node with Role :
--- stack run actors-exe role <ip:port> <ip:port>
---    메인 노드에 자신의 존재를 등록하고 
---    인터프리터로 readyRoleExp를 실행시켜 Role에 해당하는 동작 받음
+-- stack run actors-exe <role> <ip:port> <main-ip:port> <file>
+--    메인 노드에 자신의 존재를 등록하고 (메인 노드가 접속된 프로세스들에게 브로드캐스트)
+--    실행할 Behavior를 메시지로 받을 때까지 대기
 runNodeByRole :: String -> String -> String -> FilePath -> IO ()
 runNodeByRole role addrStr mainAddrStr fileName = do
   let (host, portStr) = break (== ':') addrStr
@@ -271,31 +152,26 @@ runNodeByRole role addrStr mainAddrStr fileName = do
     -- 메인 노드에 nodeRegistry 프로세스 위치 요청
     whereisRemoteAsync mainNodeId "nodeRegistry"
     receiveWait
-      [ match $ \(WhereIsReply "nodeRegistry" mPid) ->
-          case mPid of
-            Just pid -> do
-              liftIO $ putStrLn ("[Process@" ++ show self ++ "] Registering with main node.")
-              send pid (RegisterRole role self)
-              let loop = receiveWait
-                    [ match $ \(msg :: RemoteMessage) -> case msg of
-                        RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
-                          let returnVal = Proc_Val (procedure self var body savedEnv)
-                          send requester (ReturnMessage returnVal)
-                          loop
-
-                    , match $ \(msg :: ActorMessage) -> case msg of
-                        SelectedBehavior (Proc_Exp _ var body) savedEnv -> do
-                          liftIO $ putStrLn ("[Process@" ++ show self ++ "] Received SelectedBehavior.")
-                          let (loc, store1) = newref initStore (Actor_Val self)
-                              env1 = extend_env self var loc savedEnv
-                          (_,store) <- value_of_k body env1 End_Main_Thread_Cont store1 (initActorState mainNodeId procMap)
-                          runReadyServiceLoop store (initActorState mainNodeId procMap)
-
-                    , matchAny $ \_ -> loop
-                    ]
-              loop
-            Nothing  -> 
-              liftIO $ putStrLn ("[Process@" ++ show self ++ "] nodeRegistry not found.")
+      [ match $ \(WhereIsReply "nodeRegistry" mPid) -> case mPid of
+          Just pid -> do
+            liftIO $ putStrLn ("[Process@" ++ show self ++ "] Registering with main node.")
+            send pid (RegisterRole role self)
+            let loop = receiveWait
+                  [ match $ \(msg :: RemoteMessage) -> case msg of
+                      RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
+                        let returnVal = Proc_Val (procedure self var body savedEnv)
+                        send requester (ReturnMessage returnVal)
+                        loop
+                        
+                      RemoteCall (ratorVal, randVal) _ -> do
+                        let proc = expval_proc ratorVal
+                        (returnVal, store) <- apply_procedure_k proc randVal End_Main_Thread_Cont initStore (initActorState mainNodeId procMap)
+                        runReadyServiceLoop store (initActorState mainNodeId procMap)
+                  , matchAny $ \_ -> loop
+                  ]
+            loop
+          Nothing  -> 
+            liftIO $ putStrLn ("[Process@" ++ show self ++ "] nodeRegistry not found.")
       ]
 
 
@@ -322,9 +198,9 @@ runReadyService store actors = do
             return store1
 
           RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
-            (returnVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
+            let returnVal = Proc_Val (procedure current var body savedEnv)
             send requester (ReturnMessage returnVal)
-            return store1
+            return store
 
           RemoteCall (ratorVal, randVal) requester -> do
             let proc = expval_proc ratorVal

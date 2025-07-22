@@ -45,7 +45,6 @@ data Cont =
   | Ready_Cont Cont
   | RemoteReady_Cont Cont
   | New_Cont Cont
-  | Spawn_Cont Cont
 
   | Tuple_Cont [Exp] [ExpVal] Env Cont
   | Let_Tuple_Cont [Identifier] Exp Env Cont
@@ -75,7 +74,6 @@ instance Show Cont where
 
   show (RemoteReady_Cont _) = "RemoteReady_Cont"    
   show (New_Cont _) = "New_Cont"
-  show (Spawn_Cont _) = "Spawn_Cont"
   show (Tuple_Cont explist vals _ _) =
     let explistStr = unwords $ map show explist
         valsStr = unwords $ map show vals
@@ -204,9 +202,9 @@ apply_cont' (Ready_Cont saved_cont) val store actors = do
             apply_cont (Ready_Cont saved_cont) val store1 actors
           -- 프로시저 생성 (Proc) 요청 처리
           RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
-            (returnVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
+            let returnVal = Proc_Val (procedure current var body savedEnv)
             send requester (ReturnMessage returnVal)
-            apply_cont (Ready_Cont saved_cont) val store1 actors
+            apply_cont (Ready_Cont saved_cont) val store actors
           -- 프로시저 호출 요청 처리
           RemoteCall (ratorVal, randVal) requester -> do
             let proc = expval_proc ratorVal
@@ -241,9 +239,9 @@ apply_cont' (RemoteReady_Cont saved_cont) val store actors = do
             apply_cont (RemoteReady_Cont saved_cont) val store1 actors
 
           RemoteProc (Proc_Exp _ var body) savedEnv requester -> do
-            (returnVal, store1) <- value_of_k (Proc_Exp Nothing var body) savedEnv End_Main_Thread_Cont store actors
+            let returnVal = Proc_Val (procedure current var body savedEnv)
             send requester (ReturnMessage returnVal)
-            apply_cont (RemoteReady_Cont saved_cont) val store1 actors
+            apply_cont (RemoteReady_Cont saved_cont) val store actors
 
           RemoteCall (ratorVal, randVal) requester -> do
             let proc = expval_proc ratorVal
@@ -257,52 +255,18 @@ apply_cont' (New_Cont saved_cont) val store actors = do
   let Procedure saved_actor x body env = expval_proc val
   if saved_actor == current
   then do
-    let mainNid = mainNode actors
-    whereisRemoteAsync mainNid "nodeRegistry"
-    pidReply <- expectTimeout 5000000
-    case pidReply of
-      Just (WhereIsReply "nodeRegistry" (Just registryPid)) -> do
-        send registryPid (RequestNode current)
-        let loop = receiveWait
-                [ match $ \(msg :: NodeMessage) -> case msg of
-                    AssignNode nid -> do
-                      whereisRemoteAsync nid "nodeListener"
-                      m <- expectTimeout 5000000
-                      case m of
-                        Just (WhereIsReply "nodeListener" (Just listenerPid)) -> do
-                          send listenerPid (StartActor (ActorBehavior x body env actors) current)
-                          response <- expectTimeout 5000000
-                          case response of
-                            Just newPid -> apply_cont saved_cont (Actor_Val newPid) store actors
-                            Nothing     -> error "Did not receive PID from nodeListener"
-                        _ -> error $ "Listener not found on node: " ++ show nid
-                    AssignSelf -> do
-                      newPid <- spawnLocal $ do
-                        self <- getSelfPid
-                        let (loc, store1) = newref initStore (Actor_Val self)
-                            env1 = extend_env self x loc env
-                        _ <- value_of_k body env1 End_Main_Thread_Cont store1 actors
-                        forever $ liftIO $ threadDelay maxBound
-                      apply_cont saved_cont (Actor_Val newPid) store actors
-                  ,
-                  matchAny $ \msg -> loop  -- 다시 대기
-                ]
-        loop
-      _ -> error "nodeRegistry not found on main node"
+    -- 로컬에서 액터를 생성(spawnLocal)
+    newPid <- spawnLocal $ do
+                self <- getSelfPid
+                let (loc, store1) = newref initStore (Actor_Val self)
+                    env1 = extend_env self x loc env
+                _ <- value_of_k body env1 End_Main_Thread_Cont store1 actors
+                forever $ liftIO $ threadDelay maxBound
+    apply_cont saved_cont (Actor_Val newPid) store actors
   else do
-    send saved_actor (SelectedBehavior (Proc_Exp Nothing x body) env)
+    -- 원격 액터에 behavior 실행
+    send saved_actor (RemoteCall (val, (Actor_Val saved_actor)) current)
     apply_cont saved_cont (Actor_Val saved_actor) store actors
-
-apply_cont' (Spawn_Cont saved_cont) val store actors = do
-  let Procedure _ x body env = expval_proc val
-  -- 로컬에서 액터를 생성(spawnLocal)
-  newPid <- spawnLocal $ do
-              self <- getSelfPid
-              let (loc, store1) = newref initStore (Actor_Val self)
-                  env1 = extend_env self x loc env
-              _ <- value_of_k body env1 End_Main_Thread_Cont store1 actors
-              forever $ liftIO $ threadDelay maxBound
-  apply_cont saved_cont (Actor_Val newPid) store actors
 
 apply_cont' (Tuple_Cont explist vals env saved_cont) val store actors = do
   let vals' = vals ++ [val] in
@@ -462,9 +426,6 @@ value_of_k' (Ready_Exp exp) env cont store actors =
 
 value_of_k' (New_Exp exp) env cont store actors =
   value_of_k exp env (New_Cont cont) store actors
-
-value_of_k' (Spawn_Exp exp) env cont store actors =
-  value_of_k exp env (Spawn_Cont cont) store actors 
 
 -- For tuple
 value_of_k' (Tuple_Exp []) env cont store actors =

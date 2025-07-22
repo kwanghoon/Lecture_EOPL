@@ -154,8 +154,8 @@ parserSpec = ParserSpec
       rule "Expression -> new ( Expression )"
         (\rhs -> return $ PETExp (New_Exp (expFrom (get rhs 3)))),
 
-      rule "Expression -> spawn ( Expression )"
-        (\rhs -> return $ PETExp (Spawn_Exp (expFrom (get rhs 3)))),
+      -- rule "Expression -> spawn ( Expression )"
+      --   (\rhs -> return $ PETExp (Spawn_Exp (expFrom (get rhs 3)))),
 
       -- Tuples
       rule "Expression -> ( TupleExpressionList )"
