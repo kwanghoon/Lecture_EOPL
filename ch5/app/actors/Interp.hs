@@ -15,6 +15,7 @@ import NodeRegistry(NodeMessage(..))
 import SystemMessage
 
 import System.IO (hFlush, stdout)
+import System.Random (randomRIO)
 
 import Control.Distributed.Process
 import Control.Distributed.Process.Node
@@ -32,8 +33,10 @@ data Cont =
   | Zero1_Cont Cont
   | Let_Exp_Cont Identifier Exp Env Cont
   | If_Test_Cont Exp Exp Env Cont
-  | Diff1_Cont Exp Env Cont
-  | Diff2_Cont ExpVal Cont
+  -- | Diff1_Cont Exp Env Cont
+  -- | Diff2_Cont ExpVal Cont
+  | BinOp1_Cont BinaryOp Exp Env Cont
+  | BinOp2_Cont BinaryOp ExpVal Cont
   | Rator_Cont Exp Env Cont
   | Rand_Cont ExpVal Env Cont
   | Unop_Arg_Cont UnaryOp Cont
@@ -49,6 +52,8 @@ data Cont =
   | Tuple_Cont [Exp] [ExpVal] Env Cont
   | Let_Tuple_Cont [Identifier] Exp Env Cont
   | Append_Cont Identifier Env Cont
+
+  | PowMod_Cont [Exp] [ExpVal] Env Cont
     
 instance Show Cont where
   show End_Main_Thread_Cont = "End_Main_Thread_Cont"
@@ -56,11 +61,13 @@ instance Show Cont where
   show (Zero1_Cont _) = "Zero1_Cont"
   show (Let_Exp_Cont var body _ _) = "Let_Exp_Cont " ++ var 
   show (If_Test_Cont exp2 exp3 _ _) = "If_Test_Cont " 
-  show (Diff1_Cont exp2 _ _) = "Diff1_Cont " ++ show exp2 
-  show (Diff2_Cont val _) = "Diff2_Cont " ++ show val
+  -- show (Diff1_Cont exp2 _ _) = "Diff1_Cont " ++ show exp2 
+  -- show (Diff2_Cont val _) = "Diff2_Cont " ++ show val
   show (Rator_Cont rand _ _) = "Rator_Cont"
   show (Rand_Cont ratorVal _ _) = "Rand_Cont " ++ show ratorVal
   show (Unop_Arg_Cont op _) = "Unop_Arg_Cont" ++ show op
+  show (BinOp1_Cont op exp2 _ _) = "BinOp1_Cont " ++ show op
+  show (BinOp2_Cont op val1 _) = "BinOp2_Cont " ++ show op
   show (Comp1_Cont op exp2 _ _) = "Comp1_Cont " ++ show op
   show (Comp2_Cont op val1 _) = "Comp2_Cont " ++ show op
   show (Set_Rhs_Cont var _ _) = "Set_Rhs_Cont " ++ var 
@@ -81,12 +88,17 @@ instance Show Cont where
   show (Let_Tuple_Cont vars _ _ _) = "Let_Tuple_Cont " ++ unwords vars
   show (Append_Cont var _ _) = "Append_Cont " ++ var
 
+  show (PowMod_Cont explist vals _ _) =
+    let explistStr = unwords $ map show explist
+        valsStr = unwords $ map show vals
+    in  "PowMod_Cont [" ++ explistStr ++ "] [" ++ valsStr ++ "]"
+
 
 apply_cont :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Store)
 
 apply_cont cont expval store actors = 
   do current <- getSelfPid
-     -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "apply_cont: " ++ show cont 
+     liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "apply_cont: " ++ show cont 
      apply_cont' cont expval store actors 
 
 apply_cont' :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Store)
@@ -122,13 +134,20 @@ apply_cont' (If_Test_Cont exp2 exp3 env cont) v store actors =
   then value_of_k exp2 env cont store actors
   else value_of_k exp3 env cont store actors
 
-apply_cont' (Diff1_Cont exp2 env cont) val1 store actors =
-  value_of_k exp2 env (Diff2_Cont val1 cont) store actors
+-- apply_cont' (Diff1_Cont exp2 env cont) val1 store actors =
+--   value_of_k exp2 env (Diff2_Cont val1 cont) store actors
 
-apply_cont' (Diff2_Cont val1 cont) val2 store actors =
-  let num1 = expval_num val1
-      num2 = expval_num val2
-  in apply_cont cont (Num_Val (num1 - num2)) store actors
+-- apply_cont' (Diff2_Cont val1 cont) val2 store actors =
+--   let num1 = expval_num val1
+--       num2 = expval_num val2
+--   in apply_cont cont (Num_Val (num1 - num2)) store actors
+
+apply_cont' (BinOp1_Cont op e2 env cont) val1 store actors =
+  value_of_k e2 env (BinOp2_Cont op val1 cont) store actors
+
+apply_cont' (BinOp2_Cont op val1 cont) val2 store actors = do
+  res <- apply_binop op val1 val2
+  apply_cont cont res store actors
 
 apply_cont' (Unop_Arg_Cont op cont) val store actors = do
   res <- apply_unop op val
@@ -248,7 +267,7 @@ apply_cont' (RemoteReady_Cont saved_cont) val store actors = do
               Just (Proc_Exp _ var body) -> do
                 let returnVal = Proc_Val (procedure current var body savedEnv)
                 send requester (ReturnMessage returnVal)
-                apply_cont (Ready_Cont saved_cont) val store actors
+                apply_cont (RemoteReady_Cont saved_cont) val store actors
               Nothing -> error $ "Invalid RemoteProc index: " ++ show idx
 
           RemoteCall (ratorVal, randVal) requester -> do
@@ -300,7 +319,15 @@ apply_cont' (Append_Cont var env cont) val store actors = do
       store2 = setref store1 loc (List_Val xs')
   apply_cont cont (Unit_Val) store2 actors
 
-
+apply_cont' (PowMod_Cont explist vals env saved_cont) val store actors = do
+  let vals' = vals ++ [val]
+  case explist of
+    (exp:exps) -> value_of_k exp env (PowMod_Cont exps vals' env saved_cont) store actors
+    [] -> case vals' of
+            (v1:v2:v3:[]) -> do
+              let res = powMod (expval_num v1) (expval_num v2) (expval_num v3)
+              apply_cont saved_cont (Num_Val res) store actors
+            _ -> error "PowMod_Cont: expected 3 values"
 
 apply_unop :: UnaryOp -> ExpVal -> Process ExpVal
 
@@ -334,12 +361,20 @@ apply_unop ReadInt _ = do
   return $ Num_Val (read line :: Int)
 apply_unop op rand = error ("Unknown unary operator: :" ++ show op ++ " " ++ show rand)
 
-
+apply_binop :: BinaryOp -> ExpVal -> ExpVal -> Process ExpVal
+apply_binop Add (Num_Val n1) (Num_Val n2) = return $ Num_Val (n1 + n2)
+apply_binop Diff (Num_Val n1) (Num_Val n2) = return $ Num_Val (n1 - n2)
+apply_binop Mul (Num_Val n1) (Num_Val n2) = return $ Num_Val (n1 * n2)
+apply_binop Mod (Num_Val n1) (Num_Val n2) = return $ Num_Val (n1 `mod` n2)
+apply_binop Random (Num_Val n1) (Num_Val n2) = do
+  r <- liftIO $ randomRIO (n1, n2)
+  return $ Num_Val r
+apply_binop _   _             _           = error "Type error in binary op"
 
 value_of_k :: Exp -> Env -> Cont -> Store -> ActorState -> Process (FinalAnswer, Store)
 value_of_k exp env cont store actors = 
   do current <- getSelfPid
-     -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "value_of_k: " ++ take 100 (show exp)
+     liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "value_of_k: " ++ take 100 (show exp)
      value_of_k' exp env cont store actors 
 
 value_of_k' :: Exp -> Env -> Cont -> Store -> ActorState -> Process (FinalAnswer, Store)
@@ -370,11 +405,14 @@ value_of_k' (Var_Exp var) env cont store actors = do
     send saved_actor (RemoteVar loc current)
     apply_cont (RemoteReady_Cont cont) Unit_Val store' actors
 
-value_of_k' (Diff_Exp exp1 exp2) env cont store actors =
-  value_of_k exp1 env (Diff1_Cont exp2 env cont) store actors
+-- value_of_k' (Diff_Exp exp1 exp2) env cont store actors =
+--   value_of_k exp1 env (Diff1_Cont exp2 env cont) store actors
 
 value_of_k' (Unary_Exp op exp1) env cont store actors =
   value_of_k exp1 env (Unop_Arg_Cont op cont) store actors
+
+value_of_k' (Binary_Exp op exp1 exp2) env cont store actors =
+  value_of_k exp1 env (BinOp1_Cont op exp2 env cont) store actors
 
 value_of_k' (Comp_Exp op exp1 exp2) env cont store actors =
   value_of_k exp1 env (Comp1_Cont op exp2 env cont) store actors
@@ -463,6 +501,9 @@ value_of_k' (LetTuple_Exp vars exp1 exp2) env cont store actors =
 value_of_k' (Append_Exp exp1 exp2) env cont store actors =
   value_of_k exp2 env (Append_Cont exp1 env cont) store actors
 
+value_of_k' (PowMod_Exp e1 e2 e3) env cont store actors =
+  value_of_k e1 env (PowMod_Cont [e2, e3] [] env cont) store actors
+
 value_of_k' exp _ _ _ _ =
   error $ "Unknown expression in value_of_k" ++ show exp
 
@@ -488,3 +529,16 @@ apply_procedure_k (Procedure saved_actor var body saved_env) arg cont store acto
     _ -> do
       let (loc,store') = newref store arg
       value_of_k body (extend_env saved_actor var loc saved_env) cont store' actors
+
+  
+--
+powMod :: Int -> Int -> Int -> Int
+powMod base expr modulo = pow base expr 1
+  where
+    pow _ 0 acc = acc
+    pow b e acc = pow b' e' acc'
+      where
+        (e', b', acc') =
+          if even e
+          then (e `div` 2, (b * b) `mod` modulo, acc)
+          else (e - 1, b, (acc * b) `mod` modulo)

@@ -9,6 +9,10 @@ data Token =
   | INTEGER_NUMBER              -- number
   
   | SUB                         -- - ( expr1, expr2 )
+  | PLUS                        -- +
+  | TIMES                       -- *
+  | MOD                         -- mod
+
   | OPEN_PAREN  | CLOSE_PAREN
   | COMMA
 
@@ -67,6 +71,9 @@ data Token =
 
   | APPEND                      -- append
 
+  | POWMOD                      -- powMod
+  | RANDOM                      -- random
+
   deriving (Eq, Show)
 
 tokenStrList :: [(Token,String)]
@@ -77,6 +84,8 @@ tokenStrList =
     (STRING, "string"),
     
     (SUB, "-"),
+    (PLUS, "+"),
+    (TIMES, "*"),
     (OPEN_PAREN, "("),
     (CLOSE_PAREN, ")"),
     (COMMA, ","),
@@ -131,7 +140,11 @@ tokenStrList =
 
     (LOG, "log"),
 
-    (APPEND, "append")
+    (APPEND, "append"),
+
+    (POWMOD, "powMod"),
+    (RANDOM, "random"),
+    (MOD, "mod")
   ]
 
 findTok tok [] = Nothing

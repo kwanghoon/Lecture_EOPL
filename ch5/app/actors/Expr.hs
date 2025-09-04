@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
 {-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
-module Expr(Program,Exp(..),Identifier,UnaryOp(..),CompOp(..),toProcMap) where
+module Expr(Program,Exp(..),Identifier,UnaryOp(..),BinaryOp(..),CompOp(..),toProcMap) where
 
 import ActorName(ActorName, RoleName)
 import GHC.Generics (Generic)
@@ -16,7 +16,7 @@ data Exp =
     Const_Exp  Int
   | Str_Exp    String
   | Pid_Exp    ProcessId
-  | Diff_Exp   Exp Exp
+  -- | Diff_Exp   Exp Exp
   | If_Exp     Exp Exp Exp
   | Var_Exp    Identifier                 -- variable : x
   | Let_Exp    Identifier Exp Exp         -- let x = expression in expression
@@ -28,6 +28,7 @@ data Exp =
   | Set_Exp    Identifier Exp             -- set x = expression
   | Const_List_Exp  [Int]                 -- number list : [ number1, ..., numberk ]
   | Unary_Exp  UnaryOp Exp                -- unop ( expression ) where unop is one of car, cdr, null?, zero? print
+  | Binary_Exp BinaryOp Exp Exp
   | Comp_Exp   CompOp Exp Exp             -- ( expression compOp expression )
 
   -- For Actors
@@ -42,10 +43,15 @@ data Exp =
   | Append_Exp   Identifier Exp           -- append ( var , expression )
   | PtrTo_Exp Int 
 
+  | PowMod_Exp Exp Exp Exp
+
   deriving (Show, Generic, Binary)
 
 
 data UnaryOp = IsZero | IsNull | Car | Cdr | Print | Read | ReadInt
+  deriving (Show, Generic, Binary)
+
+data BinaryOp = Add | Diff | Mul | Mod | Random
   deriving (Show, Generic, Binary)
 
 data CompOp = Eq                -- more comparison operators can be added here
@@ -61,10 +67,10 @@ toProcMap :: Exp -> Int -> Map.Map Int Exp -> (Int, Map.Map Int Exp, Exp)
 toProcMap (Const_Exp n) i m = (i, m, Const_Exp n)
 toProcMap (Str_Exp s) i m = (i, m, Str_Exp s)
 toProcMap (Pid_Exp p) i m = (i, m, Pid_Exp p) 
-toProcMap (Diff_Exp e1 e2) i m =
-  let (i1, m1, e1') = toProcMap e1 i m
-      (i2, m2, e2') = toProcMap e2 i1 m1
-  in (i2, m2, Diff_Exp e1' e2')
+-- toProcMap (Diff_Exp e1 e2) i m =
+--   let (i1, m1, e1') = toProcMap e1 i m
+--       (i2, m2, e2') = toProcMap e2 i1 m1
+--   in (i2, m2, Diff_Exp e1' e2')
 toProcMap (If_Exp e1 e2 e3) i m =
   let (i1, m1, e1') = toProcMap e1 i m
       (i2, m2, e2') = toProcMap e2 i1 m1
@@ -104,6 +110,10 @@ toProcMap (Const_List_Exp nums) i m = (i, m, Const_List_Exp nums)
 toProcMap (Unary_Exp op e) i m =
   let (i1, m1, e') = toProcMap e i m
   in (i1, m1, Unary_Exp op e')
+toProcMap (Binary_Exp op e1 e2) i m =
+  let (i1, m1, e1') = toProcMap e1 i m
+      (i2, m2, e2') = toProcMap e2 i1 m1
+  in (i2, m2, Binary_Exp op e1' e2')
 toProcMap (Comp_Exp op e1 e2) i m =
   let (i1, m1, e1') = toProcMap e1 i m
       (i2, m2, e2') = toProcMap e2 i1 m1
@@ -136,5 +146,10 @@ toProcMap (LetTuple_Exp ids e1 e2) i m =
 toProcMap (Append_Exp id e) i m =
   let (i1, m1, e') = toProcMap e i m
   in (i1, m1, Append_Exp id e') 
+toProcMap (PowMod_Exp e1 e2 e3) i m =
+  let (i1, m1, e1') = toProcMap e1 i m
+      (i2, m2, e2') = toProcMap e2 i1 m1
+      (i3, m3, e3') = toProcMap e3 i2 m2
+  in (i3, m3, PowMod_Exp e1' e2' e3')
 toProcMap (PtrTo_Exp n) i m = (i, m, PtrTo_Exp n) -- Should not happen!   
   
