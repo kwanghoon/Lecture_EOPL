@@ -30,10 +30,12 @@ lexerSpec = LexerSpec
         ("\"([^\"\\\\]|\\\\.)*\"", mkFn STRING),
         
         ("\\-"     , mkFn SUB),
+        ("\\*"     , mkFn TIMES),
         ("\\("     , mkFn OPEN_PAREN),
         ("\\)"     , mkFn CLOSE_PAREN),
         ("\\,"     , mkFn COMMA),
         ("\\+\\+"  , mkFn PLUSPLUS),
+        ("\\+"     , mkFn PLUS),
         ("\\=\\="  , mkFn EQEQ),
         
         ("\\="     , mkFn EQ),
@@ -83,6 +85,10 @@ keywords =
   , ("new",    NEW)
   , ("log",    LOG)
   , ("append", APPEND)
+
+  , ("powMod", POWMOD)
+  , ("random", RANDOM)
+  , ("mod",    MOD)
   ]
   
 -- Invariant: text = "/*..."  

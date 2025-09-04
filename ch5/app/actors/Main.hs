@@ -100,7 +100,7 @@ runMainNode addrStr fileName = do
 
   mNid <- takeMVar mvar
 
-  -- Run the interpreter (by start command)
+  -- Run the interpreter
   runProcess node $ do
     pid <- getSelfPid
     register "mainInterp" pid   -- main 액터의 pid 이름
@@ -117,7 +117,7 @@ runMainNode addrStr fileName = do
     
     let expression = expFrom pet
         (_,procMap,transformedExp) = toProcMap expression 0 Map.empty
-
+    liftIO $ putStrLn (show expression)
     (result,store) <- value_of_program transformedExp procMap
     liftIO $ putStrLn ("[Main@" ++ show pid ++ "] Final result: " ++ show result)
     runReadyServiceLoop store (initActorState mNid procMap)

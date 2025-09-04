@@ -1,0 +1,12 @@
+proc(main)
+
+    let a = new (proc(self)
+                    letrec loop (d) = ready(loop) in ready(loop)) in
+    let b = new (proc(self)
+                    letrec loop (d) = ready(loop) in ready(loop)) in
+
+    let g = proc a (x) 
+                let (h,y)=x in (h y) in
+    letrec h b (z) = (g (h,z)) in
+
+    (h 10)

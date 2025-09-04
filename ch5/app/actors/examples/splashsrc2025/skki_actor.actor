@@ -4,7 +4,7 @@ proc (main)
   let F0 = 0 in
   let f0 = proc (fvs1)
             let (a, b) = fvs1 in 
-                proc (x2) begin send (b, CREATECLO, (4, (b, x2), a)); ready (proc (clo7) clo7) end 
+                proc (x2) begin print("main to b\n"); send (b, CREATECLO, (4, (b, x2), a)); ready (proc (clo7) clo7) end 
   in
   let F4 = 4 in
   let f4 = proc (fvs5) let (b, x2) = fvs5 in proc (y6) x2 
@@ -12,24 +12,27 @@ proc (main)
   let F9 = 9 in
   let f9 = proc (fvs10)
             let (a, b, c) = fvs10 in
-                proc (f11) begin send (b, CREATECLO, (13, (a, b, c, f11), a)); ready (proc (clo16) clo16) end 
+                proc (f11) begin print("main to b\n"); send (b, CREATECLO, (13, (a, b, c, f11), a)); ready (proc (clo16) clo16) end 
   in
   let F13 = 13 in
   let f13 = proc (fvs14)
              let (a, b, c, f11) = fvs14 in
-                proc (g15) begin send (c, CREATECLO, (17, (a, b, c, f11, g15), b)); ready (proc (clo20) clo20) end 
+                proc (g15) begin print("main to c\n"); send (c, CREATECLO, (17, (a, b, c, f11, g15), b)); ready (proc (clo20) clo20) end 
   in
   let F17 = 17 in
   let f17 = proc (fvs18)
              let (a, b, c, f11, g15) = fvs18 in
                 proc (z19)
                     begin 
+                        print("main to a\n");
                         send (a, CALLCLO, (f11, z19, c));
                         ready (proc (ret21)
                                 begin 
+                                    print("main to a\n");
                                     send (a, CALLCLO, (g15, z19, c));
                                     ready (proc (ret22)
                                             begin 
+                                                print("main to b\n");
                                                 send (b, CALLCLO, (ret21, ret22, c)); 
                                                 ready (proc (ret23) ret23) 
                                             end) 
@@ -59,13 +62,13 @@ proc (main)
         createClo (msg) =  let (fNO, fvs, sender) = msg in
                         let f = (dispatch fNO) in
                         let clo = (f, fvs) in
-                        begin send (sender, clo); ready (mainLoop) end
+                        begin print("main to" ++ sender ++ "\n"); send (sender, clo); ready (mainLoop) end
 
         callClo (msg) =  let (clo, arg, sender) = msg in
                         let (f, fvs) = clo in
                         let ffvs = (f fvs) in
                         let ret = (ffvs arg) in
-                        begin send (sender, ret); ready (mainLoop) end
+                        begin print("main to" ++ sender ++ "\n"); send (sender, ret); ready (mainLoop) end
   in
   let behavioura = proc (self)
                     let CREATECLO = 1 in
@@ -75,6 +78,7 @@ proc (main)
                                 let (a, b) = fvs1 in
                                     proc (x2)
                                         begin 
+                                            print("a to b\n");
                                             send (b, CREATECLO, (4, (b, x2), a));
                                             ready (proc (clo7) clo7)
                                         end 
@@ -88,6 +92,7 @@ proc (main)
                                 let (a, b, c) = fvs10 in
                                     proc (f11)
                                         begin 
+                                            print("a to b\n");
                                             send (b, CREATECLO, (13, (a, b, c, f11), a));
                                             ready (proc (clo16) clo16)
                                         end 
@@ -97,6 +102,7 @@ proc (main)
                                 let (a, b, c, f11) = fvs14 in
                                     proc (g15) 
                                         begin 
+                                            print("a to c\n");
                                             send (c, CREATECLO, (17, (a, b, c, f11, g15), b));
                                             ready (proc (clo20) clo20) 
                                         end 
@@ -106,12 +112,15 @@ proc (main)
                                 let (a, b, c, f11, g15) = fvs18 in
                                     proc (z19) 
                                         begin 
+                                            print("a to a\n");
                                             send (a, CALLCLO, (f11, z19, c));
                                             ready (proc (ret21)
                                                     begin 
+                                                        print("a to a\n");
                                                         send (a, CALLCLO, (g15, z19, c));
                                                         ready (proc (ret22)
                                                                 begin 
+                                                                    print("a to b\n");
                                                                     send (b, CALLCLO, (ret21, ret22, c));
                                                                     ready (proc (ret23) ret23) 
                                                                 end) 
@@ -141,13 +150,13 @@ proc (main)
                         createClo (msg) = let (fNO, fvs, sender) = msg in
                                         let f = (dispatch fNO) in
                                         let clo = (f, fvs) in
-                                        begin send (sender, clo); ready (mainLoop) end
+                                        begin print("a to " ++ sender ++ "\n"); send (sender, clo); ready (mainLoop) end
 
                         callClo (msg) = let (clo, arg, sender) = msg in
                                         let (f, fvs) = clo in
                                         let ffvs = (f fvs) in
                                         let ret = (ffvs arg) in
-                                        begin send (sender, ret); ready (mainLoop) end
+                                        begin print("a to " ++ sender ++ "\n"); send (sender, ret); ready (mainLoop) end
                     in ready (mainLoop) 
   in
   let a = new (behavioura) in
@@ -157,7 +166,7 @@ proc (main)
                         let F0 = 0 in
                         let f0 = proc (fvs1)
                                     let (a, b) = fvs1 in
-                                        proc (x2) begin send (b, CREATECLO, (4, (b, x2), a)); ready (proc (clo7) clo7) end 
+                                        proc (x2) begin print("b to b\n"); send (b, CREATECLO, (4, (b, x2), a)); ready (proc (clo7) clo7) end 
                         in
                         let F4 = 4 in
                         let f4 = proc (fvs5)
@@ -166,27 +175,31 @@ proc (main)
                         let F9 = 9 in
                         let f9 = proc (fvs10)
                                     let (a, b, c) = fvs10 in
-                                        proc (f11) begin send (b, CREATECLO, (13, (a, b, c, f11), a)); ready (proc (clo16) clo16) end 
+                                        proc (f11) begin print("b to b\n"); send (b, CREATECLO, (13, (a, b, c, f11), a)); ready (proc (clo16) clo16) end 
                         in
                         let F13 = 13 in
                         let f13 = proc (fvs14)
                                     let (a, b, c, f11) = fvs14 in
-                                        proc (g15) begin send (c, CREATECLO, (17, (a, b, c, f11, g15), b)); ready (proc (clo20) clo20) end 
+                                        proc (g15) begin print("b to c\n"); send (c, CREATECLO, (17, (a, b, c, f11, g15), b)); ready (proc (clo20) clo20) end 
                         in
                         let F17 = 17 in
                         let f17 = proc (fvs18)
                                     let (a, b, c, f11, g15) = fvs18 in
                                         proc (z19) 
-                                            begin send (a, CALLCLO, (f11, z19, c)); 
-                                            ready (proc (ret21)
-                                                        begin 
-                                                            send (a, CALLCLO, (g15, z19, c));
-                                                            ready (proc (ret22)
-                                                                        begin 
-                                                                            send (b, CALLCLO, (ret21, ret22, c));
-                                                                            ready (proc (ret23) ret23)
-                                                                        end)
-                                                        end)
+                                            begin 
+                                                print("b to a\n"); 
+                                                send (a, CALLCLO, (f11, z19, c)); 
+                                                ready (proc (ret21)
+                                                            begin 
+                                                                print("b to a\n");
+                                                                send (a, CALLCLO, (g15, z19, c));
+                                                                ready (proc (ret22)
+                                                                            begin 
+                                                                                print("b to b\n");
+                                                                                send (b, CALLCLO, (ret21, ret22, c));
+                                                                                ready (proc (ret23) ret23)
+                                                                            end)
+                                                            end)
                                             end 
                         in
                         let dispatch = proc (fNO)
@@ -214,14 +227,14 @@ proc (main)
                                 let (fNO, fvs, sender) = msg in
                                 let f = (dispatch fNO) in
                                 let clo = (f, fvs) in
-                                begin send (sender, clo); ready (mainLoop) end
+                                begin print("b to " ++ sender ++ "\n"); send (sender, clo); ready (mainLoop) end
 
                             callClo (msg) =
                                 let (clo, arg, sender) = msg in
                                 let (f, fvs) = clo in
                                 let ffvs = (f fvs) in
                                 let ret = (ffvs arg) in
-                                begin send (sender, ret); ready (mainLoop) end
+                                begin print("b to " ++ sender ++ "\n"); send (sender, ret); ready (mainLoop) end
                         in
                         ready (mainLoop) 
   in
@@ -232,7 +245,7 @@ proc (main)
                         let F0 = 0 in
                         let f0 = proc (fvs1)
                                     let (a, b) = fvs1 in
-                                        proc (x2) begin send (b, CREATECLO, (4, (b, x2), a)); ready (proc (clo7) clo7) end 
+                                        proc (x2) begin print("c to b\n"); send (b, CREATECLO, (4, (b, x2), a)); ready (proc (clo7) clo7) end 
                         in
                         let F4 = 4 in
                         let f4 = proc (fvs5)
@@ -241,24 +254,27 @@ proc (main)
                         let F9 = 9 in
                         let f9 = proc (fvs10)
                                     let (a, b, c) = fvs10 in
-                                        proc (f11) begin send (b, CREATECLO, (13, (a, b, c, f11), a)); ready (proc (clo16) clo16) end 
+                                        proc (f11) begin print("c to b\n"); send (b, CREATECLO, (13, (a, b, c, f11), a)); ready (proc (clo16) clo16) end 
                         in
                         let F13 = 13 in
                         let f13 = proc (fvs14)
                                     let (a, b, c, f11) = fvs14 in
-                                        proc (g15) begin send (c, CREATECLO, (17, (a, b, c, f11, g15), b)); ready (proc (clo20) clo20) end 
+                                        proc (g15) begin print("c to c\n"); send (c, CREATECLO, (17, (a, b, c, f11, g15), b)); ready (proc (clo20) clo20) end 
                         in
                         let F17 = 17 in
                         let f17 = proc (fvs18)
                                     let (a, b, c, f11, g15) = fvs18 in
                                         proc (z19) 
                                             begin 
+                                                print("c to a\n");
                                                 send (a, CALLCLO, (f11, z19, c)); 
                                                 ready (proc (ret21)
                                                             begin 
+                                                                print("c to a\n");
                                                                 send (a, CALLCLO, (g15, z19, c)); 
                                                                 ready (proc (ret22)
                                                                             begin 
+                                                                                print("c to b\n");
                                                                                 send (b, CALLCLO, (ret21, ret22, c));
                                                                                 ready (proc (ret23) ret23) 
                                                                             end) 
@@ -290,33 +306,38 @@ proc (main)
                                 let (fNO, fvs, sender) = msg in
                                 let f = (dispatch fNO) in
                                 let clo = (f, fvs) in
-                                begin send (sender, clo); ready (mainLoop) end
+                                begin print("c to " ++ sender ++ "\n"); send (sender, clo); ready (mainLoop) end
 
                             callClo (msg) =
                                 let (clo, arg, sender) = msg in
                                 let (f, fvs) = clo in
                                 let ffvs = (f fvs) in
                                 let ret = (ffvs arg) in
-                                begin send (sender, ret); ready (mainLoop) end
+                                begin print("c to " ++ sender ++ "\n"); send (sender, ret); ready (mainLoop) end
                         in
                         ready (mainLoop) 
   in
   let c = new (behaviourc) in
     begin 
+        print("main to a\n");
         send (a, CREATECLO, (0, (a, b), main));
         ready (proc (clo3)
                     let k8 = clo3 in 
                     begin 
+                        print("main to a\n");
                         send (a, CREATECLO, (9, (a, b, c), main));
                         ready (proc (clo12)
                                     let s24 = clo12 in
                                     begin 
+                                        print("main to a\n");
                                         send (a, CALLCLO, (s24, k8, main)); 
                                         ready (proc (ret25)
                                                     begin 
+                                                        print("main to b\n");
                                                         send (b, CALLCLO, (ret25, k8, main));
                                                         ready (proc (ret26)
                                                                 begin 
+                                                                    print("main to c\n");
                                                                     send (c, CALLCLO, (ret26, 1, main)); 
                                                                     ready (proc (ret27)
                                                                                 begin print(ret27); ret27 end)
