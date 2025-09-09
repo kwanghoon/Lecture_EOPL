@@ -41,7 +41,10 @@ data Exp =
   | Tuple_Exp    [ Exp ]                  -- ( expression1, ..., expressionk )
   | LetTuple_Exp [ Identifier ] Exp Exp   -- let x1, ..., xk = expression in expression
   | Append_Exp   Identifier Exp           -- append ( var , expression )
+  
   | PtrTo_Exp Int 
+  | PtrTo_Rec [ Int ] Exp
+  | Rec_Exp Identifier (Maybe ActorName) Identifier Exp
 
   | PowMod_Exp Exp Exp Exp
 
@@ -81,13 +84,20 @@ toProcMap (Let_Exp id e1 e2) i m =
   let (i1, m1, e1') = toProcMap e1 i m
       (i2, m2, e2') = toProcMap e2 i1 m1
   in (i2, m2, Let_Exp id e1' e2')
-toProcMap (Letrec_Exp binds e) i m =
-  let (i1, m1, binds') = 
-        foldl (\(i', m', acc) (id, aname, arg, e1) ->
-          let (i2, m2, e1') = toProcMap e1 i' m'
-          in (i2, m2, (id, aname, arg, e1') : acc)) (i, m, []) binds
-      (i2, m2, e') = toProcMap e i1 m1
-  in (i2, m2, Letrec_Exp (reverse binds') e')
+toProcMap (Letrec_Exp binds body) i m =
+  -- binds :: [(fid, aname, arg, e1)]
+  let (i1, m1, ptrsRev) =
+        foldl
+          (\(i', m', acc) (fid, aname, arg, e1) ->
+              let (i2, m2, e1') = toProcMap e1 i' m'
+                  idx           = i2
+                  m3            = Map.insert idx (Rec_Exp fid aname arg e1') m2
+                  i3            = i2 + 1
+              in (i3, m3, idx : acc))
+          (i, m, [])
+          binds
+      (i2, m2, body') = toProcMap body i1 m1
+  in (i2, m2, PtrTo_Rec (reverse ptrsRev) body') 
 toProcMap (Proc_Exp aname id e) i m =
   let (i1, m1, e') = toProcMap e i m
       i2 = i1 + 1
