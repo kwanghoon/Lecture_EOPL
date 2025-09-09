@@ -6,7 +6,7 @@ proc(main)
                     letrec loop (d) = ready(loop) in ready(loop)) in
 
     let g = proc a (x) 
-                let (h,y)=x in (h y) in
-    letrec h b (z) = (g (h,z)) in
+                let (h,y)=x in begin print("g"); (h y) end in
+    letrec h b (z) = begin print("h"); (g (h,z)) end in
 
     (h 10)

@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 module EnvStore where
 
@@ -8,7 +9,7 @@ import ActorName(RoleName)
 import Data.List(intercalate,find)
 import Data.Maybe(listToMaybe)
 
-import Control.Distributed.Process (ProcessId, NodeId)
+import Control.Distributed.Process
 
 import GHC.Generics (Generic)
 import Data.Binary
@@ -20,67 +21,44 @@ import qualified Data.Map as Map
 data Env =
     Empty_env
   | Extend_env ActorId Identifier DenVal Env
-  | Extend_env_rec [(Identifier,ActorId,Identifier,Exp)] Env
-  | Extend_env_behv (RoleName,Exp,Env) Env
+  | Extend_env_rec [(Identifier,ActorId,Identifier,Exp,Int)] Env
   | Extend_env_with_actorId Identifier ActorId Env   -- No location! 
   deriving (Generic, Binary)
 
 empty_env :: Env
 empty_env = Empty_env
 
-apply_env :: Env -> Store -> Identifier -> (DenVal, Store)
+apply_env :: Env -> Store -> Identifier -> Process (ActorId, DenVal, Store)
 apply_env Empty_env store search_var = error (search_var ++ " is not found.")
-apply_env (Extend_env _ saved_var saved_val saved_env) store search_var
-  | search_var==saved_var = (saved_val,store)
+apply_env (Extend_env saved_actor saved_var saved_val saved_env) store search_var
+  | search_var==saved_var = return (saved_actor,saved_val,store)
   | otherwise             = apply_env saved_env store search_var
-apply_env (Extend_env_rec idActoridIdExpList saved_env) store search_var
-  | isIn      = let (loc, store') = newref store procVal
-                in (loc, store')
-  | otherwise = apply_env saved_env store search_var
-  where isIn      = or [ p_name==search_var | (p_name,saved_actor,b_var,p_body) <- idActoridIdExpList ]
-        procVal = head [ Proc_Val (procedure saved_actor b_var p_body (Extend_env_rec idActoridIdExpList saved_env)) 
-                       | (p_name,saved_actor,b_var,p_body) <- idActoridIdExpList, p_name==search_var ]
-apply_env (Extend_env_behv _ saved_env) store search_var =
-  apply_env saved_env store search_var
+apply_env env@(Extend_env_rec idActoridIdExpPtrList saved_env) store search_var = do
+  current <- getSelfPid
+  case filter (\(p_name,_,_,_,_) -> p_name == search_var) idActoridIdExpPtrList of
+    [] -> apply_env saved_env store search_var
+    (p_name, saved_actor, b_var, p_body, ptr):_ ->
+      if saved_actor == current
+        then do
+          let procVal = Proc_Val (procedure saved_actor b_var p_body env)
+              (loc, store') = newref store procVal
+          return (current, loc, store')
+        else do
+          send saved_actor (RemoteRec ptr env current)
+          loc <- receiveWait [match (\(loc'::DenVal) -> return loc')]
+          return (saved_actor, loc, store)
 apply_env (Extend_env_with_actorId _ _ saved_env) store search_var =
   apply_env saved_env store search_var  
 
 extend_env :: ActorId -> Identifier -> DenVal -> Env -> Env
 extend_env a x v env = Extend_env a x v env
 
-extend_env_rec :: [(Identifier, ActorId, Identifier, Exp)] -> Env -> Env
-extend_env_rec idActoridIdExpList env = Extend_env_rec idActoridIdExpList env
-
-extend_env_behv :: RoleName -> Exp -> Env -> Env
-extend_env_behv roleName procExp savedEnv = Extend_env_behv (roleName,procExp,savedEnv) savedEnv
+extend_env_rec :: [(Identifier, ActorId, Identifier, Exp, Int)] -> Env -> Env
+extend_env_rec idActoridIdExpPtrList env = Extend_env_rec idActoridIdExpPtrList env
 
 extend_env_with_actorId :: Identifier -> ActorId -> Env -> Env
 extend_env_with_actorId var aid env = Extend_env_with_actorId var aid env
 
--- lookup_env: 변수가 정의된 위치(액터 id)만 반환
-lookup_env :: Env -> Identifier -> ActorId
-lookup_env Empty_env search_var = error (search_var ++ " is not found.")
-lookup_env (Extend_env saved_actor saved_var _ saved_env) search_var
-  | search_var == saved_var = saved_actor
-  | otherwise               = lookup_env saved_env search_var
-lookup_env (Extend_env_rec idActoridIdExpList saved_env) search_var =
-  case [ saved_actor | (p_name, saved_actor, _, _) <- idActoridIdExpList, p_name == search_var ] of
-    (saved_actor:_) -> saved_actor
-    []     -> lookup_env saved_env search_var
-lookup_env (Extend_env_behv _ env) search_var =
-  lookup_env env search_var
-lookup_env (Extend_env_with_actorId _ _ env) search_var =
-  lookup_env env search_var  
-
---
-lookup_behvs :: RoleName -> Env -> [(Exp, Env)]
-lookup_behvs _ Empty_env = []
-lookup_behvs role (Extend_env_behv (r, e, savedEnv) rest)
-  | role == r = (e, savedEnv) : lookup_behvs role rest
-  | otherwise = lookup_behvs role rest
-lookup_behvs role (Extend_env _ _ _ rest) = lookup_behvs role rest
-lookup_behvs role (Extend_env_rec _ rest) = lookup_behvs role rest
-lookup_behvs role (Extend_env_with_actorId _ _ rest) = lookup_behvs role rest
 
 --
 lookup_actorId :: Env -> Identifier -> ActorId 
@@ -88,8 +66,6 @@ lookup_actorId Empty_env search_aname = error (search_aname ++ " is not found.")
 lookup_actorId (Extend_env saved_actor _ _ saved_env) search_aname =
   lookup_actorId saved_env search_aname
 lookup_actorId (Extend_env_rec _ saved_env) search_aname =
-  lookup_actorId saved_env search_aname
-lookup_actorId (Extend_env_behv _ saved_env) search_aname =
   lookup_actorId saved_env search_aname
 lookup_actorId (Extend_env_with_actorId saved_aname saved_actor saved_env) search_aname
   | search_aname == saved_aname = saved_actor  
@@ -223,6 +199,7 @@ data RemoteMessage =
   | RemoteSet (Location, ExpVal) ActorId    -- (원격 store 주소, 할당할 값)
   | RemoteProc Int Env ActorId              -- 생성할 Proc_Exp, Env
   | RemoteCall (ExpVal, ExpVal) ActorId     -- (ratorVal, randVal)
+  | RemoteRec Int Env ActorId
   deriving (Generic, Binary, Typeable)
 
 instance Show RemoteMessage where
@@ -230,7 +207,7 @@ instance Show RemoteMessage where
   show (RemoteSet (loc, val) aid) = "RemoteSet loc: " ++ show loc ++ " value: " ++ show val ++ " to: " ++ show aid
   show (RemoteProc idx env aid) = "RemoteProc Ptr: " ++ show idx ++ " to: " ++ show aid
   show (RemoteCall (val1, val2) aid) = "RemoteCall rator: " ++ show val1 ++ " value: " ++ show val2 ++ " to: " ++ show aid  
-
+  show (RemoteRec idx env aid) = "RemoteRec Ptr: " ++ show idx ++ " to: " ++ show aid
 data ReturnMessage = ReturnMessage ExpVal
   deriving (Generic, Binary, Typeable)
 

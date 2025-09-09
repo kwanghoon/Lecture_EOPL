@@ -98,7 +98,7 @@ apply_cont :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Sto
 
 apply_cont cont expval store actors = 
   do current <- getSelfPid
-     liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "apply_cont: " ++ show cont 
+     -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "apply_cont: " ++ show cont 
      apply_cont' cont expval store actors 
 
 apply_cont' :: Cont -> ExpVal -> Store -> ActorState -> Process (FinalAnswer, Store)
@@ -175,15 +175,13 @@ apply_cont' (Rand_Cont ratorVal env cont) randVal store actors = do
     apply_cont (RemoteReady_Cont cont) Unit_Val store actors
 
 apply_cont' (Set_Rhs_Cont var env cont) val store actors = do
-  let saved_actor = lookup_env env var
+  (saved_actor, loc, store1) <- apply_env env store var
   current <- getSelfPid
   if saved_actor == current
   then
-      let (loc, store1) = apply_env env store var
-          store2 = setref store1 loc val
+      let store2 = setref store1 loc val
       in apply_cont cont (Unit_Val) store2 actors
   else do
-    let (loc, store1) = apply_env env store var
     send saved_actor (RemoteSet (loc, val) current)
     apply_cont (RemoteReady_Cont cont) Unit_Val store1 actors
 
@@ -207,7 +205,14 @@ apply_cont' (Send_Cont explist vals env saved_cont) val store actors = do
 apply_cont' (Ready_Cont saved_cont) val store actors = do
   current <- getSelfPid
   receiveWait
-    [ match $ \(msg :: RemoteMessage) -> do
+    [ match $ \(msg :: ExpVal) -> do
+        let Procedure _ x body env = expval_proc val
+            (loc, store1) = newref store msg
+            env1 = extend_env current x loc env
+        value_of_k body env1 saved_cont store1 actors
+      ,
+      match $ \(msg :: RemoteMessage) -> do
+        -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "Ready_Cont received RemoteMessage: " ++ show msg
         case msg of
           -- 변수 read 요청 처리
           RemoteVar varLoc requester -> do
@@ -234,22 +239,28 @@ apply_cont' (Ready_Cont saved_cont) val store actors = do
             (returnVal, store1) <- apply_procedure_k proc randVal End_Main_Thread_Cont store actors
             send requester (ReturnMessage returnVal)
             apply_cont (Ready_Cont saved_cont) val store1 actors
-      ,
-      match $ \(msg :: ExpVal) -> do
-        let Procedure _ x body env = expval_proc val
-            (loc, store1) = newref store msg
-        let env1 = extend_env current x loc env
-        value_of_k body env1 saved_cont store1 actors
+          -- apply_env 에서의 재귀적 함수 호출 처리
+          RemoteRec idx savedEnv requester -> do
+            let m = procMap actors
+            case Map.lookup idx m of
+              Just (Rec_Exp p_name _ var body) -> do
+                let procVal = Proc_Val (procedure current var body savedEnv)
+                    (loc, store1) = newref store procVal
+                send requester loc
+                apply_cont (Ready_Cont saved_cont) val store1 actors
+              Nothing -> error $ "Invalid RemoteRec index: " ++ show idx          
     ]
 
 apply_cont' (RemoteReady_Cont saved_cont) val store actors = do
   current <- getSelfPid
   receiveWait
     [ match $ \(msg :: ReturnMessage) -> do
+        -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "RemoteReady_Cont received ReturnMessage"
         let ReturnMessage returnVal = msg
         apply_cont saved_cont returnVal store actors
       ,
       match $ \(msg :: RemoteMessage) -> do
+        -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "RemoteReady_Cont received RemoteMessage: " ++ show msg
         case msg of
           RemoteVar varLoc requester -> do
             let returnVal = deref store varLoc
@@ -275,6 +286,16 @@ apply_cont' (RemoteReady_Cont saved_cont) val store actors = do
             (returnVal, store1) <- apply_procedure_k proc randVal End_Main_Thread_Cont store actors
             send requester (ReturnMessage returnVal)
             apply_cont (RemoteReady_Cont saved_cont) val store1 actors
+
+          RemoteRec idx savedEnv requester -> do
+            let m = procMap actors
+            case Map.lookup idx m of
+              Just (Rec_Exp p_name _ var body) -> do
+                let procVal = Proc_Val (procedure current var body savedEnv)
+                    (loc, store1) = newref store procVal
+                send requester loc
+                apply_cont (RemoteReady_Cont saved_cont) val store1 actors
+              Nothing -> error $ "Invalid RemoteRec index: " ++ show idx
     ]
 
 apply_cont' (New_Cont saved_cont) val store actors = do
@@ -313,8 +334,8 @@ apply_cont' (Let_Tuple_Cont vars body env saved_cont) val store actors = do
     _ -> error ("LetTuple_Cont: expected a list, got " ++ show val)
 
 apply_cont' (Append_Cont var env cont) val store actors = do
-  let (loc, store1) = apply_env env store var
-      List_Val xs = deref store1 loc
+  (_, loc, store1) <- apply_env env store var
+  let List_Val xs = deref store1 loc
       xs' = xs ++ [val]
       store2 = setref store1 loc (List_Val xs')
   apply_cont cont (Unit_Val) store2 actors
@@ -374,7 +395,7 @@ apply_binop _   _             _           = error "Type error in binary op"
 value_of_k :: Exp -> Env -> Cont -> Store -> ActorState -> Process (FinalAnswer, Store)
 value_of_k exp env cont store actors = 
   do current <- getSelfPid
-     liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "value_of_k: " ++ take 100 (show exp)
+     -- liftIO $ putStrLn $ "["  ++ show current ++ "] " ++ "value_of_k: " ++ take 100 (show exp)
      value_of_k' exp env cont store actors 
 
 value_of_k' :: Exp -> Env -> Cont -> Store -> ActorState -> Process (FinalAnswer, Store)
@@ -395,8 +416,7 @@ value_of_k' (Pid_Exp pid) env cont store actors = do
 
 value_of_k' (Var_Exp var) env cont store actors = do
   current <- getSelfPid
-  let saved_actor = lookup_env env var
-      (loc, store') = apply_env env store var
+  (saved_actor, loc, store') <- apply_env env store var
   if saved_actor == current
   then do
     let val = deref store' loc
@@ -423,17 +443,20 @@ value_of_k' (If_Exp exp1 exp2 exp3) env cont store actors =
 value_of_k' (Let_Exp var exp1 body) env cont store actors =
   value_of_k exp1 env (Let_Exp_Cont var body env cont) store actors
 
-value_of_k' (Letrec_Exp nameActorNameArgBodyList letrec_body) env cont store actors = do
+value_of_k' (PtrTo_Rec ptrList letrec_body) env cont store actors = do
   current <- getSelfPid
-  let nameActorIdArgBodyList =
-        [ case maybeActorName of
-            Nothing -> (p_name, current, b_var, p_body)
-            Just actorName ->
-              let (loc, store1) = apply_env env store actorName   -- Ignore store1!!
-                  actorId  = expval_actor(deref store1 loc)
-              in (p_name,actorId,b_var,p_body)
-          | (p_name,maybeActorName,b_var,p_body) <- nameActorNameArgBodyList ]
-  value_of_k letrec_body (extend_env_rec nameActorIdArgBodyList env) cont store actors
+  let m = procMap actors
+      mapActorIdArgBodyPtrList =
+        [ (p_name, actorId, b_var, p_body, i)
+        | i <- ptrList,
+          Just (Rec_Exp p_name maybeActorName b_var p_body) <- [Map.lookup i m],
+          let actorId = case maybeActorName of
+                          Nothing -> current
+                          Just actorName ->
+                            let actorId = lookup_actorId env actorName
+                            in actorId
+        ]
+  value_of_k letrec_body (extend_env_rec mapActorIdArgBodyPtrList env) cont store actors
 
 -- value_of_k' (Proc_Exp (Just actorName) var body) env cont store actors = do
 --   current <- getSelfPid
