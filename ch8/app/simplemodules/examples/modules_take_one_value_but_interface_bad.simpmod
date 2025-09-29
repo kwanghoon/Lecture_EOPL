@@ -1,4 +1,5 @@
 module m 
     interface []  
     body [u = 3]
-    from m take u
+
+from m take u

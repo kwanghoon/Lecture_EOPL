@@ -1,0 +1,9 @@
+let fst = proc(p : ?) 
+            unpair (x,y) = p in x 
+in 
+let snd = proc(p : ?) 
+            unpair (x,y) = p in y 
+in 
+let mypair = newpair (proc(x:?) zero?(x), 0) in 
+  ((fst mypair) (snd mypair))
+  

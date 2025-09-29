@@ -1,0 +1,4 @@
+let fst = proc(p : ?) unpair (x,y) = p in x in 
+let snd = proc(p : ?) unpair (x,y) = p in y in 
+let q = newpair (1, zero?(0)) in 
+  if (snd q) then 0 else (fst q)

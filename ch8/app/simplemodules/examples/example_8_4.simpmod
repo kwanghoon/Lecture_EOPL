@@ -6,4 +6,4 @@ module m1
     [v = 33 
     u = 44]
 
-    from m1 take u
+from m1 take u

@@ -2,4 +2,5 @@ module m
     interface      
     [u : int v : int]
     body [u = 44  v = -(u,11)]
-    -(from m take u, from m take v)
+
+-(from m take u, from m take v)
