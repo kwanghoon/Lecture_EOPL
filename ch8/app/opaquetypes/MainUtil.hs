@@ -60,8 +60,8 @@ typecheck text = do
     Right ty ->
       do putStrLn (show ty)
 
-         let val = value_of_program program
-         putStrLn (show val)
+        --  let val = value_of_program program
+        --  putStrLn (show val)
 
     Left errMsg ->
       do putStrLn errMsg

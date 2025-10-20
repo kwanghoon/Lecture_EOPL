@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -55,7 +55,7 @@ executable opaquetypes-exe
       Paths_ch8
   hs-source-dirs:
       app/opaquetypes
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
@@ -82,7 +82,7 @@ executable procmodules-exe
       Paths_ch8
   hs-source-dirs:
       app/procmodules
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
@@ -108,7 +108,7 @@ executable simplemodules-exe
       Paths_ch8
   hs-source-dirs:
       app/simplemodules
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
@@ -139,7 +139,7 @@ test-suite opaquetypes-test
   hs-source-dirs:
       test/opaquetypes
       app/opaquetypes
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
@@ -170,7 +170,7 @@ test-suite procmodules-test
   hs-source-dirs:
       test/procmodules
       app/procmodules
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
@@ -200,7 +200,7 @@ test-suite simplemodules-test
   hs-source-dirs:
       test/simplemodules
       app/simplemodules
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
