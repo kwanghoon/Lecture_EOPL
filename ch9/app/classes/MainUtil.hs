@@ -8,7 +8,7 @@ import Terminal
 import Parser
 import Expr
 import Interp
-import EnvStore(ExpVal)
+import EnvStore(ExpVal, initialize_class_env)
 
 import Control.Monad (when)
 import System.IO
@@ -49,3 +49,11 @@ runProg text bool = do
   
   let val = value_of_program program      -- interpreter
   return val 
+
+classEnv :: String -> IO ()
+classEnv fileName = do 
+  text <- readFile fileName
+  _program <- parser text
+  let Program classDecls _ = programFrom _program
+  let init_class_Env = initialize_class_env classDecls
+  putStrLn (show init_class_Env)
