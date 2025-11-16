@@ -15,6 +15,7 @@ data Env =
   | Extend_env [Identifier] [Location] Env
   | Extend_env_rec [(Identifier,[Identifier],Exp)] Env
   | Extend_env_with_self_and_super Object Identifier Env
+  deriving Show
 
 apply_env :: Env -> Store -> Identifier -> (DenVal, Store)
 apply_env Empty_env store search_var = error (search_var ++ " is not found.")
@@ -128,6 +129,7 @@ data Class = AClass
     class_field_names :: [Identifier], 
     class_method_env :: MethodEnv
   }
+  deriving Show
 
 new_object :: Identifier -> ClassEnv -> Store -> (Object, Store)
 new_object class_name class_env store = 
@@ -147,6 +149,7 @@ data Method = AMethod
     method_super_name :: Identifier,
     method_field_names :: [Identifier]
   }
+  deriving Show
 
 -- apply_method in Interp.hs
 
@@ -212,4 +215,3 @@ method_decls_method_envs method_decls super_name field_names =
 
 merge_method_envs :: MethodEnv -> MethodEnv -> MethodEnv
 merge_method_envs superMethodEnvs newMethodEnvs = newMethodEnvs ++ superMethodEnvs
-

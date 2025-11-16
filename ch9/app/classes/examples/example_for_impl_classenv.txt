@@ -1,0 +1,202 @@
+[ ( "c3"
+  , AClass
+      { class_super_name  = Just "c2"
+      , class_field_names = ["x_1","y_1","y","x","z"]
+      , class_method_env  =
+          [ ( "initialize"
+            , AMethod
+                { method_vars       = []
+                , method_body       =
+                    Block_Exp
+                      [ Super_Call_Exp "initialize" []
+                      , Set_Exp "x" (Const_Exp 31)
+                      , Set_Exp "z" (Const_Exp 32)
+                      ]
+                , method_super_name = "c2"
+                , method_field_names = ["x_1","y_1","y","x","z"]
+                }
+            )
+          , ( "m3"
+            , AMethod
+                { method_vars       = []
+                , method_body       =
+                    Diff_Exp
+                      (Var_Exp "x")
+                      (Diff_Exp (Var_Exp "y") (Var_Exp "z"))
+                , method_super_name = "c2"
+                , method_field_names = ["x_1","y_1","y","x","z"]
+                }
+            )
+          , ( "initialize"
+            , AMethod
+                { method_vars       = []
+                , method_body       =
+                    Block_Exp
+                      [ Super_Call_Exp "initialize" []
+                      , Set_Exp "y" (Const_Exp 22)
+                      ]
+                , method_super_name = "c1"
+                , method_field_names = ["x","y_1","y"]
+                }
+            )
+          , ( "m1"
+            , AMethod
+                { method_vars        = ["u","v"]
+                , method_body        =
+                    Diff_Exp
+                      (Diff_Exp (Var_Exp "x") (Var_Exp "u"))
+                      (Diff_Exp (Var_Exp "y") (Var_Exp "v"))
+                , method_super_name  = "c1"
+                , method_field_names = ["x","y_1","y"]
+                }
+            )
+          , ( "m3"
+            , AMethod
+                { method_vars       = []
+                , method_body       = Const_Exp 23
+                , method_super_name = "c1"
+                , method_field_names = ["x","y_1","y"]
+                }
+            )
+          , ( "initialize"
+            , AMethod
+                { method_vars       = []
+                , method_body       =
+                    Block_Exp
+                      [ Set_Exp "x" (Const_Exp 11)
+                      , Set_Exp "y" (Const_Exp 12)
+                      ]
+                , method_super_name = "object"
+                , method_field_names = ["x","y"]
+                }
+            )
+          , ( "m1"
+            , AMethod
+                { method_vars       = []
+                , method_body       = Diff_Exp (Var_Exp "x") (Var_Exp "y")
+                , method_super_name = "object"
+                , method_field_names = ["x","y"]
+                }
+            )
+          , ( "m2"
+            , AMethod
+                { method_vars       = []
+                , method_body       = Method_Call_Exp Self_Exp "m3" []
+                , method_super_name = "object"
+                , method_field_names = ["x","y"]
+                }
+            )
+          ]
+      }
+  )
+, ( "c2"
+  , AClass
+      { class_super_name  = Just "c1"
+      , class_field_names = ["x","y_1","y"]
+      , class_method_env  =
+          [ ( "initialize"
+            , AMethod
+                { method_vars       = []
+                , method_body       =
+                    Block_Exp
+                      [ Super_Call_Exp "initialize" []
+                      , Set_Exp "y" (Const_Exp 22)
+                      ]
+                , method_super_name = "c1"
+                , method_field_names = ["x","y_1","y"]
+                }
+            )
+          , ( "m1"
+            , AMethod
+                { method_vars        = ["u","v"]
+                , method_body        =
+                    Diff_Exp
+                      (Diff_Exp (Var_Exp "x") (Var_Exp "u"))
+                      (Diff_Exp (Var_Exp "y") (Var_Exp "v"))
+                , method_super_name  = "c1"
+                , method_field_names = ["x","y_1","y"]
+                }
+            )
+          , ( "m3"
+            , AMethod
+                { method_vars       = []
+                , method_body       = Const_Exp 23
+                , method_super_name = "c1"
+                , method_field_names = ["x","y_1","y"]
+                }
+            )
+          , ( "initialize"
+            , AMethod
+                { method_vars       = []
+                , method_body       =
+                    Block_Exp
+                      [ Set_Exp "x" (Const_Exp 11)
+                      , Set_Exp "y" (Const_Exp 12)
+                      ]
+                , method_super_name = "object"
+                , method_field_names = ["x","y"]
+                }
+            )
+          , ( "m1"
+            , AMethod
+                { method_vars       = []
+                , method_body       = Diff_Exp (Var_Exp "x") (Var_Exp "y")
+                , method_super_name = "object"
+                , method_field_names = ["x","y"]
+                }
+            )
+          , ( "m2"
+            , AMethod
+                { method_vars       = []
+                , method_body       = Method_Call_Exp Self_Exp "m3" []
+                , method_super_name = "object"
+                , method_field_names = ["x","y"]
+                }
+            )
+          ]
+      }
+  )
+, ( "c1"
+  , AClass
+      { class_super_name  = Just "object"
+      , class_field_names = ["x","y"]
+      , class_method_env  =
+          [ ( "initialize"
+            , AMethod
+                { method_vars       = []
+                , method_body       =
+                    Block_Exp
+                      [ Set_Exp "x" (Const_Exp 11)
+                      , Set_Exp "y" (Const_Exp 12)
+                      ]
+                , method_super_name = "object"
+                , method_field_names = ["x","y"]
+                }
+            )
+          , ( "m1"
+            , AMethod
+                { method_vars       = []
+                , method_body       = Diff_Exp (Var_Exp "x") (Var_Exp "y")
+                , method_super_name = "object"
+                , method_field_names = ["x","y"]
+                }
+            )
+          , ( "m2"
+            , AMethod
+                { method_vars       = []
+                , method_body       = Method_Call_Exp Self_Exp "m3" []
+                , method_super_name = "object"
+                , method_field_names = ["x","y"]
+                }
+            )
+          ]
+      }
+  )
+, ( "object"
+  , AClass
+      { class_super_name  = Nothing
+      , class_field_names = []
+      , class_method_env  = []
+      }
+  )
+]
