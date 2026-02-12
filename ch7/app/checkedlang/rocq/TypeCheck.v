@@ -122,7 +122,11 @@ Fixpoint type_of (exp : Exp) (env : TyEnv) : TyResult :=
   end.
 
 Definition type_of_program (exp : Exp) : TyResult :=
-  type_of exp empty_tyenv.
+  let initTyEnv :=
+    extend_tyenv "i" TyInt
+      (extend_tyenv "v" TyInt
+        (extend_tyenv "x" TyInt empty_tyenv)) in
+  type_of exp initTyEnv.
 
 Definition typeCheck (exp : Exp) : TyResult :=
   type_of_program exp.

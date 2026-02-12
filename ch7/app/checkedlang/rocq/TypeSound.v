@@ -88,19 +88,19 @@ Proof.
   induction 1; intros search_var target_ty found_val Htyenv Happ;
     simpl in *.
   - discriminate.
-  - repeat (rewrite String.eqb_sym in *).
-    destruct (String.eqb search_var var0) eqn:Heq.
+  - destruct (String.eqb search_var var) eqn:Heq.
     + apply String.eqb_eq in Heq; subst.
       inversion Htyenv; inversion Happ; subst; assumption.
-    + apply IHenv_has_type; assumption.
-  - repeat (rewrite String.eqb_sym in *).
-    destruct (String.eqb search_var proc_name) eqn:Heq.
+    + eapply IHenv_has_type; eassumption.
+  - destruct (String.eqb search_var proc_name) eqn:Heq.
     + apply String.eqb_eq in Heq; subst.
+      inversion Htyenv; subst.
       inversion Happ; subst.
-      constructor;
-        [ constructor; assumption
-        | assumption ].
-    + apply IHenv_has_type; assumption.
+      eapply ValueHasTypeProc with
+        (tenv := extend_tyenv proc_name (TyFun argTy resultTy) tenv).
+      * eapply EnvExtendRecHasType; eauto.
+      * exact H0.
+    + eapply IHenv_has_type; eassumption.
 Qed.
 
 Lemma env_extend_has_type :
@@ -119,14 +119,22 @@ Lemma value_has_type_proc_intro :
     value_has_type (Proc_Val (procedure param body saved_env))
                    (TyFun argTy resultTy).
 Proof.
-  intros; constructor; assumption.
+  intros.
+  eapply ValueHasTypeProc with (tenv := tenv); eauto.
 Qed.
 
 Lemma type_of_program_env :
-  env_has_type initEnv empty_tyenv.
+  env_has_type initEnv
+    (extend_tyenv "i" TyInt
+      (extend_tyenv "v" TyInt
+        (extend_tyenv "x" TyInt empty_tyenv))).
 Proof.
   unfold initEnv.
-  repeat constructor; constructor.
+  repeat (eapply EnvExtendHasType).
+  - constructor.
+  - constructor.
+  - constructor.
+  - constructor.
 Qed.
 
 Lemma bind_eval_value :
@@ -183,14 +191,12 @@ Proof.
           | e1 e2
           | e
           | cond_exp then_exp else_exp
-          | id
+          | var_name
           | var exp1 body
           | result_ty proc_name bound_var bound_ty proc_body letrec_body
           | param param_ty body_proc
           | rator rand]; simpl in *.
       * inversion Hty; inversion Heval; constructor.
-      * destruct (apply_env env id) eqn:Hlookup; inversion Heval; subst.
-        eapply env_lookup_sound; eauto.
       * apply bind_inr in Hty as [ty1 [Hty1 Hty]].
         apply bind_inr in Hty as [ty2 [Hty2 Hty]].
         destruct ty1; try (simpl in Hty; discriminate).
@@ -227,16 +233,18 @@ Proof.
         apply bind_eval_value in Heval as [cond_val [Hcond Heval]].
         pose proof (IHenv _ _ _ _ _ Henv HcondTy Hcond) as Hcond_typed.
         inversion Hcond_typed; subst.
-        destruct b.
-        -- simpl in Heval.
-           eapply IHenv; eauto.
-        -- simpl in Heval.
-           eapply IHenv; eauto.
+        destruct b;
+          [ simpl in Heval;
+            eapply IHenv with (exp := then_exp) (env := env) (tenv := tenv); eauto
+          | simpl in Heval;
+            eapply IHenv with (exp := else_exp) (env := env) (tenv := tenv); eauto ].
+        * destruct (apply_env env var_name) eqn:Hlookup; inversion Heval; subst.
+          eapply env_lookup_sound; eauto.
       * apply bind_inr in Hty as [expTy [HexpTy Hty]].
         simpl in Heval.
         apply bind_eval_value in Heval as [val1 [Hval1 Heval]].
         pose proof (IHenv _ _ _ _ _ Henv HexpTy Hval1) as Hval1_ty.
-        pose proof (env_extend_has_type _ _ _ _ _ Henv Hval1_ty) as Henv_ext.
+        pose proof (env_extend_has_type env tenv var val1 expTy Henv Hval1_ty) as Henv_ext.
         eapply IHenv with (exp := body)
                           (env := extend_env var val1 env)
                           (tenv := extend_tyenv var expTy tenv)
@@ -256,9 +264,9 @@ Proof.
         inversion Hty; subst ty.
         inversion Heval; subst.
         eapply value_has_type_proc_intro; eauto.
-      apply bind_inr in Hty as [funTy [HfunTy Hty]].
-      apply bind_inr in Hty as [argTy [HargTy Hty]].
-        destruct funTy; try (simpl in Hty; discriminate).
+      * apply bind_inr in Hty as [funTy [HfunTy Hty]].
+        apply bind_inr in Hty as [argTy [HargTy Hty]].
+        destruct funTy as [| |dom cod]; try (simpl in Hty; discriminate).
         destruct (equal_ty dom argTy) eqn:Heq; try (simpl in Hty; discriminate).
         simpl in Hty.
         inversion Hty; subst ty.
@@ -274,7 +282,7 @@ Proof.
       destruct proc as [param body saved_env].
       simpl in Happ.
       inversion Hproc as [ | | param' body' saved_env' tenv' argTy' resultTy' Henv_saved HbodyTy]; subst.
-      pose proof (env_extend_has_type _ _ _ _ _ Henv_saved Harg) as Henv_ext.
+      pose proof (env_extend_has_type saved_env tenv' param arg argTy Henv_saved Harg) as Henv_ext.
       eapply IHenv with (exp := body)
                         (env := extend_env param arg saved_env)
                         (tenv := extend_tyenv param argTy tenv')
