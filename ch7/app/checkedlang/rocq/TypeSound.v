@@ -1,6 +1,6 @@
 Set Warnings "-masking-absolute-name".
 
-From Coq Require Import String.
+From Stdlib Require Import String.
 Require Import Expr TyEnv Env Interp TypeCheck.
 
 Module TypeSound.
@@ -161,17 +161,10 @@ Proof.
 Qed.
 
 Lemma type_of_program_env :
-  env_has_type initEnv
-    (extend_tyenv "i" TyInt
-      (extend_tyenv "v" TyInt
-        (extend_tyenv "x" TyInt empty_tyenv))).
+  env_has_type initEnv empty_tyenv.
 Proof.
   unfold initEnv.
-  repeat (eapply EnvExtendHasType).
-  - constructor.
-  - constructor.
-  - constructor.
-  - constructor.
+  constructor.
 Qed.
 
 Lemma bind_eval_value :
@@ -518,11 +511,7 @@ Proof.
   destruct (type_sound_value_or_gas_mutual step) as [Hexp _].
   unfold type_of_program in Htyped.
   unfold value_of_program in Hrt.
-  specialize (Hexp exp initEnv
-              (extend_tyenv "i" TyInt
-                (extend_tyenv "v" TyInt
-                  (extend_tyenv "x" TyInt empty_tyenv)))
-              ty type_of_program_env Htyped) as Hres.
+  specialize (Hexp exp initEnv empty_tyenv ty type_of_program_env Htyped) as Hres.
   destruct Hres as [[v [Hev _]]|Hg].
   - rewrite Hev in Hrt. discriminate.
   - rewrite Hg in Hrt. discriminate.

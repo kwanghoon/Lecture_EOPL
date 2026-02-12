@@ -1,6 +1,6 @@
 Set Warnings "-masking-absolute-name".
 
-From Coq Require Import String ZArith Bool.
+From Stdlib Require Import String ZArith Bool.
 Require Import Expr.
 
 Module Env.

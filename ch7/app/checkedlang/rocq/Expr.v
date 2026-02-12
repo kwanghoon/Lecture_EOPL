@@ -1,4 +1,4 @@
-From Coq Require Import String ZArith.
+From Stdlib Require Import String ZArith.
 
 Module Expr.
 

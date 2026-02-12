@@ -1,6 +1,6 @@
 Set Warnings "-masking-absolute-name".
 
-From Coq Require Import String Bool.
+From Stdlib Require Import String Bool.
 Require Import Expr TyEnv.
 
 Module TypeCheck.
@@ -122,10 +122,7 @@ Fixpoint type_of (exp : Exp) (env : TyEnv) : TyResult :=
   end.
 
 Definition type_of_program (exp : Exp) : TyResult :=
-  let initTyEnv :=
-    extend_tyenv "i" TyInt
-      (extend_tyenv "v" TyInt
-        (extend_tyenv "x" TyInt empty_tyenv)) in
+  let initTyEnv := empty_tyenv in
   type_of exp initTyEnv.
 
 Definition typeCheck (exp : Exp) : TyResult :=

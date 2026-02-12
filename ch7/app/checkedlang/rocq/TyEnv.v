@@ -1,6 +1,6 @@
 Set Warnings "-masking-absolute-name".
 
-From Coq Require Import String Bool.
+From Stdlib Require Import String Bool.
 Require Import Expr.
 
 Module TyEnv.

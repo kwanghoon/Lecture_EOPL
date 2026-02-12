@@ -1,7 +1,7 @@
 Set Warnings "-masking-absolute-name".
 Unset Guard Checking.
 
-From Coq Require Import String ZArith Bool.
+From Stdlib Require Import String ZArith Bool.
 Require Import Expr Env.
 
 Module Interp.
@@ -81,10 +81,7 @@ with apply_procedure (step : nat) (proc : Proc) (arg : ExpVal) {struct step} : E
       end
   end.
 
-Definition initEnv : Env :=
-  extend_env "i" (Num_Val 1)
-    (extend_env "v" (Num_Val 5)
-      (extend_env "x" (Num_Val 10) empty_env)).
+Definition initEnv : Env := empty_env.
 
 Definition value_of_program (step : nat) (exp : Exp) : EvalResult :=
   value_of step exp initEnv.
