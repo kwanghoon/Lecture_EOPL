@@ -103,6 +103,43 @@ Proof.
     + eapply IHenv_has_type; eassumption.
 Qed.
 
+Lemma env_lookup_complete :
+  forall env tenv, env_has_type env tenv ->
+  forall search_var target_ty,
+    apply_tyenv tenv search_var = inr target_ty ->
+    exists found_val,
+      apply_env env search_var = Some found_val /\
+      value_has_type found_val target_ty.
+Proof.
+  induction 1; intros search_var target_ty Htyenv; simpl in *.
+  - discriminate.
+  - destruct (String.eqb search_var var) eqn:Heq.
+    + exists val.
+      split.
+      * reflexivity.
+      * inversion Htyenv; subst. assumption.
+    + specialize (IHenv_has_type _ _ Htyenv) as [found_val [Happ Htyped]].
+      exists found_val.
+      split.
+      * assumption.
+      * assumption.
+  - destruct (String.eqb search_var proc_name) eqn:Heq.
+    + inversion Htyenv; subst.
+      exists (Proc_Val (Procedure bound_var proc_body0
+                  (Extend_env_rec proc_name bound_var proc_body0 env))).
+      split.
+        * reflexivity.
+      * eapply ValueHasTypeProc with
+          (tenv := extend_tyenv proc_name (TyFun argTy resultTy) tenv).
+        -- eapply EnvExtendRecHasType; eauto.
+        -- exact H0.
+    + specialize (IHenv_has_type _ _ Htyenv) as [found_val [Happ Htyped]].
+      exists found_val.
+      split.
+      * assumption.
+      * assumption.
+Qed.
+
 Lemma env_extend_has_type :
   forall env tenv var val ty,
     env_has_type env tenv ->
@@ -325,6 +362,202 @@ Proof.
   unfold value_of_program in Heval.
   eapply type_sound_env; eauto.
   apply type_of_program_env.
+Qed.
+
+Lemma type_sound_value_or_gas_mutual :
+  forall step,
+    (forall exp env tenv ty,
+        env_has_type env tenv ->
+        type_of exp tenv = inr ty ->
+        (exists v, value_of step exp env = EvalValue v /\ value_has_type v ty)
+        \/ value_of step exp env = EvalGasExhausted)
+    /\
+    (forall proc arg argTy resultTy,
+        value_has_type (Proc_Val proc) (TyFun argTy resultTy) ->
+        value_has_type arg argTy ->
+        (exists v, apply_procedure step proc arg = EvalValue v /\ value_has_type v resultTy)
+        \/ apply_procedure step proc arg = EvalGasExhausted).
+Proof.
+  induction step as [|step IH].
+  - split.
+    + intros exp env tenv ty Henv Hty.
+      right. simpl. reflexivity.
+    + intros proc arg argTy resultTy Hproc Harg.
+      right. simpl. reflexivity.
+  - destruct IH as [IHexp IHproc].
+    split.
+    + intros exp env tenv ty Henv Hty.
+      destruct exp as
+          [n
+          | e1 e2
+          | e
+          | cond_exp then_exp else_exp
+          | var_name
+          | var exp1 body
+          | result_ty proc_name bound_var bound_ty proc_body letrec_body
+          | param param_ty body_proc
+          | rator rand]; simpl in *.
+      * inversion Hty; subst.
+        left. exists (Num_Val n). split; [reflexivity|constructor].
+      * apply bind_inr in Hty as [ty1 [Hty1 Hty]].
+        apply bind_inr in Hty as [ty2 [Hty2 Hty]].
+        destruct ty1; try (simpl in Hty; discriminate).
+        destruct ty2; try (simpl in Hty; discriminate).
+        inversion Hty; subst.
+        specialize (IHexp e1 env tenv TyInt Henv Hty1) as IH1.
+        specialize (IHexp e2 env tenv TyInt Henv Hty2) as IH2.
+        destruct IH1 as [[v1 [He1 Hv1]]|Hg1].
+        -- destruct IH2 as [[v2 [He2 Hv2]]|Hg2].
+           ++ inversion Hv1; subst.
+              inversion Hv2; subst.
+              left. exists (Num_Val (BinInt.Z.sub n n0)).
+              split.
+              ** simpl. rewrite He1, He2. reflexivity.
+              ** constructor.
+           ++ right. simpl. rewrite He1, Hg2. reflexivity.
+        -- right. simpl. rewrite Hg1. reflexivity.
+      * apply bind_inr in Hty as [ty1 [Hty1 Hty]].
+        destruct ty1; try (simpl in Hty; discriminate).
+        inversion Hty; subst.
+        specialize (IHexp e env tenv TyInt Henv Hty1) as IHe.
+        destruct IHe as [[v [Hev Htv]]|Hg].
+          -- destruct v as [nval|bval|pval].
+             ++ left. exists (Bool_Val (BinInt.Z.eqb nval BinNums.Z0)).
+              split.
+              ** simpl. rewrite Hev. reflexivity.
+              ** constructor.
+            ++ inversion Htv.
+            ++ inversion Htv.
+        -- right. simpl. rewrite Hg. reflexivity.
+      * apply bind_inr in Hty as [condTy [HcondTy Hty]].
+        destruct condTy; try (simpl in Hty; discriminate).
+        apply bind_inr in Hty as [thenTy [HthenTy Hty]].
+        apply bind_inr in Hty as [elseTy [HelseTy Hty]].
+        destruct (equal_ty thenTy elseTy) eqn:Heq; try (simpl in Hty; discriminate).
+        inversion Hty; subst.
+        apply equal_ty_eq in Heq; subst elseTy.
+        specialize (IHexp cond_exp env tenv TyBool Henv HcondTy) as IHc.
+        destruct IHc as [[cv [Hc Hcv]]|Hcg].
+        -- inversion Hcv; subst.
+           destruct b.
+            ++ specialize (IHexp then_exp env tenv _ Henv HthenTy) as IHt.
+              destruct IHt as [[v [Ht Hv]]|Htg].
+              ** left. exists v. split; [simpl; rewrite Hc; exact Ht|exact Hv].
+              ** right. simpl. rewrite Hc, Htg. reflexivity.
+            ++ specialize (IHexp else_exp env tenv _ Henv HelseTy) as IHe.
+              destruct IHe as [[v [He Hv]]|Heg].
+              ** left. exists v. split; [simpl; rewrite Hc; exact He|exact Hv].
+              ** right. simpl. rewrite Hc, Heg. reflexivity.
+        -- right. simpl. rewrite Hcg. reflexivity.
+      * specialize (env_lookup_complete _ _ Henv _ _ Hty) as [found_val [Hlookup Htyped]].
+        left. exists found_val. split.
+        -- simpl. rewrite Hlookup. reflexivity.
+        -- exact Htyped.
+      * apply bind_inr in Hty as [expTy [HexpTy Hty_body]].
+        specialize (IHexp exp1 env tenv expTy Henv HexpTy) as IH1.
+        destruct IH1 as [[v1 [He1 Hv1]]|Hg1].
+        -- pose proof (env_extend_has_type env tenv var v1 expTy Henv Hv1) as Henv_ext.
+           specialize (IHexp body (extend_env var v1 env) (extend_tyenv var expTy tenv) ty Henv_ext Hty_body)
+             as IHbody.
+           destruct IHbody as [[v [Hb Hvb]]|Hbg].
+           ++ left. exists v. split; [simpl; rewrite He1; exact Hb|exact Hvb].
+           ++ right. simpl. rewrite He1. exact Hbg.
+        -- right. simpl. rewrite Hg1. reflexivity.
+      * apply bind_inr in Hty as [procbodyTy [HprocTy Hty]].
+        destruct (equal_ty result_ty procbodyTy) eqn:Heq; try (simpl in Hty; discriminate).
+        apply equal_ty_eq in Heq; subst procbodyTy.
+        pose proof (env_has_type_extend_rec_preserves _ _ _ _ _ _ _ Henv HprocTy) as Henv_rec.
+        specialize (IHexp letrec_body
+                    (extend_env_rec proc_name bound_var proc_body env)
+                    (extend_tyenv proc_name (TyFun bound_ty result_ty) tenv)
+                    ty Henv_rec Hty) as IHlr.
+        exact IHlr.
+      * apply bind_inr in Hty as [bodyTy [HbodyTy Hty]].
+        inversion Hty; subst.
+        left. exists (Proc_Val (Procedure param body_proc env)).
+        split.
+        -- reflexivity.
+        -- eapply value_has_type_proc_intro; eauto.
+      * apply bind_inr in Hty as [funTy [HfunTy Hty]].
+        apply bind_inr in Hty as [argTy [HargTy Hty]].
+        destruct funTy as [| |dom cod]; try (simpl in Hty; discriminate).
+        destruct (equal_ty dom argTy) eqn:Heq; try (simpl in Hty; discriminate).
+        inversion Hty; subst.
+        apply equal_ty_eq in Heq; subst argTy.
+          specialize (IHexp rator env tenv (TyFun dom ty) Henv HfunTy) as IHrator.
+        specialize (IHexp rand env tenv dom Henv HargTy) as IHrand.
+        destruct IHrator as [[proc_val [Hrator Hproc_typed]]|Hgr].
+        -- destruct IHrand as [[arg_val [Hrand Harg_typed]]|Hga].
+            ++ destruct proc_val as [n0|b0|procv].
+              ** inversion Hproc_typed.
+              ** inversion Hproc_typed.
+              ** simpl in Hrator.
+                specialize (IHproc procv arg_val dom ty Hproc_typed Harg_typed) as IHp.
+                destruct IHp as [[v [Hp Hv]]|Hpg].
+                --- left. exists v. split; [simpl; rewrite Hrator, Hrand; exact Hp|exact Hv].
+                --- right. simpl. rewrite Hrator, Hrand. exact Hpg.
+           ++ right. simpl. rewrite Hrator, Hga. reflexivity.
+        -- right. simpl. rewrite Hgr. reflexivity.
+    + intros proc arg argTy resultTy Hproc Harg.
+      destruct proc as [param body saved_env].
+      inversion Hproc as [| |param' body' saved_env' tenv' argTy' resultTy' Henv_saved HbodyTy]; subst.
+      pose proof (env_extend_has_type saved_env tenv' param arg argTy Henv_saved Harg) as Henv_ext.
+      specialize (IHexp body (extend_env param arg saved_env)
+                  (extend_tyenv param argTy tenv') resultTy Henv_ext HbodyTy) as IHb.
+      destruct IHb as [[v [Hb Hvb]]|Hbg].
+      * left. exists v. split; [simpl; exact Hb|exact Hvb].
+      * right. simpl. exact Hbg.
+Qed.
+
+Theorem type_sound_no_runtime_error :
+  forall (step : nat) (exp : Exp) (ty : Ty),
+    type_of_program exp = inr ty ->
+    value_of_program step exp <> EvalRuntimeError.
+Proof.
+  intros step exp ty Htyped Hrt.
+  destruct (type_sound_value_or_gas_mutual step) as [Hexp _].
+  unfold type_of_program in Htyped.
+  unfold value_of_program in Hrt.
+  specialize (Hexp exp initEnv
+              (extend_tyenv "i" TyInt
+                (extend_tyenv "v" TyInt
+                  (extend_tyenv "x" TyInt empty_tyenv)))
+              ty type_of_program_env Htyped) as Hres.
+  destruct Hres as [[v [Hev _]]|Hg].
+  - rewrite Hev in Hrt. discriminate.
+  - rewrite Hg in Hrt. discriminate.
+Qed.
+
+Theorem type_sound_value_or_gas_assuming_no_runtime :
+  forall (step : nat) (exp : Exp) (ty : Ty),
+    type_of_program exp = inr ty ->
+    value_of_program step exp <> EvalRuntimeError ->
+    (exists v, value_of_program step exp = EvalValue v /\ value_has_type v ty)
+    \/ value_of_program step exp = EvalGasExhausted.
+Proof.
+  intros step exp ty Htyped Hno_runtime.
+  destruct (value_of_program step exp) as [v| |] eqn:Heval.
+  - left.
+    exists v.
+    split.
+    + reflexivity.
+    + eapply type_sound; [exact Htyped | exact Heval].
+  - exfalso.
+    apply Hno_runtime.
+    reflexivity.
+  - right.
+    reflexivity.
+Qed.
+
+Theorem type_sound_value_or_gas :
+  forall (step : nat) (exp : Exp) (ty : Ty),
+    type_of_program exp = inr ty ->
+    (exists v, value_of_program step exp = EvalValue v /\ value_has_type v ty)
+    \/ value_of_program step exp = EvalGasExhausted.
+Proof.
+  intros step exp ty Htyped.
+  eapply type_sound_value_or_gas_assuming_no_runtime; eauto.
+  eapply type_sound_no_runtime_error; eauto.
 Qed.
 
 End TypeSound.
