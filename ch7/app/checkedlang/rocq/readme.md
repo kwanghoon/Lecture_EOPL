@@ -10,11 +10,13 @@ In **PowerShell**, set the following environment variables:
 ```powershell
 $env:COQBIN  = "C:\rocq\bin"
 $env:ROCQLIB = "C:\rocq\lib\coq"
+```
 
 ## 2) Run rocq everywhere (add to PATH)
 
 ```powershell
 $env:PATH += ";C:\rocq\bin"
+```
 
 ## 3) Compile *.v
 
@@ -25,7 +27,7 @@ roqc compile Interp.v
 roqc compile TyEnv.v
 roqc compile TypeCheck.v
 roqc compile TypeSound.v
-
+```
 
 ## Notes
 
