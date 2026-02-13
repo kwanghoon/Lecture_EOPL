@@ -16,6 +16,16 @@ $env:ROCQLIB = "C:\rocq\lib\coq"
 ```powershell
 $env:PATH += ";C:\rocq\bin"
 
+## 3) Compile *.v
+
+```powershell
+roqc comiple Expr.v
+roqc compile Env.v
+roqc compile Interp.v
+roqc compile TyEnv.v
+roqc compile TypeCheck.v
+roqc compile TypeSound.v
+
 
 ## Notes
 
