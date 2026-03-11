@@ -1,0 +1,31 @@
+class counter extends object
+  field int count
+   method void initialize()set count = 0
+   method void countup()set count = +(count,1)
+   method int getcount()count
+   
+class c1 extends object 
+   field int n
+   field counter counter1
+   method void initialize(a_counter : counter)
+    begin
+     set n = 0;
+     set counter1 = a_counter
+    end
+   method void countup()
+     begin
+      send counter1 countup();
+      set n = +(n,1)
+     end
+   method listof int getstate()list(n, send counter1 getcount())
+   
+let counter1 = new counter()
+in let o1 = new c1(counter1)
+       o2 = new c1(counter1)
+   in begin
+        send o1 countup();
+        send o2 countup();
+        send o2 countup();
+        list( send o1 getstate(),
+              send o2 getstate())
+      end

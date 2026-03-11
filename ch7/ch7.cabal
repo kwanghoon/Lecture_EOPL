@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -32,6 +32,33 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
+    , hspec
+    , transformers
+    , yapb >=0.2.3
+  default-language: Haskell2010
+
+executable checkedimplicitrefslang-exe
+  main-is: Main.hs
+  other-modules:
+      EnvStore
+      Expr
+      Interp
+      Lexer
+      MainUtil
+      Parser
+      Ref
+      Testcase
+      Token
+      TyEnv
+      TypeCheck
+      Paths_ch7
+  hs-source-dirs:
+      app/checkedimplicitrefslang
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , ch7
     , containers
     , hspec
     , transformers
@@ -83,6 +110,37 @@ executable inferredlang-exe
       Paths_ch7
   hs-source-dirs:
       app/inferredlang
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , ch7
+    , containers
+    , hspec
+    , transformers
+    , yapb >=0.2.3
+  default-language: Haskell2010
+
+test-suite checkedimplicitrefslang-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      TypeCheckerTest
+      EnvStore
+      Expr
+      Interp
+      Lexer
+      Main
+      MainUtil
+      Parser
+      Ref
+      Testcase
+      Token
+      TyEnv
+      TypeCheck
+      Paths_ch7
+  hs-source-dirs:
+      test/checkedimplicitrefslang
+      app/checkedimplicitrefslang
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5

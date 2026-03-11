@@ -1,0 +1,1 @@
+proc (x : int) proc (f : (int -> (int -> bool))) (f x)

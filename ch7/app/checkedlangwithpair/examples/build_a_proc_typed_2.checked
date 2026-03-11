@@ -1,0 +1,1 @@
+proc (x : int) zero?(-(x,1))

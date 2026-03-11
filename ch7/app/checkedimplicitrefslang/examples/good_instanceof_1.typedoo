@@ -1,0 +1,5 @@
+class c1 extends object 
+ method int initialize () 1
+class c2 extends object 
+ method int initialize () 2
+let p = proc (o : c1) instanceof o c2 in 11

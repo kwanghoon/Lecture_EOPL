@@ -1,0 +1,1 @@
+proc(f : (bool -> bool)) (f 3)

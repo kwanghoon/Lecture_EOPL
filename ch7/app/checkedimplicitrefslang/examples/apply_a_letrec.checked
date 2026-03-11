@@ -1,0 +1,1 @@
+letrec int f(x : int) = -(x,1) in (f 40)

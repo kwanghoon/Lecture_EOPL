@@ -1,0 +1,7 @@
+let fix = proc (f : bool)
+  let d = proc (x : bool) proc (z : bool) ((f (x x)) z)
+  in proc (n : bool) ((f (d d)) n)
+in let
+  t4m = proc (f : bool) proc(x : bool) if zero?(x) then 0 else -((f -(x,1)),-4)
+in let times4 = (fix t4m)
+   in (times4 3)

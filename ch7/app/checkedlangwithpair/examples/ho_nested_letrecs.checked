@@ -1,0 +1,3 @@
+letrec int even(odd : (int -> int)) = proc(x : int) if zero?(x) then 1 else (odd -(x,1))
+in letrec int odd(x : int) = if zero?(x) then 0 else ((even odd) -(x,1))
+in (odd 13)

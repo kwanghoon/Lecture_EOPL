@@ -1,0 +1,354 @@
+DIGEST 9236f959e13ab091ca2fcd3671afffe8
+FTypeCheck
+R67:72 Stdlib.Strings.String <> <> lib
+R74:77 Stdlib.Bool.Bool <> <> lib
+R95:98 Expr <> <> lib
+R100:104 TyEnv <> <> lib
+mod 115:123 <> TypeCheck
+R151:154 Expr <> <> modtype
+mod 141:146 <> TypeCheck.ExprNS
+R141:146 TypeCheck TypeCheck.ExprNS <> mod
+R182:186 TyEnv <> <> modtype
+mod 171:177 <> TypeCheck.TyEnvNS
+R171:177 TypeCheck TypeCheck.TyEnvNS <> mod
+def 227:229 TypeCheck ret
+R237:238 TypeCheck TypeCheck Ty ind
+binder 232:233 <> ty:1
+R243:250 TypeCheck TypeCheck TyResult def
+R255:257 Corelib.Init.Datatypes <> inr constr
+R259:260 TypeCheck <> ty:1 var
+def 275:278 TypeCheck bind
+R285:292 TypeCheck TypeCheck TyResult def
+binder 281:281 <> r:2
+R302:305 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R300:301 TypeCheck TypeCheck Ty ind
+R306:313 TypeCheck TypeCheck TyResult def
+binder 296:296 <> k:3
+R318:325 TypeCheck TypeCheck TyResult def
+R338:338 TypeCheck <> r:2 var
+R349:351 Corelib.Init.Datatypes <> inl constr
+R360:362 Corelib.Init.Datatypes <> inl constr
+R372:374 Corelib.Init.Datatypes <> inr constr
+R381:381 TypeCheck <> k:3 var
+def 402:408 TypeCheck show_ty
+R416:417 TypeCheck TypeCheck Ty ind
+binder 411:412 <> ty:5
+R422:427 Stdlib.Strings.String <> string ind
+R440:441 TypeCheck <> ty:5 var
+R452:456 TypeCheck TypeCheck TyInt constr
+R473:478 TypeCheck TypeCheck TyBool constr
+R496:500 TypeCheck TypeCheck TyFun constr
+R522:525 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R537:540 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R526:532 TypeCheck <> show_ty:6 def
+R544:547 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R559:562 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R548:554 TypeCheck <> show_ty:6 def
+def 584:591 TypeCheck show_exp
+R600:602 TypeCheck TypeCheck Exp ind
+binder 594:596 <> exp:8
+R607:612 Stdlib.Strings.String <> string ind
+R625:627 TypeCheck <> exp:8 var
+R638:646 TypeCheck TypeCheck Const_Exp constr
+R671:678 TypeCheck TypeCheck Diff_Exp constr
+R701:704 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R716:719 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R705:712 TypeCheck <> show_exp:9 def
+R723:726 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R738:741 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R727:734 TypeCheck <> show_exp:9 def
+R750:759 TypeCheck TypeCheck IsZero_Exp constr
+R780:783 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R794:797 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R784:791 TypeCheck <> show_exp:9 def
+R806:811 TypeCheck TypeCheck If_Exp constr
+R841:844 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R856:859 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R845:852 TypeCheck <> show_exp:9 def
+R863:866 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R878:881 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R867:874 TypeCheck <> show_exp:9 def
+R885:888 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R900:903 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R889:896 TypeCheck <> show_exp:9 def
+R912:918 TypeCheck TypeCheck Var_Exp constr
+R936:939 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R941:944 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R953:959 TypeCheck TypeCheck Let_Exp constr
+R991:994 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R996:999 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1003:1006 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1018:1021 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1007:1014 TypeCheck <> show_exp:9 def
+R1025:1028 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1042:1045 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1029:1036 TypeCheck <> show_exp:9 def
+R1054:1063 TypeCheck TypeCheck Letrec_Exp constr
+R1110:1113 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1115:1118 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1122:1125 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1127:1130 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1134:1137 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1151:1154 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1138:1145 TypeCheck <> show_exp:9 def
+R1158:1161 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1179:1182 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1162:1169 TypeCheck <> show_exp:9 def
+R1191:1198 TypeCheck TypeCheck Proc_Exp constr
+R1224:1227 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1229:1232 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1236:1239 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1253:1256 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1240:1247 TypeCheck <> show_exp:9 def
+R1265:1272 TypeCheck TypeCheck Call_Exp constr
+R1300:1303 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1318:1321 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1304:1311 TypeCheck <> show_exp:9 def
+R1325:1328 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1342:1345 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1329:1336 TypeCheck <> show_exp:9 def
+def 1369:1382 TypeCheck expectedButErr
+R1404:1405 TypeCheck TypeCheck Ty ind
+binder 1385:1394 <> expectedTy:11
+binder 1396:1400 <> gotTy:12
+R1415:1417 TypeCheck TypeCheck Exp ind
+binder 1409:1411 <> exp:13
+R1422:1429 TypeCheck TypeCheck TyResult def
+R1436:1438 Corelib.Init.Datatypes <> inl constr
+R1452:1455 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1474:1477 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1456:1462 TypeCheck TypeCheck show_ty def
+R1464:1473 TypeCheck <> expectedTy:11 var
+R1489:1492 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1506:1509 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1493:1499 TypeCheck TypeCheck show_ty def
+R1501:1505 TypeCheck <> gotTy:12 var
+R1516:1519 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1520:1527 TypeCheck TypeCheck show_exp def
+R1529:1531 TypeCheck <> exp:13 var
+def 1547:1565 TypeCheck expectedFuntyButErr
+R1576:1577 TypeCheck TypeCheck Ty ind
+binder 1568:1572 <> gotTy:14
+R1587:1589 TypeCheck TypeCheck Exp ind
+binder 1581:1583 <> exp:15
+R1594:1601 TypeCheck TypeCheck TyResult def
+R1608:1610 Corelib.Init.Datatypes <> inl constr
+R1646:1649 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1663:1666 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1650:1656 TypeCheck TypeCheck show_ty def
+R1658:1662 TypeCheck <> gotTy:14 var
+R1673:1676 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1677:1684 TypeCheck TypeCheck show_exp def
+R1686:1688 TypeCheck <> exp:15 var
+def 1704:1723 TypeCheck inequalIfBranchTyErr
+R1742:1743 TypeCheck TypeCheck Ty ind
+binder 1726:1731 <> thenTy:16
+binder 1733:1738 <> elseTy:17
+R1765:1767 TypeCheck TypeCheck Exp ind
+binder 1747:1753 <> thenExp:18
+binder 1755:1761 <> elseExp:19
+R1772:1779 TypeCheck TypeCheck TyResult def
+R1786:1788 Corelib.Init.Datatypes <> inl constr
+R1808:1819 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1834:1837 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1820:1826 TypeCheck TypeCheck show_ty def
+R1828:1833 TypeCheck <> thenTy:16 var
+R1844:1847 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1864:1875 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1848:1855 TypeCheck TypeCheck show_exp def
+R1857:1863 TypeCheck <> thenExp:18 var
+R1882:1885 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1900:1903 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1886:1892 TypeCheck TypeCheck show_ty def
+R1894:1899 TypeCheck <> elseTy:17 var
+R1910:1913 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R1914:1921 TypeCheck TypeCheck show_exp def
+R1923:1929 TypeCheck <> elseExp:19 var
+def 1945:1959 TypeCheck inequalArgtyErr
+R1981:1982 TypeCheck TypeCheck Ty ind
+binder 1962:1971 <> expectedTy:20
+binder 1973:1977 <> gotTy:21
+R2002:2004 TypeCheck TypeCheck Exp ind
+binder 1986:1991 <> funExp:22
+binder 1993:1998 <> argExp:23
+R2009:2016 TypeCheck TypeCheck TyResult def
+R2023:2025 Corelib.Init.Datatypes <> inl constr
+R2045:2056 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R2075:2078 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R2057:2063 TypeCheck TypeCheck show_ty def
+R2065:2074 TypeCheck <> expectedTy:20 var
+R2102:2105 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R2121:2132 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R2106:2113 TypeCheck TypeCheck show_exp def
+R2115:2120 TypeCheck <> funExp:22 var
+R2139:2142 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R2156:2159 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R2143:2149 TypeCheck TypeCheck show_ty def
+R2151:2155 TypeCheck <> gotTy:21 var
+R2166:2169 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R2170:2177 TypeCheck TypeCheck show_exp def
+R2179:2184 TypeCheck <> argExp:23 var
+def 2198:2205 TypeCheck equal_ty
+R2218:2219 TypeCheck TypeCheck Ty ind
+binder 2208:2210 <> ty1:24
+binder 2212:2214 <> ty2:25
+R2224:2227 Corelib.Init.Datatypes <> bool ind
+R2245:2247 TypeCheck <> ty2:25 var
+R2240:2242 TypeCheck <> ty1:24 var
+R2258:2262 TypeCheck TypeCheck TyInt constr
+R2265:2269 TypeCheck TypeCheck TyInt constr
+R2274:2277 Corelib.Init.Datatypes <> true constr
+R2283:2288 TypeCheck TypeCheck TyBool constr
+R2291:2296 TypeCheck TypeCheck TyBool constr
+R2301:2304 Corelib.Init.Datatypes <> true constr
+R2310:2314 TypeCheck TypeCheck TyFun constr
+R2323:2327 TypeCheck TypeCheck TyFun constr
+R2338:2341 Corelib.Init.Datatypes <> andb def
+R2361:2368 TypeCheck <> equal_ty:26 def
+R2344:2351 TypeCheck <> equal_ty:26 def
+R2389:2393 Corelib.Init.Datatypes <> false constr
+def 2412:2418 TypeCheck type_of
+R2427:2429 TypeCheck TypeCheck Exp ind
+binder 2421:2423 <> exp:29
+R2439:2443 TypeCheck TypeCheck TyEnv ind
+binder 2433:2435 <> env:30
+R2448:2455 TypeCheck TypeCheck TyResult def
+R2468:2470 TypeCheck <> exp:29 var
+R2481:2489 TypeCheck TypeCheck Const_Exp constr
+R2496:2498 TypeCheck TypeCheck ret def
+R2500:2504 TypeCheck TypeCheck TyInt constr
+R2510:2516 TypeCheck TypeCheck Var_Exp constr
+R2525:2535 TypeCheck TypeCheck apply_tyenv def
+R2537:2539 TypeCheck <> env:30 var
+R2549:2556 TypeCheck TypeCheck Diff_Exp constr
+R2573:2576 TypeCheck TypeCheck bind def
+R2579:2585 TypeCheck <> type_of:31 def
+R2590:2592 TypeCheck <> env:30 var
+binder 2600:2602 <> ty1:33
+R2613:2616 TypeCheck TypeCheck bind def
+R2619:2625 TypeCheck <> type_of:31 def
+R2630:2632 TypeCheck <> env:30 var
+binder 2640:2642 <> ty2:34
+R2661:2663 TypeCheck <> ty1:33 var
+R2680:2684 TypeCheck TypeCheck TyInt constr
+R2695:2697 TypeCheck <> ty2:34 var
+R2725:2729 TypeCheck TypeCheck TyInt constr
+R2734:2736 TypeCheck TypeCheck ret def
+R2738:2742 TypeCheck TypeCheck TyInt constr
+R2770:2783 TypeCheck TypeCheck expectedButErr def
+R2785:2789 TypeCheck TypeCheck TyInt constr
+R2791:2793 TypeCheck <> ty2:34 var
+R2836:2849 TypeCheck TypeCheck expectedButErr def
+R2851:2855 TypeCheck TypeCheck TyInt constr
+R2857:2859 TypeCheck <> ty1:33 var
+R2882:2891 TypeCheck TypeCheck IsZero_Exp constr
+R2905:2908 TypeCheck TypeCheck bind def
+R2911:2917 TypeCheck <> type_of:31 def
+R2922:2924 TypeCheck <> env:30 var
+binder 2932:2934 <> ty1:37
+R2953:2955 TypeCheck <> ty1:37 var
+R2972:2976 TypeCheck TypeCheck TyInt constr
+R2981:2983 TypeCheck TypeCheck ret def
+R2985:2990 TypeCheck TypeCheck TyBool constr
+R3007:3020 TypeCheck TypeCheck expectedButErr def
+R3022:3026 TypeCheck TypeCheck TyInt constr
+R3028:3030 TypeCheck <> ty1:37 var
+R3052:3057 TypeCheck TypeCheck If_Exp constr
+R3077:3080 TypeCheck TypeCheck bind def
+R3083:3089 TypeCheck <> type_of:31 def
+R3094:3096 TypeCheck <> env:30 var
+binder 3104:3109 <> condTy:39
+R3128:3133 TypeCheck <> condTy:39 var
+R3150:3155 TypeCheck TypeCheck TyBool constr
+R3172:3175 TypeCheck TypeCheck bind def
+R3178:3184 TypeCheck <> type_of:31 def
+R3189:3191 TypeCheck <> env:30 var
+binder 3199:3204 <> thenTy:41
+R3221:3224 TypeCheck TypeCheck bind def
+R3227:3233 TypeCheck <> type_of:31 def
+R3238:3240 TypeCheck <> env:30 var
+binder 3248:3253 <> elseTy:42
+R3275:3282 TypeCheck TypeCheck equal_ty def
+R3284:3289 TypeCheck <> thenTy:41 var
+R3291:3296 TypeCheck <> elseTy:42 var
+R3347:3366 TypeCheck TypeCheck inequalIfBranchTyErr def
+R3368:3373 TypeCheck <> thenTy:41 var
+R3375:3380 TypeCheck <> elseTy:42 var
+R3317:3319 TypeCheck TypeCheck ret def
+R3321:3326 TypeCheck <> thenTy:41 var
+R3405:3418 TypeCheck TypeCheck expectedButErr def
+R3420:3425 TypeCheck TypeCheck TyBool constr
+R3427:3432 TypeCheck <> condTy:39 var
+R3454:3460 TypeCheck TypeCheck Let_Exp constr
+R3485:3488 TypeCheck TypeCheck bind def
+R3491:3497 TypeCheck <> type_of:31 def
+R3504:3506 TypeCheck <> env:30 var
+binder 3514:3518 <> expTy:43
+R3531:3537 TypeCheck <> type_of:31 def
+R3545:3556 TypeCheck TypeCheck extend_tyenv def
+R3562:3566 TypeCheck <> expTy:43 var
+R3568:3570 TypeCheck <> env:30 var
+R3578:3587 TypeCheck TypeCheck Letrec_Exp constr
+R3671:3682 TypeCheck TypeCheck extend_tyenv def
+R3724:3735 TypeCheck TypeCheck extend_tyenv def
+R3748:3752 TypeCheck TypeCheck TyFun constr
+R3774:3776 TypeCheck <> env:30 var
+binder 3663:3666 <> env1:44
+R3788:3791 TypeCheck TypeCheck bind def
+R3794:3800 TypeCheck <> type_of:31 def
+R3812:3815 TypeCheck <> env1:44 var
+binder 3823:3832 <> procbodyTy:45
+R3848:3855 TypeCheck TypeCheck equal_ty def
+R3867:3876 TypeCheck <> procbodyTy:45 var
+R4010:4023 TypeCheck TypeCheck expectedButErr def
+R4035:4044 TypeCheck <> procbodyTy:45 var
+R3905:3916 TypeCheck TypeCheck extend_tyenv def
+R3929:3933 TypeCheck TypeCheck TyFun constr
+R3955:3957 TypeCheck <> env:30 var
+binder 3897:3900 <> env2:46
+R3972:3978 TypeCheck <> type_of:31 def
+R3992:3995 TypeCheck <> env2:46 var
+R4061:4068 TypeCheck TypeCheck Proc_Exp constr
+R4094:4097 TypeCheck TypeCheck bind def
+R4100:4106 TypeCheck <> type_of:31 def
+R4114:4125 TypeCheck TypeCheck extend_tyenv def
+R4137:4139 TypeCheck <> env:30 var
+binder 4148:4153 <> bodyTy:47
+R4166:4168 TypeCheck TypeCheck ret def
+R4171:4175 TypeCheck TypeCheck TyFun constr
+R4183:4188 TypeCheck <> bodyTy:47 var
+R4196:4203 TypeCheck TypeCheck Call_Exp constr
+R4225:4228 TypeCheck TypeCheck bind def
+R4231:4237 TypeCheck <> type_of:31 def
+R4245:4247 TypeCheck <> env:30 var
+binder 4255:4259 <> funTy:48
+R4270:4273 TypeCheck TypeCheck bind def
+R4276:4282 TypeCheck <> type_of:31 def
+R4289:4291 TypeCheck <> env:30 var
+binder 4299:4303 <> argTy:49
+R4322:4326 TypeCheck <> funTy:48 var
+R4343:4347 TypeCheck TypeCheck TyFun constr
+R4375:4382 TypeCheck TypeCheck equal_ty def
+R4388:4392 TypeCheck <> argTy:49 var
+R4424:4438 TypeCheck TypeCheck inequalArgtyErr def
+R4444:4448 TypeCheck <> argTy:49 var
+R4399:4401 TypeCheck TypeCheck ret def
+R4476:4494 TypeCheck TypeCheck expectedFuntyButErr def
+R4496:4500 TypeCheck <> funTy:48 var
+def 4541:4555 TypeCheck type_of_program
+R4564:4566 TypeCheck TypeCheck Exp ind
+binder 4558:4560 <> exp:51
+R4571:4578 TypeCheck TypeCheck TyResult def
+R4602:4612 TypeCheck TypeCheck empty_tyenv def
+binder 4589:4597 <> initTyEnv:52
+R4619:4625 TypeCheck TypeCheck type_of def
+R4627:4629 TypeCheck <> exp:51 var
+R4631:4639 TypeCheck <> initTyEnv:52 var
+def 4654:4662 TypeCheck typeCheck
+R4671:4673 TypeCheck TypeCheck Exp ind
+binder 4665:4667 <> exp:53
+R4678:4685 TypeCheck TypeCheck TyResult def
+R4692:4706 TypeCheck TypeCheck type_of_program def
+R4708:4710 TypeCheck <> exp:53 var
+R4718:4726 TypeCheck TypeCheck <> mod
+R4737:4745 TypeCheck TypeCheck <> mod

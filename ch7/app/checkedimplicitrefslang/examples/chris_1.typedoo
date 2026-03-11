@@ -1,0 +1,7 @@
+class aclass extends object 
+  field int i
+  method void initialize(x : int) set i = x
+  method int m(y : int) +(i,y)
+  
+let o1 = new aclass(3)
+in send o1 m(2)

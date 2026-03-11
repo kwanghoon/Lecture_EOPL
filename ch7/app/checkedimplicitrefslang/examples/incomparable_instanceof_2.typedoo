@@ -1,0 +1,8 @@
+class c1 extends object 
+  method int initialize ()1
+  method int get()2
+  
+class c2 extends object 
+  method int initialize () 100
+    
+let f = proc (o : c2) if instanceof o c1 then 1 else 2 in (f new c2())

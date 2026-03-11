@@ -1,0 +1,38 @@
+interface tree
+  method int sum()
+  method bool equal(t : tree)
+  method bool equal_int(l : tree, r : tree)
+  method bool equal_leaf(val : int)
+  
+class interior_node extends object implements tree
+  field tree left
+  field tree right
+  method void initialize(l : tree, r : tree)
+   begin
+    set left = l; set right = r
+   end
+  method int sum() +(send left sum(), send right sum())
+  method bool equal(t : tree) send t equal_int(left, right)
+  method bool equal_int(l : tree, r : tree) 
+     if send left equal(l)
+     then send right equal(r)
+     else zero?(1)  % false
+     
+  method bool equal_leaf(v : int) zero?(1)  % false
+  
+class leaf_node extends object  implements tree
+  field int value
+  field bool false
+  method void initialize(v : int) begin set value = v; set
+                                      false=zero?(1) end
+  method int sum()value
+  method bool equal(t : tree) send t equal_leaf(value)
+  method bool equal_int(l : tree, r : tree) false
+  method bool equal_leaf(otherval : int) zero?(-(value, otherval))
+  
+let o1 = new interior_node (
+          new interior_node (
+            new leaf_node(3),   
+            new leaf_node(4)),
+          new leaf_node(5))
+in send o1 equal(o1)

@@ -1,0 +1,23 @@
+class c1 extends object 
+  method int initialize () 1
+  method int test () 1
+  method int result1 () send self test ()
+  
+class c2 extends c1 
+  method int test () 2
+  
+class c3 extends c2 
+  method int result2 () send self result1 ()
+  method int result3 () super test ()
+  
+class c4 extends c3 
+  method int test () 4
+  
+let o3 = new c3 ()
+    o4 = new c4 ()
+in list(send o3 test(),
+        send o4 result1 (),
+        send o3 result2 (),   
+        send o4 result2 (),
+        send o3 result3 (),
+        send o4 result3 ())

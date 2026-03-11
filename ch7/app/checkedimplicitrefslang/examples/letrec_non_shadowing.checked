@@ -1,0 +1,4 @@
+(proc (x : int)
+    letrec bool loop(x : bool) = (loop x)
+    in x
+ 1)

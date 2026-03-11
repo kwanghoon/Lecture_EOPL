@@ -1,0 +1,20 @@
+class c1 extends object 
+  method int initialize()1
+  method int m1()1
+  
+class c2 extends c1 
+  method int initialize()1
+  method int m1()super m1()
+  method int m2()2
+  
+class c3 extends c2 
+  method int initialize()1
+  method int m1()3
+  method int m2()super m2()
+  method int m3()super m1()
+  
+let o = new c3 ()
+in list( send o m1(),
+         send o m2(),
+         send o m3()
+        )

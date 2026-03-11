@@ -1,0 +1,6 @@
+class c1 extends object 
+  method int initialize ()1
+  method int get()2
+  
+class c2 extends object   % no initialize method!
+let f = proc (o : c2) instanceof o c1 in (f new c2())

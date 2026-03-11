@@ -1,0 +1,4 @@
+let g = let count = 0 in proc(d) 
+                        let d = set count = -(count,-1)
+                        in count
+in -((g 11), (g 22))

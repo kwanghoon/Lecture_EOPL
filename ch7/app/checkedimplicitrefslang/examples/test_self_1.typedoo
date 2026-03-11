@@ -1,0 +1,16 @@
+class c extends object 
+  field int s
+  method void initialize(v : int)set s = v
+  method void sets(v : int)set s = v
+  method int gets()s
+  method void testit()send self sets(13)
+  
+let o = new c (11)
+       t1 = 0
+       t2 = 0
+   in begin 
+       set t1 = send o gets();
+       send o testit();
+       set t2 = send o gets();
+       list(t1,t2)
+      end

@@ -1,0 +1,10 @@
+class c1 extends object 
+  method int initialize() 1
+  method int ma()1
+  method int mb()send self ma()
+  
+class c2 extends c1   % just use c1's initialize
+  method int ma() 2
+  
+let x = new c2 ()
+in list(send x ma(),send x mb())

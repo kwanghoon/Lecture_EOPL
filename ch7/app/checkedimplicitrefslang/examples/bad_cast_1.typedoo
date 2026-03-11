@@ -1,0 +1,5 @@
+class c1 extends object 
+ method int initialize () 1
+class c2 extends object 
+ method int initialize () 2
+proc (o : c1) cast o c2

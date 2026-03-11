@@ -1,0 +1,1 @@
+(proc(f : (int -> int))(f 30) proc(x : int)-(x,1))

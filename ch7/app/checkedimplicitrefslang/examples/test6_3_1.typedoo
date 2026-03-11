@@ -1,0 +1,13 @@
+class c1 extends object
+ method int initialize () 1 
+ method int m1 () 11
+ method int m2 () 12
+class c2 extends c1 
+ method int m1 () 21
+ method int m2 () 22
+ method int m3 () 23
+class c3 extends c2 
+ method int m4 () 34
+class c4 extends c3 
+ method int m2 () 42 
+proc (o : c3) send o m2()

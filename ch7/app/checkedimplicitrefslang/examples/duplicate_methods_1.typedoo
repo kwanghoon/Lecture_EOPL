@@ -1,0 +1,6 @@
+class c1 extends object
+  method int initialize() 1
+class c2 extends c1
+  method int m1() 1
+  method int m1() 2
+33

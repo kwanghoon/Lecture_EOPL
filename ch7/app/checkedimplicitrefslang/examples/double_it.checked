@@ -1,0 +1,4 @@
+letrec int double (n : int) = if zero?(n) 
+                              then 0 
+                              else -( (double -(n,1)), -2)
+in (double 3)

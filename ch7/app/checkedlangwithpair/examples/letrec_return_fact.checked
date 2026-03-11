@@ -1,0 +1,6 @@
+let times = proc (x : int) 
+                proc (y : int) -(x,y)
+in letrec int fact(x : int) = if zero?(x) 
+                              then 1 
+                              else ((times x) (fact -(x,1)))
+    in fact

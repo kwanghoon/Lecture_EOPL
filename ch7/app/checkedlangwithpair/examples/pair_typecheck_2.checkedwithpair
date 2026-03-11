@@ -1,0 +1,3 @@
+let p = newpair (1, zero?(0)) in 
+unpair (x, y) = p in 
+ x

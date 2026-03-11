@@ -1,0 +1,11 @@
+class c1 extends object 
+ method int initialize() 1
+ 
+class c2 extends c1 
+ method int m1() super m2()
+ 
+class c3 extends c2 
+ method int m2() 2
+ 
+class c4 extends c3 
+let o = new c4() in send o m1()

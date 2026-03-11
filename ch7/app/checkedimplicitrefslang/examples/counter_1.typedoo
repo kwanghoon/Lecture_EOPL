@@ -1,0 +1,15 @@
+class counter extends object 
+ field int count
+ method void initialize() set count = 0
+ method void countup() set count = -(count, -1)
+ method int getcount() count
+ 
+let o1 = new counter ()
+    t1 = 0
+    t2 = 0
+in begin
+    set t1 = send o1 getcount();
+    send o1 countup();
+    set t2 = send o1 getcount();
+    list(t1,t2)
+   end

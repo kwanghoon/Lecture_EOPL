@@ -1,0 +1,913 @@
+DIGEST 8c18fe56b6f180cce49f684b52ecde17
+FTypeSound
+R67:72 Stdlib.Strings.String <> <> lib
+R90:93 Expr <> <> lib
+R95:99 TyEnv <> <> lib
+R101:103 Env <> <> lib
+R105:110 Interp <> <> lib
+R112:120 TypeCheck <> <> lib
+mod 131:139 <> TypeSound
+R167:170 Expr <> <> modtype
+mod 157:162 <> TypeSound.ExprNS
+R157:162 TypeSound TypeSound.ExprNS <> mod
+R198:202 TyEnv <> <> modtype
+mod 187:193 <> TypeSound.TyEnvNS
+R187:193 TypeSound TypeSound.TyEnvNS <> mod
+R228:230 Env <> <> modtype
+mod 219:223 <> TypeSound.EnvNS
+R219:223 TypeSound TypeSound.EnvNS <> mod
+R259:264 Interp <> <> modtype
+mod 247:254 <> TypeSound.InterpNS
+R247:254 TypeSound TypeSound.InterpNS <> mod
+R296:304 TypeCheck <> <> modtype
+mod 281:291 <> TypeSound.TypeCheckNS
+R281:291 TypeSound TypeSound.TypeCheckNS <> mod
+ind 379:390 TypeSound env_has_type
+constr 420:434 TypeSound EnvEmptyHasType
+constr 479:494 TypeSound EnvExtendHasType
+constr 665:683 TypeSound EnvExtendRecHasType
+ind 1075:1088 TypeSound value_has_type
+constr 1118:1132 TypeSound ValueHasTypeNum
+constr 1191:1206 TypeSound ValueHasTypeBool
+constr 1267:1282 TypeSound ValueHasTypeProc
+R397:400 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R394:396 TypeSound TypeSound Env ind
+R406:409 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R401:405 TypeSound TypeSound TyEnv ind
+R1098:1101 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R1092:1097 TypeSound TypeSound ExpVal ind
+R1104:1107 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R1102:1103 TypeSound TypeSound Ty ind
+R442:453 TypeSound <> env_has_type:1 ind
+R465:475 TypeSound TypeSound Empty_tyenv constr
+R455:463 TypeSound TypeSound Empty_env constr
+binder 509:511 <> env:5
+binder 513:516 <> tenv:6
+binder 518:520 <> var:7
+binder 522:524 <> val:8
+binder 526:527 <> ty:9
+R557:566 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R536:549 TypeSound <> value_has_type:2 ind
+R555:556 TypeSound <> ty:9 var
+R551:553 TypeSound <> val:8 var
+R588:597 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R567:578 TypeSound <> env_has_type:1 ind
+R584:587 TypeSound <> tenv:6 var
+R580:582 TypeSound <> env:5 var
+R598:609 TypeSound <> env_has_type:1 ind
+R637:648 TypeSound TypeSound Extend_tyenv constr
+R650:652 TypeSound <> var:7 var
+R654:655 TypeSound <> ty:9 var
+R657:660 TypeSound <> tenv:6 var
+R612:621 TypeSound TypeSound Extend_env constr
+R623:625 TypeSound <> var:7 var
+R627:629 TypeSound <> val:8 var
+R631:633 TypeSound <> env:5 var
+binder 698:700 <> env:10
+binder 702:705 <> tenv:11
+binder 707:715 <> proc_name:12
+binder 717:725 <> bound_var:13
+binder 727:735 <> proc_body:14
+binder 737:741 <> argTy:15
+binder 743:750 <> resultTy:16
+R780:789 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R759:770 TypeSound <> env_has_type:1 ind
+R776:779 TypeSound <> tenv:11 var
+R772:774 TypeSound <> env:10 var
+R924:933 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R909:911 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R790:796 TypeSound TypeSound type_of def
+R798:806 TypeSound <> proc_body:14 var
+R817:828 TypeSound TypeSound extend_tyenv def
+R830:838 TypeSound <> bound_var:13 var
+R840:844 TypeSound <> argTy:15 var
+R857:868 TypeSound TypeSound extend_tyenv def
+R870:878 TypeSound <> proc_name:12 var
+R881:885 TypeSound TypeSound TyFun constr
+R887:891 TypeSound <> argTy:15 var
+R893:900 TypeSound <> resultTy:16 var
+R903:906 TypeSound <> tenv:11 var
+R912:914 Corelib.Init.Datatypes <> inr constr
+R916:923 TypeSound <> resultTy:16 var
+R934:945 TypeSound <> env_has_type:1 ind
+R1018:1029 TypeSound TypeSound Extend_tyenv constr
+R1031:1039 TypeSound <> proc_name:12 var
+R1042:1046 TypeSound TypeSound TyFun constr
+R1048:1052 TypeSound <> argTy:15 var
+R1054:1061 TypeSound <> resultTy:16 var
+R1064:1067 TypeSound <> tenv:11 var
+R948:961 TypeSound TypeSound Extend_env_rec constr
+R963:971 TypeSound <> proc_name:12 var
+R973:981 TypeSound <> bound_var:13 var
+R983:991 TypeSound <> proc_body:14 var
+R993:995 TypeSound <> env:10 var
+binder 1147:1147 <> n:17
+R1156:1169 TypeSound <> value_has_type:2 ind
+R1183:1187 TypeSound TypeSound TyInt constr
+R1172:1178 TypeSound TypeSound Num_Val constr
+R1180:1180 TypeSound <> n:17 var
+binder 1221:1221 <> b:18
+R1230:1243 TypeSound <> value_has_type:2 ind
+R1258:1263 TypeSound TypeSound TyBool constr
+R1246:1253 TypeSound TypeSound Bool_Val constr
+R1255:1255 TypeSound <> b:18 var
+binder 1297:1301 <> param:19
+binder 1303:1306 <> body:20
+binder 1308:1316 <> saved_env:21
+binder 1318:1321 <> tenv:22
+binder 1323:1327 <> argTy:23
+binder 1329:1336 <> resultTy:24
+R1372:1381 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R1345:1356 TypeSound <> env_has_type:1 ind
+R1368:1371 TypeSound <> tenv:22 var
+R1358:1366 TypeSound <> saved_env:21 var
+R1441:1450 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R1426:1428 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R1382:1388 TypeSound TypeSound type_of def
+R1390:1393 TypeSound <> body:20 var
+R1396:1407 TypeSound TypeSound extend_tyenv def
+R1409:1413 TypeSound <> param:19 var
+R1415:1419 TypeSound <> argTy:23 var
+R1421:1424 TypeSound <> tenv:22 var
+R1429:1431 Corelib.Init.Datatypes <> inr constr
+R1433:1440 TypeSound <> resultTy:24 var
+R1451:1464 TypeSound <> value_has_type:2 ind
+R1533:1537 TypeSound TypeSound TyFun constr
+R1539:1543 TypeSound <> argTy:23 var
+R1545:1552 TypeSound <> resultTy:24 var
+R1467:1474 TypeSound TypeSound Proc_Val constr
+R1477:1485 TypeSound TypeSound Procedure constr
+R1487:1491 TypeSound <> param:19 var
+R1493:1496 TypeSound <> body:20 var
+R1498:1506 TypeSound <> saved_env:21 var
+scheme 379:390 TypeSound env_has_type_ind
+scheme 379:390 TypeSound env_has_type_sind
+scheme 1075:1088 TypeSound value_has_type_ind
+scheme 1075:1088 TypeSound value_has_type_sind
+def 1564:1579 TypeSound env_has_type_mut
+def 1626:1643 TypeSound value_has_type_mut
+R1598:1609 TypeSound TypeSound env_has_type ind
+R1662:1675 TypeSound TypeSound value_has_type ind
+R1737:1752 TypeSound TypeSound env_has_type_mut scheme
+R1755:1772 TypeSound TypeSound value_has_type_mut scheme
+prf 1782:1794 TypeSound equal_ty_refl
+binder 1805:1806 <> ty:25
+R1823:1825 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R1809:1816 TypeSound TypeSound equal_ty def
+R1818:1819 TypeSound <> ty:25 var
+R1821:1822 TypeSound <> ty:25 var
+R1826:1829 Corelib.Init.Datatypes <> true constr
+prf 1929:1939 TypeSound equal_ty_eq
+binder 1950:1952 <> ty1:26
+binder 1954:1956 <> ty2:27
+R1982:1985 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R1975:1977 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R1959:1966 TypeSound TypeSound equal_ty def
+R1968:1970 TypeSound <> ty1:26 var
+R1972:1974 TypeSound <> ty2:27 var
+R1978:1981 Corelib.Init.Datatypes <> true constr
+R1989:1991 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R1986:1988 TypeSound <> ty1:26 var
+R1992:1994 TypeSound <> ty2:27 var
+R2118:2126 Corelib.Init.Datatypes <> andb_prop thm
+R2118:2126 Corelib.Init.Datatypes <> andb_prop thm
+prf 2251:2283 TypeSound env_has_type_extend_rec_preserves
+binder 2296:2298 <> env:28
+binder 2300:2303 <> tenv:29
+binder 2305:2313 <> proc_name:30
+binder 2315:2323 <> bound_var:31
+binder 2325:2333 <> proc_body:32
+binder 2335:2339 <> argTy:33
+binder 2341:2348 <> resultTy:34
+R2376:2383 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R2355:2366 TypeSound TypeSound env_has_type ind
+R2368:2370 TypeSound <> env:28 var
+R2372:2375 TypeSound <> tenv:29 var
+R2514:2521 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R2499:2501 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R2384:2390 TypeSound TypeSound type_of def
+R2392:2400 TypeSound <> proc_body:32 var
+R2409:2420 TypeSound TypeSound extend_tyenv def
+R2422:2430 TypeSound <> bound_var:31 var
+R2432:2436 TypeSound <> argTy:33 var
+R2447:2458 TypeSound TypeSound extend_tyenv def
+R2460:2468 TypeSound <> proc_name:30 var
+R2471:2475 TypeSound TypeSound TyFun constr
+R2477:2481 TypeSound <> argTy:33 var
+R2483:2490 TypeSound <> resultTy:34 var
+R2493:2496 TypeSound <> tenv:29 var
+R2502:2504 Corelib.Init.Datatypes <> inr constr
+R2506:2513 TypeSound <> resultTy:34 var
+R2522:2533 TypeSound TypeSound env_has_type ind
+R2536:2549 TypeSound TypeSound extend_env_rec def
+R2551:2559 TypeSound <> proc_name:30 var
+R2561:2569 TypeSound <> bound_var:31 var
+R2571:2579 TypeSound <> proc_body:32 var
+R2581:2583 TypeSound <> env:28 var
+R2604:2615 TypeSound TypeSound extend_tyenv def
+R2617:2625 TypeSound <> proc_name:30 var
+R2628:2632 TypeSound TypeSound TyFun constr
+R2634:2638 TypeSound <> argTy:33 var
+R2640:2647 TypeSound <> resultTy:34 var
+R2650:2653 TypeSound <> tenv:29 var
+prf 2768:2783 TypeSound env_lookup_sound
+binder 2796:2798 <> env:35
+binder 2800:2803 <> tenv:36
+R2827:2832 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R2806:2817 TypeSound TypeSound env_has_type ind
+R2819:2821 TypeSound <> env:35 var
+R2823:2826 TypeSound <> tenv:36 var
+binder 2840:2849 <> search_var:37
+binder 2851:2859 <> target_ty:38
+binder 2861:2869 <> found_val:39
+R2919:2926 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R2903:2905 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R2876:2886 TypeSound TypeSound apply_tyenv def
+R2888:2891 TypeSound <> tenv:36 var
+R2893:2902 TypeSound <> search_var:37 var
+R2906:2908 Corelib.Init.Datatypes <> inr constr
+R2910:2918 TypeSound <> target_ty:38 var
+R2968:2975 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R2951:2953 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R2927:2935 TypeSound TypeSound apply_env def
+R2937:2939 TypeSound <> env:35 var
+R2941:2950 TypeSound <> search_var:37 var
+R2954:2957 Corelib.Init.Datatypes <> Some constr
+R2959:2967 TypeSound <> found_val:39 var
+R2976:2989 TypeSound TypeSound value_has_type ind
+R2991:2999 TypeSound <> found_val:39 var
+R3001:3009 TypeSound <> target_ty:38 var
+R3133:3142 Stdlib.Strings.String <> eqb def
+R3133:3142 Stdlib.Strings.String <> eqb def
+R3181:3193 Stdlib.Strings.String <> eqb_eq thm
+R3181:3193 Stdlib.Strings.String <> eqb_eq thm
+R3325:3334 Stdlib.Strings.String <> eqb def
+R3325:3334 Stdlib.Strings.String <> eqb def
+R3379:3391 Stdlib.Strings.String <> eqb_eq thm
+R3379:3391 Stdlib.Strings.String <> eqb_eq thm
+R3520:3531 TypeSound TypeSound extend_tyenv def
+R3544:3548 TypeSound TypeSound TyFun constr
+R3481:3496 TypeSound TypeSound ValueHasTypeProc constr
+R3520:3531 TypeSound TypeSound extend_tyenv def
+R3544:3548 TypeSound TypeSound TyFun constr
+R3481:3496 TypeSound TypeSound ValueHasTypeProc constr
+R3588:3606 TypeSound TypeSound EnvExtendRecHasType constr
+R3588:3606 TypeSound TypeSound EnvExtendRecHasType constr
+prf 3688:3706 TypeSound env_lookup_complete
+binder 3719:3721 <> env:40
+binder 3723:3726 <> tenv:41
+R3750:3755 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R3729:3740 TypeSound TypeSound env_has_type ind
+R3742:3744 TypeSound <> env:40 var
+R3746:3749 TypeSound <> tenv:41 var
+binder 3763:3772 <> search_var:42
+binder 3774:3782 <> target_ty:43
+R3832:3839 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R3816:3818 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R3789:3799 TypeSound TypeSound apply_tyenv def
+R3801:3804 TypeSound <> tenv:41 var
+R3806:3815 TypeSound <> search_var:42 var
+R3819:3821 Corelib.Init.Datatypes <> inr constr
+R3823:3831 TypeSound <> target_ty:43 var
+R3840:3846 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R3856:3863 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+binder 3847:3855 <> found_val:44
+R3905:3914 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R3888:3890 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R3864:3872 TypeSound TypeSound apply_env def
+R3874:3876 TypeSound <> env:40 var
+R3878:3887 TypeSound <> search_var:42 var
+R3891:3894 Corelib.Init.Datatypes <> Some constr
+R3896:3904 TypeSound <> found_val:44 var
+R3915:3928 TypeSound TypeSound value_has_type ind
+R3930:3938 TypeSound <> found_val:44 var
+R3940:3948 TypeSound <> target_ty:43 var
+R4053:4062 Stdlib.Strings.String <> eqb def
+R4053:4062 Stdlib.Strings.String <> eqb def
+R4352:4361 Stdlib.Strings.String <> eqb def
+R4352:4361 Stdlib.Strings.String <> eqb def
+R4439:4446 TypeSound TypeSound Proc_Val constr
+R4449:4457 TypeSound TypeSound Procedure constr
+R4499:4512 TypeSound TypeSound Extend_env_rec constr
+R4439:4446 TypeSound TypeSound Proc_Val constr
+R4449:4457 TypeSound TypeSound Procedure constr
+R4499:4512 TypeSound TypeSound Extend_env_rec constr
+R4645:4656 TypeSound TypeSound extend_tyenv def
+R4669:4673 TypeSound TypeSound TyFun constr
+R4604:4619 TypeSound TypeSound ValueHasTypeProc constr
+R4645:4656 TypeSound TypeSound extend_tyenv def
+R4669:4673 TypeSound TypeSound TyFun constr
+R4604:4619 TypeSound TypeSound ValueHasTypeProc constr
+R4716:4734 TypeSound TypeSound EnvExtendRecHasType constr
+R4716:4734 TypeSound TypeSound EnvExtendRecHasType constr
+prf 4929:4947 TypeSound env_extend_has_type
+binder 4960:4962 <> env:45
+binder 4964:4967 <> tenv:46
+binder 4969:4971 <> var:47
+binder 4973:4975 <> val:48
+binder 4977:4978 <> ty:49
+R5006:5013 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R4985:4996 TypeSound TypeSound env_has_type ind
+R4998:5000 TypeSound <> env:45 var
+R5002:5005 TypeSound <> tenv:46 var
+R5035:5042 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R5014:5027 TypeSound TypeSound value_has_type ind
+R5029:5031 TypeSound <> val:48 var
+R5033:5034 TypeSound <> ty:49 var
+R5043:5054 TypeSound TypeSound env_has_type ind
+R5057:5066 TypeSound TypeSound extend_env def
+R5068:5070 TypeSound <> var:47 var
+R5072:5074 TypeSound <> val:48 var
+R5076:5078 TypeSound <> env:45 var
+R5082:5093 TypeSound TypeSound extend_tyenv def
+R5095:5097 TypeSound <> var:47 var
+R5099:5100 TypeSound <> ty:49 var
+R5102:5105 TypeSound <> tenv:46 var
+prf 5155:5179 TypeSound value_has_type_proc_intro
+binder 5192:5196 <> param:50
+binder 5198:5201 <> body:51
+binder 5203:5211 <> saved_env:52
+binder 5213:5216 <> tenv:53
+binder 5218:5222 <> argTy:54
+binder 5224:5231 <> resultTy:55
+R5265:5272 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R5238:5249 TypeSound TypeSound env_has_type ind
+R5251:5259 TypeSound <> saved_env:52 var
+R5261:5264 TypeSound <> tenv:53 var
+R5332:5339 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R5317:5319 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R5273:5279 TypeSound TypeSound type_of def
+R5281:5284 TypeSound <> body:51 var
+R5287:5298 TypeSound TypeSound extend_tyenv def
+R5300:5304 TypeSound <> param:50 var
+R5306:5310 TypeSound <> argTy:54 var
+R5312:5315 TypeSound <> tenv:53 var
+R5320:5322 Corelib.Init.Datatypes <> inr constr
+R5324:5331 TypeSound <> resultTy:55 var
+R5340:5353 TypeSound TypeSound value_has_type ind
+R5356:5363 TypeSound TypeSound Proc_Val constr
+R5366:5374 TypeSound TypeSound procedure def
+R5376:5380 TypeSound <> param:50 var
+R5382:5385 TypeSound <> body:51 var
+R5387:5395 TypeSound <> saved_env:52 var
+R5419:5423 TypeSound TypeSound TyFun constr
+R5425:5429 TypeSound <> argTy:54 var
+R5431:5438 TypeSound <> resultTy:55 var
+R5468:5483 TypeSound TypeSound ValueHasTypeProc constr
+R5468:5483 TypeSound TypeSound ValueHasTypeProc constr
+prf 5525:5543 TypeSound type_of_program_env
+R5549:5560 TypeSound TypeSound env_has_type ind
+R5562:5568 TypeSound TypeSound initEnv def
+R5570:5580 TypeSound TypeSound empty_tyenv def
+R5599:5605 TypeSound TypeSound initEnv def
+prf 5635:5649 TypeSound bind_eval_value
+binder 5662:5662 <> r:56
+binder 5664:5664 <> k:57
+binder 5666:5666 <> v:58
+R5700:5707 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R5686:5688 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R5673:5681 TypeSound TypeSound bind_eval def
+R5683:5683 TypeSound <> r:56 var
+R5685:5685 TypeSound <> k:57 var
+R5689:5697 TypeSound TypeSound EvalValue constr
+R5699:5699 TypeSound <> v:58 var
+R5708:5714 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R5716:5717 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+binder 5715:5715 <> x:59
+R5733:5736 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R5719:5721 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R5718:5718 TypeSound <> r:56 var
+R5722:5730 TypeSound TypeSound EvalValue constr
+R5732:5732 TypeSound <> x:59 var
+R5740:5742 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R5737:5737 TypeSound <> k:57 var
+R5739:5739 TypeSound <> x:59 var
+R5743:5751 TypeSound TypeSound EvalValue constr
+R5753:5753 TypeSound <> v:58 var
+prf 5847:5854 TypeSound bind_inr
+R5872:5879 TypeSound TypeSound TyResult def
+binder 5868:5868 <> r:60
+R5889:5892 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R5887:5888 TypeSound TypeSound Ty ind
+R5893:5900 TypeSound TypeSound TyResult def
+binder 5883:5883 <> k:61
+binder 5903:5904 <> ty:62
+R5928:5935 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R5919:5921 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R5911:5914 TypeSound TypeSound bind def
+R5916:5916 TypeSound <> r:60 var
+R5918:5918 TypeSound <> k:61 var
+R5922:5924 Corelib.Init.Datatypes <> inr constr
+R5926:5927 TypeSound <> ty:62 var
+R5936:5942 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R5944:5945 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+binder 5943:5943 <> v:63
+R5955:5972 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R5947:5949 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R5946:5946 TypeSound <> r:60 var
+R5950:5952 Corelib.Init.Datatypes <> inr constr
+R5954:5954 TypeSound <> v:63 var
+R5976:5978 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R5973:5973 TypeSound <> k:61 var
+R5975:5975 TypeSound <> v:63 var
+R5979:5981 Corelib.Init.Datatypes <> inr constr
+R5983:5984 TypeSound <> ty:62 var
+prf 6076:6092 TypeSound type_sound_mutual
+binder 6105:6108 <> step:64
+R6115:6115 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R6292:6305 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R6535:6535 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+binder 6123:6125 <> exp:65
+binder 6127:6129 <> env:66
+binder 6131:6134 <> tenv:67
+binder 6136:6137 <> ty:68
+binder 6139:6141 <> val:69
+R6173:6184 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R6152:6163 TypeSound TypeSound env_has_type ind
+R6165:6167 TypeSound <> env:66 var
+R6169:6172 TypeSound <> tenv:67 var
+R6210:6221 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R6201:6203 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R6185:6191 TypeSound TypeSound type_of def
+R6193:6195 TypeSound <> exp:65 var
+R6197:6200 TypeSound <> tenv:67 var
+R6204:6206 Corelib.Init.Datatypes <> inr constr
+R6208:6209 TypeSound <> ty:68 var
+R6259:6270 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R6243:6245 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R6222:6229 TypeSound TypeSound value_of def
+R6231:6234 TypeSound <> step:64 var
+R6236:6238 TypeSound <> exp:65 var
+R6240:6242 TypeSound <> env:66 var
+R6246:6254 TypeSound TypeSound EvalValue constr
+R6256:6258 TypeSound <> val:69 var
+R6271:6284 TypeSound TypeSound value_has_type ind
+R6286:6288 TypeSound <> val:69 var
+R6290:6291 TypeSound <> ty:68 var
+binder 6313:6316 <> proc:70
+binder 6318:6320 <> arg:71
+binder 6322:6324 <> val:72
+binder 6326:6330 <> argTy:73
+binder 6332:6339 <> resultTy:74
+R6403:6414 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R6350:6363 TypeSound TypeSound value_has_type ind
+R6366:6373 TypeSound TypeSound Proc_Val constr
+R6375:6378 TypeSound <> proc:70 var
+R6382:6386 TypeSound TypeSound TyFun constr
+R6388:6392 TypeSound <> argTy:73 var
+R6394:6401 TypeSound <> resultTy:74 var
+R6439:6450 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R6415:6428 TypeSound TypeSound value_has_type ind
+R6430:6432 TypeSound <> arg:71 var
+R6434:6438 TypeSound <> argTy:73 var
+R6496:6507 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R6480:6482 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R6451:6465 TypeSound TypeSound apply_procedure def
+R6467:6470 TypeSound <> step:64 var
+R6472:6475 TypeSound <> proc:70 var
+R6477:6479 TypeSound <> arg:71 var
+R6483:6491 TypeSound TypeSound EvalValue constr
+R6493:6495 TypeSound <> val:72 var
+R6508:6521 TypeSound TypeSound value_has_type ind
+R6523:6525 TypeSound <> val:72 var
+R6527:6534 TypeSound <> resultTy:74 var
+R7265:7272 TypeSound TypeSound bind_inr thm
+R7265:7272 TypeSound TypeSound bind_inr thm
+R7316:7323 TypeSound TypeSound bind_inr thm
+R7316:7323 TypeSound TypeSound bind_inr thm
+R7536:7550 TypeSound TypeSound bind_eval_value thm
+R7536:7550 TypeSound TypeSound bind_eval_value thm
+R7599:7613 TypeSound TypeSound bind_eval_value thm
+R7599:7613 TypeSound TypeSound bind_eval_value thm
+R7911:7918 TypeSound TypeSound bind_inr thm
+R7911:7918 TypeSound TypeSound bind_inr thm
+R8075:8089 TypeSound TypeSound bind_eval_value thm
+R8075:8089 TypeSound TypeSound bind_eval_value thm
+R8310:8317 TypeSound TypeSound bind_inr thm
+R8310:8317 TypeSound TypeSound bind_inr thm
+R8426:8433 TypeSound TypeSound bind_inr thm
+R8426:8433 TypeSound TypeSound bind_inr thm
+R8483:8490 TypeSound TypeSound bind_inr thm
+R8483:8490 TypeSound TypeSound bind_inr thm
+R8544:8551 TypeSound TypeSound equal_ty def
+R8544:8551 TypeSound TypeSound equal_ty def
+R8680:8690 TypeSound TypeSound equal_ty_eq thm
+R8680:8690 TypeSound TypeSound equal_ty_eq thm
+R8752:8766 TypeSound TypeSound bind_eval_value thm
+R8752:8766 TypeSound TypeSound bind_eval_value thm
+R9181:9189 TypeSound TypeSound apply_env def
+R9181:9189 TypeSound TypeSound apply_env def
+R9259:9274 TypeSound TypeSound env_lookup_sound thm
+R9259:9274 TypeSound TypeSound env_lookup_sound thm
+R9298:9305 TypeSound TypeSound bind_inr thm
+R9298:9305 TypeSound TypeSound bind_inr thm
+R9377:9391 TypeSound TypeSound bind_eval_value thm
+R9377:9391 TypeSound TypeSound bind_eval_value thm
+R9515:9533 TypeSound TypeSound env_extend_has_type thm
+R9515:9533 TypeSound TypeSound env_extend_has_type thm
+R9661:9670 TypeSound TypeSound extend_env def
+R9721:9732 TypeSound TypeSound extend_tyenv def
+R9661:9670 TypeSound TypeSound extend_env def
+R9721:9732 TypeSound TypeSound extend_tyenv def
+R9819:9826 TypeSound TypeSound bind_inr thm
+R9819:9826 TypeSound TypeSound bind_inr thm
+R9884:9891 TypeSound TypeSound equal_ty def
+R9884:9891 TypeSound TypeSound equal_ty def
+R9994:10004 TypeSound TypeSound equal_ty_eq thm
+R9994:10004 TypeSound TypeSound equal_ty_eq thm
+R10052:10084 TypeSound TypeSound env_has_type_extend_rec_preserves thm
+R10052:10084 TypeSound TypeSound env_has_type_extend_rec_preserves thm
+R10208:10221 TypeSound TypeSound extend_env_rec def
+R10293:10304 TypeSound TypeSound extend_tyenv def
+R10317:10321 TypeSound TypeSound TyFun constr
+R10208:10221 TypeSound TypeSound extend_env_rec def
+R10293:10304 TypeSound TypeSound extend_tyenv def
+R10317:10321 TypeSound TypeSound TyFun constr
+R10418:10425 TypeSound TypeSound bind_inr thm
+R10418:10425 TypeSound TypeSound bind_inr thm
+R10541:10565 TypeSound TypeSound value_has_type_proc_intro thm
+R10541:10565 TypeSound TypeSound value_has_type_proc_intro thm
+R10589:10596 TypeSound TypeSound bind_inr thm
+R10589:10596 TypeSound TypeSound bind_inr thm
+R10644:10651 TypeSound TypeSound bind_inr thm
+R10644:10651 TypeSound TypeSound bind_inr thm
+R10777:10784 TypeSound TypeSound equal_ty def
+R10777:10784 TypeSound TypeSound equal_ty def
+R10933:10947 TypeSound TypeSound bind_eval_value thm
+R10933:10947 TypeSound TypeSound bind_eval_value thm
+R11001:11015 TypeSound TypeSound bind_eval_value thm
+R11001:11015 TypeSound TypeSound bind_eval_value thm
+R11201:11211 TypeSound TypeSound equal_ty_eq thm
+R11201:11211 TypeSound TypeSound equal_ty_eq thm
+R11582:11600 TypeSound TypeSound env_extend_has_type thm
+R11582:11600 TypeSound TypeSound env_extend_has_type thm
+R11734:11743 TypeSound TypeSound extend_env def
+R11799:11810 TypeSound TypeSound extend_tyenv def
+R11734:11743 TypeSound TypeSound extend_env def
+R11799:11810 TypeSound TypeSound extend_tyenv def
+prf 11900:11913 TypeSound type_sound_env
+binder 11926:11929 <> step:75
+binder 11931:11933 <> exp:76
+binder 11935:11937 <> env:77
+binder 11939:11942 <> tenv:78
+binder 11944:11945 <> ty:79
+binder 11947:11949 <> val:80
+R11977:11984 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R11956:11967 TypeSound TypeSound env_has_type ind
+R11969:11971 TypeSound <> env:77 var
+R11973:11976 TypeSound <> tenv:78 var
+R12010:12017 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R12001:12003 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R11985:11991 TypeSound TypeSound type_of def
+R11993:11995 TypeSound <> exp:76 var
+R11997:12000 TypeSound <> tenv:78 var
+R12004:12006 Corelib.Init.Datatypes <> inr constr
+R12008:12009 TypeSound <> ty:79 var
+R12055:12062 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R12039:12041 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R12018:12025 TypeSound TypeSound value_of def
+R12027:12030 TypeSound <> step:75 var
+R12032:12034 TypeSound <> exp:76 var
+R12036:12038 TypeSound <> env:77 var
+R12042:12050 TypeSound TypeSound EvalValue constr
+R12052:12054 TypeSound <> val:80 var
+R12063:12076 TypeSound TypeSound value_has_type ind
+R12078:12080 TypeSound <> val:80 var
+R12082:12083 TypeSound <> ty:79 var
+R12155:12171 TypeSound TypeSound type_sound_mutual thm
+R12155:12171 TypeSound TypeSound type_sound_mutual thm
+prf 12220:12234 TypeSound type_sound_proc
+binder 12247:12250 <> step:81
+binder 12252:12255 <> proc:82
+binder 12257:12259 <> arg:83
+binder 12261:12263 <> val:84
+binder 12265:12269 <> argTy:85
+binder 12271:12278 <> resultTy:86
+R12338:12345 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R12285:12298 TypeSound TypeSound value_has_type ind
+R12301:12308 TypeSound TypeSound Proc_Val constr
+R12310:12313 TypeSound <> proc:82 var
+R12317:12321 TypeSound TypeSound TyFun constr
+R12323:12327 TypeSound <> argTy:85 var
+R12329:12336 TypeSound <> resultTy:86 var
+R12370:12377 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R12346:12359 TypeSound TypeSound value_has_type ind
+R12361:12363 TypeSound <> arg:83 var
+R12365:12369 TypeSound <> argTy:85 var
+R12423:12430 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R12407:12409 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R12378:12392 TypeSound TypeSound apply_procedure def
+R12394:12397 TypeSound <> step:81 var
+R12399:12402 TypeSound <> proc:82 var
+R12404:12406 TypeSound <> arg:83 var
+R12410:12418 TypeSound TypeSound EvalValue constr
+R12420:12422 TypeSound <> val:84 var
+R12431:12444 TypeSound TypeSound value_has_type ind
+R12446:12448 TypeSound <> val:84 var
+R12450:12457 TypeSound <> resultTy:86 var
+R12538:12554 TypeSound TypeSound type_sound_mutual thm
+R12538:12554 TypeSound TypeSound type_sound_mutual thm
+prf 12605:12614 TypeSound type_sound
+R12635:12637 Corelib.Init.Datatypes <> nat ind
+binder 12628:12631 <> step:87
+R12647:12649 TypeSound TypeSound Exp ind
+binder 12641:12643 <> exp:88
+R12658:12659 TypeSound TypeSound Ty ind
+binder 12653:12654 <> ty:89
+R12669:12674 TypeSound TypeSound ExpVal ind
+binder 12663:12665 <> val:90
+R12710:12717 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R12701:12703 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R12682:12696 TypeSound TypeSound type_of_program def
+R12698:12700 TypeSound <> exp:88 var
+R12704:12706 Corelib.Init.Datatypes <> inr constr
+R12708:12709 TypeSound <> ty:89 var
+R12759:12766 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R12743:12745 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R12718:12733 TypeSound TypeSound value_of_program def
+R12735:12738 TypeSound <> step:87 var
+R12740:12742 TypeSound <> exp:88 var
+R12746:12754 TypeSound TypeSound EvalValue constr
+R12756:12758 TypeSound <> val:90 var
+R12767:12780 TypeSound TypeSound value_has_type ind
+R12782:12784 TypeSound <> val:90 var
+R12786:12787 TypeSound <> ty:89 var
+R12845:12859 TypeSound TypeSound type_of_program def
+R12881:12896 TypeSound TypeSound value_of_program def
+R12917:12930 TypeSound TypeSound type_sound_env thm
+R12917:12930 TypeSound TypeSound type_sound_env thm
+R12948:12966 TypeSound TypeSound type_of_program_env thm
+R12948:12966 TypeSound TypeSound type_of_program_env thm
+prf 12981:13010 TypeSound type_sound_value_or_gas_mutual
+binder 13023:13026 <> step:91
+R13033:13033 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R13258:13271 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R13557:13557 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+binder 13041:13043 <> exp:92
+binder 13045:13047 <> env:93
+binder 13049:13052 <> tenv:94
+binder 13054:13055 <> ty:95
+R13087:13098 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R13066:13077 TypeSound TypeSound env_has_type ind
+R13079:13081 TypeSound <> env:93 var
+R13083:13086 TypeSound <> tenv:94 var
+R13124:13135 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R13115:13117 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R13099:13105 TypeSound TypeSound type_of def
+R13107:13109 TypeSound <> exp:92 var
+R13111:13114 TypeSound <> tenv:94 var
+R13118:13120 Corelib.Init.Datatypes <> inr constr
+R13122:13123 TypeSound <> ty:95 var
+R13136:13136 Corelib.Init.Logic <> ::type_scope:x_'\/'_x not
+R13205:13217 Corelib.Init.Logic <> ::type_scope:x_'\/'_x not
+R13137:13143 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R13145:13146 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+binder 13144:13144 <> v:96
+R13182:13185 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R13168:13170 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R13147:13154 TypeSound TypeSound value_of def
+R13156:13159 TypeSound <> step:91 var
+R13161:13163 TypeSound <> exp:92 var
+R13165:13167 TypeSound <> env:93 var
+R13171:13179 TypeSound TypeSound EvalValue constr
+R13181:13181 TypeSound <> v:96 var
+R13186:13199 TypeSound TypeSound value_has_type ind
+R13201:13201 TypeSound <> v:96 var
+R13203:13204 TypeSound <> ty:95 var
+R13239:13241 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R13218:13225 TypeSound TypeSound value_of def
+R13227:13230 TypeSound <> step:91 var
+R13232:13234 TypeSound <> exp:92 var
+R13236:13238 TypeSound <> env:93 var
+R13242:13257 TypeSound TypeSound EvalGasExhausted constr
+binder 13279:13282 <> proc:97
+binder 13284:13286 <> arg:98
+binder 13288:13292 <> argTy:99
+binder 13294:13301 <> resultTy:100
+R13365:13376 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R13312:13325 TypeSound TypeSound value_has_type ind
+R13328:13335 TypeSound TypeSound Proc_Val constr
+R13337:13340 TypeSound <> proc:97 var
+R13344:13348 TypeSound TypeSound TyFun constr
+R13350:13354 TypeSound <> argTy:99 var
+R13356:13363 TypeSound <> resultTy:100 var
+R13401:13412 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R13377:13390 TypeSound TypeSound value_has_type ind
+R13392:13394 TypeSound <> arg:98 var
+R13396:13400 TypeSound <> argTy:99 var
+R13413:13413 Corelib.Init.Logic <> ::type_scope:x_'\/'_x not
+R13496:13508 Corelib.Init.Logic <> ::type_scope:x_'\/'_x not
+R13414:13420 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R13422:13423 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+binder 13421:13421 <> v:101
+R13467:13470 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R13453:13455 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R13424:13438 TypeSound TypeSound apply_procedure def
+R13440:13443 TypeSound <> step:91 var
+R13445:13448 TypeSound <> proc:97 var
+R13450:13452 TypeSound <> arg:98 var
+R13456:13464 TypeSound TypeSound EvalValue constr
+R13466:13466 TypeSound <> v:101 var
+R13471:13484 TypeSound TypeSound value_has_type ind
+R13486:13486 TypeSound <> v:101 var
+R13488:13495 TypeSound <> resultTy:100 var
+R13538:13540 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R13509:13523 TypeSound TypeSound apply_procedure def
+R13525:13528 TypeSound <> step:91 var
+R13530:13533 TypeSound <> proc:97 var
+R13535:13537 TypeSound <> arg:98 var
+R13541:13556 TypeSound TypeSound EvalGasExhausted constr
+R14201:14207 TypeSound TypeSound Num_Val constr
+R14201:14207 TypeSound TypeSound Num_Val constr
+R14261:14268 TypeSound TypeSound bind_inr thm
+R14261:14268 TypeSound TypeSound bind_inr thm
+R14312:14319 TypeSound TypeSound bind_inr thm
+R14312:14319 TypeSound TypeSound bind_inr thm
+R14529:14533 TypeSound TypeSound TyInt constr
+R14529:14533 TypeSound TypeSound TyInt constr
+R14592:14596 TypeSound TypeSound TyInt constr
+R14592:14596 TypeSound TypeSound TyInt constr
+R14812:14818 TypeSound TypeSound Num_Val constr
+R14821:14832 Stdlib.ZArith.BinInt Z sub def
+R14812:14818 TypeSound TypeSound Num_Val constr
+R14821:14832 Stdlib.ZArith.BinInt Z sub def
+R15072:15079 TypeSound TypeSound bind_inr thm
+R15072:15079 TypeSound TypeSound bind_inr thm
+R15232:15236 TypeSound TypeSound TyInt constr
+R15232:15236 TypeSound TypeSound TyInt constr
+R15376:15383 TypeSound TypeSound Bool_Val constr
+R15386:15397 Stdlib.ZArith.BinInt Z eqb def
+R15404:15413 Corelib.Numbers.BinNums <> Z0 constr
+R15376:15383 TypeSound TypeSound Bool_Val constr
+R15386:15397 Stdlib.ZArith.BinInt Z eqb def
+R15404:15413 Corelib.Numbers.BinNums <> Z0 constr
+R15643:15650 TypeSound TypeSound bind_inr thm
+R15643:15650 TypeSound TypeSound bind_inr thm
+R15759:15766 TypeSound TypeSound bind_inr thm
+R15759:15766 TypeSound TypeSound bind_inr thm
+R15816:15823 TypeSound TypeSound bind_inr thm
+R15816:15823 TypeSound TypeSound bind_inr thm
+R15877:15884 TypeSound TypeSound equal_ty def
+R15877:15884 TypeSound TypeSound equal_ty def
+R15988:15998 TypeSound TypeSound equal_ty_eq thm
+R15988:15998 TypeSound TypeSound equal_ty_eq thm
+R16066:16071 TypeSound TypeSound TyBool constr
+R16066:16071 TypeSound TypeSound TyBool constr
+R16797:16815 TypeSound TypeSound env_lookup_complete thm
+R16797:16815 TypeSound TypeSound env_lookup_complete thm
+R16994:17001 TypeSound TypeSound bind_inr thm
+R16994:17001 TypeSound TypeSound bind_inr thm
+R17176:17194 TypeSound TypeSound env_extend_has_type thm
+R17176:17194 TypeSound TypeSound env_extend_has_type thm
+R17276:17285 TypeSound TypeSound extend_env def
+R17300:17311 TypeSound TypeSound extend_tyenv def
+R17276:17285 TypeSound TypeSound extend_env def
+R17300:17311 TypeSound TypeSound extend_tyenv def
+R17621:17628 TypeSound TypeSound bind_inr thm
+R17621:17628 TypeSound TypeSound bind_inr thm
+R17686:17693 TypeSound TypeSound equal_ty def
+R17686:17693 TypeSound TypeSound equal_ty def
+R17774:17784 TypeSound TypeSound equal_ty_eq thm
+R17774:17784 TypeSound TypeSound equal_ty_eq thm
+R17832:17864 TypeSound TypeSound env_has_type_extend_rec_preserves thm
+R17832:17864 TypeSound TypeSound env_has_type_extend_rec_preserves thm
+R17966:17979 TypeSound TypeSound extend_env_rec def
+R18037:18048 TypeSound TypeSound extend_tyenv def
+R18061:18065 TypeSound TypeSound TyFun constr
+R17966:17979 TypeSound TypeSound extend_env_rec def
+R18037:18048 TypeSound TypeSound extend_tyenv def
+R18061:18065 TypeSound TypeSound TyFun constr
+R18173:18180 TypeSound TypeSound bind_inr thm
+R18173:18180 TypeSound TypeSound bind_inr thm
+R18268:18275 TypeSound TypeSound Proc_Val constr
+R18278:18286 TypeSound TypeSound Procedure constr
+R18268:18275 TypeSound TypeSound Proc_Val constr
+R18278:18286 TypeSound TypeSound Procedure constr
+R18368:18392 TypeSound TypeSound value_has_type_proc_intro thm
+R18368:18392 TypeSound TypeSound value_has_type_proc_intro thm
+R18416:18423 TypeSound TypeSound bind_inr thm
+R18416:18423 TypeSound TypeSound bind_inr thm
+R18471:18478 TypeSound TypeSound bind_inr thm
+R18471:18478 TypeSound TypeSound bind_inr thm
+R18604:18611 TypeSound TypeSound equal_ty def
+R18604:18611 TypeSound TypeSound equal_ty def
+R18711:18721 TypeSound TypeSound equal_ty_eq thm
+R18711:18721 TypeSound TypeSound equal_ty_eq thm
+R18788:18792 TypeSound TypeSound TyFun constr
+R18788:18792 TypeSound TypeSound TyFun constr
+R19825:19843 TypeSound TypeSound env_extend_has_type thm
+R19825:19843 TypeSound TypeSound env_extend_has_type thm
+R19937:19946 TypeSound TypeSound extend_env def
+R19988:19999 TypeSound TypeSound extend_tyenv def
+R19937:19946 TypeSound TypeSound extend_env def
+R19988:19999 TypeSound TypeSound extend_tyenv def
+prf 20204:20230 TypeSound type_sound_no_runtime_error
+R20251:20253 Corelib.Init.Datatypes <> nat ind
+binder 20244:20247 <> step:102
+R20263:20265 TypeSound TypeSound Exp ind
+binder 20257:20259 <> exp:103
+R20274:20275 TypeSound TypeSound Ty ind
+binder 20269:20270 <> ty:104
+R20311:20318 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R20302:20304 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R20283:20297 TypeSound TypeSound type_of_program def
+R20299:20301 TypeSound <> exp:103 var
+R20305:20307 Corelib.Init.Datatypes <> inr constr
+R20309:20310 TypeSound <> ty:104 var
+R20344:20347 Corelib.Init.Logic <> ::type_scope:x_'<>'_x not
+R20319:20334 TypeSound TypeSound value_of_program def
+R20336:20339 TypeSound <> step:102 var
+R20341:20343 TypeSound <> exp:103 var
+R20348:20363 TypeSound TypeSound EvalRuntimeError constr
+R20418:20447 TypeSound TypeSound type_sound_value_or_gas_mutual thm
+R20418:20447 TypeSound TypeSound type_sound_value_or_gas_mutual thm
+R20477:20491 TypeSound TypeSound type_of_program def
+R20513:20528 TypeSound TypeSound value_of_program def
+R20561:20567 TypeSound TypeSound initEnv def
+R20569:20579 TypeSound TypeSound empty_tyenv def
+R20584:20602 TypeSound TypeSound type_of_program_env thm
+R20561:20567 TypeSound TypeSound initEnv def
+R20569:20579 TypeSound TypeSound empty_tyenv def
+R20584:20602 TypeSound TypeSound type_of_program_env thm
+prf 20747:20789 TypeSound type_sound_value_or_gas_assuming_no_runtime
+R20810:20812 Corelib.Init.Datatypes <> nat ind
+binder 20803:20806 <> step:105
+R20822:20824 TypeSound TypeSound Exp ind
+binder 20816:20818 <> exp:106
+R20833:20834 TypeSound TypeSound Ty ind
+binder 20828:20829 <> ty:107
+R20870:20877 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R20861:20863 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R20842:20856 TypeSound TypeSound type_of_program def
+R20858:20860 TypeSound <> exp:106 var
+R20864:20866 Corelib.Init.Datatypes <> inr constr
+R20868:20869 TypeSound <> ty:107 var
+R20923:20930 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R20903:20906 Corelib.Init.Logic <> ::type_scope:x_'<>'_x not
+R20878:20893 TypeSound TypeSound value_of_program def
+R20895:20898 TypeSound <> step:105 var
+R20900:20902 TypeSound <> exp:106 var
+R20907:20922 TypeSound TypeSound EvalRuntimeError constr
+R20931:20931 Corelib.Init.Logic <> ::type_scope:x_'\/'_x not
+R21004:21012 Corelib.Init.Logic <> ::type_scope:x_'\/'_x not
+R20932:20938 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R20940:20941 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+binder 20939:20939 <> v:108
+R20981:20984 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R20967:20969 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R20942:20957 TypeSound TypeSound value_of_program def
+R20959:20962 TypeSound <> step:105 var
+R20964:20966 TypeSound <> exp:106 var
+R20970:20978 TypeSound TypeSound EvalValue constr
+R20980:20980 TypeSound <> v:108 var
+R20985:20998 TypeSound TypeSound value_has_type ind
+R21000:21000 TypeSound <> v:108 var
+R21002:21003 TypeSound <> ty:107 var
+R21038:21040 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R21013:21028 TypeSound TypeSound value_of_program def
+R21030:21033 TypeSound <> step:105 var
+R21035:21037 TypeSound <> exp:106 var
+R21041:21056 TypeSound TypeSound EvalGasExhausted constr
+R21119:21134 TypeSound TypeSound value_of_program def
+R21119:21134 TypeSound TypeSound value_of_program def
+R21234:21243 TypeSound TypeSound type_sound thm
+R21234:21243 TypeSound TypeSound type_sound thm
+prf 21371:21393 TypeSound type_sound_value_or_gas
+R21414:21416 Corelib.Init.Datatypes <> nat ind
+binder 21407:21410 <> step:109
+R21426:21428 TypeSound TypeSound Exp ind
+binder 21420:21422 <> exp:110
+R21437:21438 TypeSound TypeSound Ty ind
+binder 21432:21433 <> ty:111
+R21474:21481 Corelib.Init.Logic <> ::type_scope:x_'->'_x not
+R21465:21467 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R21446:21460 TypeSound TypeSound type_of_program def
+R21462:21464 TypeSound <> exp:110 var
+R21468:21470 Corelib.Init.Datatypes <> inr constr
+R21472:21473 TypeSound <> ty:111 var
+R21482:21482 Corelib.Init.Logic <> ::type_scope:x_'\/'_x not
+R21555:21563 Corelib.Init.Logic <> ::type_scope:x_'\/'_x not
+R21483:21489 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+R21491:21492 Corelib.Init.Logic <> ::type_scope:'exists'_x_'..'_x_','_x not
+binder 21490:21490 <> v:112
+R21532:21535 Corelib.Init.Logic <> ::type_scope:x_'/\'_x not
+R21518:21520 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R21493:21508 TypeSound TypeSound value_of_program def
+R21510:21513 TypeSound <> step:109 var
+R21515:21517 TypeSound <> exp:110 var
+R21521:21529 TypeSound TypeSound EvalValue constr
+R21531:21531 TypeSound <> v:112 var
+R21536:21549 TypeSound TypeSound value_has_type ind
+R21551:21551 TypeSound <> v:112 var
+R21553:21554 TypeSound <> ty:111 var
+R21589:21591 Corelib.Init.Logic <> ::type_scope:x_'='_x not
+R21564:21579 TypeSound TypeSound value_of_program def
+R21581:21584 TypeSound <> step:109 var
+R21586:21588 TypeSound <> exp:110 var
+R21592:21607 TypeSound TypeSound EvalGasExhausted constr
+R21655:21697 TypeSound TypeSound type_sound_value_or_gas_assuming_no_runtime thm
+R21655:21697 TypeSound TypeSound type_sound_value_or_gas_assuming_no_runtime thm
+R21716:21742 TypeSound TypeSound type_sound_no_runtime_error thm
+R21716:21742 TypeSound TypeSound type_sound_no_runtime_error thm
+R21762:21770 TypeSound TypeSound <> mod
+R21781:21789 TypeSound TypeSound <> mod

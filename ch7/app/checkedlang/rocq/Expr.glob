@@ -1,0 +1,96 @@
+DIGEST b649f571a844dba7e96520e220e0c7a7
+FExpr
+R27:32 Stdlib.Strings.String <> <> lib
+R34:39 Stdlib.ZArith.ZArith <> <> lib
+mod 50:53 <> Expr
+def 114:123 Expr Identifier
+R128:133 Stdlib.Strings.String <> string ind
+ind 147:148 Expr Ty
+constr 162:166 Expr TyInt
+constr 170:175 Expr TyBool
+constr 179:183 Expr TyFun
+R196:197 Expr <> Ty:1 ind
+binder 186:188 <> dom:3
+binder 190:192 <> cod:4
+scheme 147:148 Expr Ty_rect
+scheme 147:148 Expr Ty_ind
+scheme 147:148 Expr Ty_rec
+scheme 147:148 Expr Ty_sind
+ind 212:214 Expr Exp
+constr 228:236 Expr Const_Exp
+constr 248:255 Expr Diff_Exp
+constr 273:282 Expr IsZero_Exp
+constr 296:301 Expr If_Exp
+constr 342:348 Expr Var_Exp
+constr 372:378 Expr Let_Exp
+constr 420:429 Expr Letrec_Exp
+constr 544:551 Expr Proc_Exp
+constr 605:612 Expr Call_Exp
+R243:243 Corelib.Numbers.BinNums <> Z ind
+binder 239:239 <> n:7
+R266:268 Expr <> Exp:5 ind
+binder 258:259 <> e1:8
+binder 261:262 <> e2:9
+R289:291 Expr <> Exp:5 ind
+binder 285:285 <> e:10
+R335:337 Expr <> Exp:5 ind
+binder 304:307 <> cond:11
+binder 309:319 <> then_branch:12
+binder 321:331 <> else_branch:13
+R358:367 Expr Expr Identifier def
+binder 351:354 <> name:14
+R388:397 Expr Expr Identifier def
+binder 381:384 <> name:15
+R413:415 Expr <> Exp:5 ind
+binder 401:404 <> exp1:16
+binder 406:409 <> body:17
+R444:445 Expr Expr Ty ind
+binder 432:440 <> result_ty:18
+R471:480 Expr Expr Identifier def
+binder 449:457 <> proc_name:19
+binder 459:467 <> bound_var:20
+R508:509 Expr Expr Ty ind
+binder 497:504 <> bound_ty:21
+R537:539 Expr <> Exp:5 ind
+binder 513:521 <> proc_body:22
+binder 523:533 <> letrec_body:23
+R562:571 Expr Expr Identifier def
+binder 554:558 <> param:24
+R586:587 Expr Expr Ty ind
+binder 575:582 <> param_ty:25
+R598:600 Expr <> Exp:5 ind
+binder 591:594 <> body:26
+R628:630 Expr <> Exp:5 ind
+binder 615:619 <> rator:27
+binder 621:624 <> rand:28
+scheme 212:214 Expr Exp_rect
+scheme 212:214 Expr Exp_ind
+scheme 212:214 Expr Exp_rec
+scheme 212:214 Expr Exp_sind
+def 646:652 Expr Program
+R657:659 Expr Expr Exp ind
+ind 673:675 Expr AST
+constr 689:694 Expr ASTExp
+constr 710:714 Expr ASTTy
+R703:705 Expr Expr Exp ind
+binder 697:699 <> exp:31
+R722:723 Expr Expr Ty ind
+binder 717:718 <> ty:32
+scheme 673:675 Expr AST_rect
+scheme 673:675 Expr AST_ind
+scheme 673:675 Expr AST_rec
+scheme 673:675 Expr AST_sind
+def 739:746 Expr toASTExp
+R755:757 Expr Expr Exp ind
+binder 749:751 <> exp:33
+R762:764 Expr Expr AST ind
+R769:774 Expr Expr ASTExp constr
+R776:778 Expr <> exp:33 var
+def 793:799 Expr toASTTy
+R807:808 Expr Expr Ty ind
+binder 802:803 <> ty:34
+R813:815 Expr Expr AST ind
+R820:824 Expr Expr ASTTy constr
+R826:827 Expr <> ty:34 var
+R835:838 Expr Expr <> mod
+R849:852 Expr Expr <> mod

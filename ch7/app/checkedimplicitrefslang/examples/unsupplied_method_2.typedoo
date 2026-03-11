@@ -1,0 +1,8 @@
+interface c1 
+  method int m1() 
+  
+class c2 extends object implements c1 
+  method int initialize () 0
+  method int m2 ()send self m1()
+  
+33

@@ -1,0 +1,60 @@
+DIGEST 59635edf9e846482763f3fc8b19de19d
+FTyEnv
+R67:72 Stdlib.Strings.String <> <> lib
+R74:77 Stdlib.Bool.Bool <> <> lib
+R95:98 Expr <> <> lib
+mod 109:113 <> TyEnv
+R141:144 Expr <> <> modtype
+mod 131:136 <> TyEnv.ExprNS
+R131:136 TyEnv TyEnv.ExprNS <> mod
+ind 207:211 TyEnv TyEnv
+constr 225:235 TyEnv Empty_tyenv
+constr 239:250 TyEnv Extend_tyenv
+R259:268 TyEnv TyEnv Identifier def
+binder 253:255 <> var:3
+R277:278 TyEnv TyEnv Ty ind
+binder 272:273 <> ty:4
+R294:298 TyEnv <> TyEnv:1 ind
+binder 282:290 <> saved_env:5
+scheme 207:211 TyEnv TyEnv_rect
+scheme 207:211 TyEnv TyEnv_ind
+scheme 207:211 TyEnv TyEnv_rec
+scheme 207:211 TyEnv TyEnv_sind
+def 314:324 TyEnv empty_tyenv
+R328:332 TyEnv TyEnv TyEnv ind
+R337:347 TyEnv TyEnv Empty_tyenv constr
+def 362:373 TyEnv extend_tyenv
+R382:391 TyEnv TyEnv Identifier def
+binder 376:378 <> var:6
+R400:401 TyEnv TyEnv Ty ind
+binder 395:396 <> ty:7
+R411:415 TyEnv TyEnv TyEnv ind
+binder 405:407 <> env:8
+R420:424 TyEnv TyEnv TyEnv ind
+R431:442 TyEnv TyEnv Extend_tyenv constr
+R444:446 TyEnv <> var:6 var
+R448:449 TyEnv <> ty:7 var
+R451:453 TyEnv <> env:8 var
+def 468:475 TyEnv TyResult
+R487:489 Corelib.Init.Datatypes <> ::type_scope:x_'+'_x not
+R481:486 Stdlib.Strings.String <> string ind
+R490:491 TyEnv TyEnv Ty ind
+def 510:520 TyEnv apply_tyenv
+R529:533 TyEnv TyEnv TyEnv ind
+binder 523:525 <> env:9
+R543:552 TyEnv TyEnv Identifier def
+binder 537:539 <> var:10
+R557:564 TyEnv TyEnv TyResult def
+R577:579 TyEnv <> env:9 var
+R590:600 TyEnv TyEnv Empty_tyenv constr
+R605:607 Corelib.Init.Datatypes <> inl constr
+R632:635 Stdlib.Strings.String <> ::string_scope:x_'++'_x not
+R636:638 TyEnv <> var:10 var
+R645:656 TyEnv TyEnv Extend_tyenv constr
+R699:708 Stdlib.Strings.String <> eqb def
+R710:712 TyEnv <> var:10 var
+R759:769 TyEnv <> apply_tyenv:11 def
+R781:783 TyEnv <> var:10 var
+R735:737 Corelib.Init.Datatypes <> inr constr
+R797:801 TyEnv TyEnv <> mod
+R812:816 TyEnv TyEnv <> mod

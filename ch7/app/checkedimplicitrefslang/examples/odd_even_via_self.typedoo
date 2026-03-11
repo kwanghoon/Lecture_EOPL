@@ -1,0 +1,6 @@
+class oddeven extends object 
+  method int initialize() 1
+  method int even(n : int) if zero?(n) then 1 else send self odd (-(n,1))
+  method int odd(n : int) if zero?(n) then 0 else send self even (-(n,1))
+  
+let o1 = new oddeven() in send o1 odd(13)
