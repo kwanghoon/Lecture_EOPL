@@ -1,0 +1,9 @@
+let x = 0
+in begin
+  try begin
+    set x = 10;
+    raise 0
+  end
+  catch (e) set x = 20;
+  x
+end

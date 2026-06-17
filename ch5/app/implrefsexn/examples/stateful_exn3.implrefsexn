@@ -1,0 +1,6 @@
+let x = 5
+in try begin
+  set x = -(x, 1);
+  raise x
+end
+catch (e) -(e, x)

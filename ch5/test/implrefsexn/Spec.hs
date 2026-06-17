@@ -118,5 +118,10 @@ testcases =
       ("text_example_0_1.exn", Just "\"[\"3,4\"]\""),
       ("text_example_0_2.exn", Just "\"[\"3,4\"]\""),
       ("text_example_1_1.exn", Just "0"),
-      ("text_example_1_2.exn", Just "-1")
+      ("text_example_1_2.exn", Just "-1"),
+
+      -- stateful exceptions 
+      ("stateful_exn1.implrefsexn", Just "10"),
+      ("stateful_exn2.implrefsexn", Just "20"),
+      ("stateful_exn3.implrefsexn", Just "0")
     ]

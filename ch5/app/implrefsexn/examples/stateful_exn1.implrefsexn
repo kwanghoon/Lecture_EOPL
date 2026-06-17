@@ -1,0 +1,7 @@
+let x = 0
+in try 
+    begin
+        set x = 10;
+        raise 0
+    end
+   catch (e) x
