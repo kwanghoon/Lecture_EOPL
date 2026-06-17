@@ -1,0 +1,11 @@
+let index 
+            = proc (n)
+               letrec inner2 (lst)
+                  = if null?(lst) then raise 99       
+                    else if zero?(-(car(lst),n)) then 0
+                    else -((inner2 cdr(lst)), -1)
+               in proc (lst)
+                   try (inner2 lst)
+                   catch (x) -1
+       in ((index 5) list(2, 3))
+

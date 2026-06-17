@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - yapb >= 0.2.3
 - hspec
+- containers
 
 library:
   source-dirs: src
@@ -58,6 +59,16 @@ executables:
     dependencies:
     - ch5
 
+  implrefsexn-exe:
+    main:                Main.hs
+    source-dirs:         app/implrefsexn
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - ch5    
+
 tests:
   letreccps-test:
     main:                Spec.hs
@@ -89,6 +100,18 @@ tests:
     source-dirs:         
     - test/threads
     - app/threads
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - ch5    
+
+  implrefsexn-test:
+    main:                Spec.hs
+    source-dirs:         
+    - test/implrefsexn
+    - app/implrefsexn
     ghc-options:
     - -threaded
     - -rtsopts

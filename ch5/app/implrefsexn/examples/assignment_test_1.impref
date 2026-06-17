@@ -1,0 +1,2 @@
+let x = 17
+in begin set x = 27; x end
