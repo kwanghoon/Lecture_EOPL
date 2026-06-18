@@ -39,6 +39,9 @@ dependencies:
 library:
   source-dirs: src
 
+extra-source-files:
+  - app/*/examples/*    
+
 executables:
   classes-exe:
     main:                Main.hs
@@ -64,7 +67,17 @@ executables:
 tests:
   classes-test:
     main:                Spec.hs
-    other-modules: []
+    other-modules:
+    - TypeCheckerTest
+    - EnvStore
+    - Expr
+    - Interp
+    - Lexer
+    - MainUtil
+    - Parser
+    - Ref
+    - Testcase
+    - Token
     source-dirs:         
     - test/classes
     - app/classes
@@ -76,7 +89,19 @@ tests:
     - ch9
   typedoo-test:
     main:                Spec.hs
-    other-modules: []
+    other-modules:
+    - TypeCheckerTest
+    - EnvStore
+    - Expr
+    - Interp
+    - Lexer
+    - MainUtil
+    - Parser
+    - Ref
+    - Testcase
+    - Token
+    - TyEnv
+    - TypeCheck
     source-dirs:         
     - test/typedoo
     - app/typedoo

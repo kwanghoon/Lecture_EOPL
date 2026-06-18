@@ -40,6 +40,11 @@ dependencies:
 library:
   source-dirs: src
 
+extra-source-files:
+  - app/*/examples/*   
+  - app/checkedlang/rocq/*.v
+  - app/checkedlang/rocq/readme.md
+
 executables:
   checkedlang-exe:
     main:                Main.hs

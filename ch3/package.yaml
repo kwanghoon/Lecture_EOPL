@@ -28,6 +28,9 @@ library:
   source-dirs: 
    - src
 
+extra-source-files:
+  - app/*/examples/*
+
 executables:
   letlang-exe:
     main:                Main.lhs

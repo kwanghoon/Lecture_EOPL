@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.38.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -16,8 +16,93 @@ license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
-    README.md
-    ChangeLog.md
+    app/explicitrefslang/examples/assignment_test_1.expref
+    app/explicitrefslang/examples/begin_test_1.expref
+    app/explicitrefslang/examples/begin_test_1.letrec_ext
+    app/explicitrefslang/examples/chains_1.expref
+    app/explicitrefslang/examples/check_shadowing_in_body.let
+    app/explicitrefslang/examples/check_shadowing_in_rhs.let
+    app/explicitrefslang/examples/eval_let_body.let
+    app/explicitrefslang/examples/eval_let_rhs.let
+    app/explicitrefslang/examples/even_odd_via_set_1.expref
+    app/explicitrefslang/examples/gensym_test_1.expref
+    app/explicitrefslang/examples/gensym_test_2.expref
+    app/explicitrefslang/examples/ho_nested_letrecs.letrec
+    app/explicitrefslang/examples/if_eval_test_false.let
+    app/explicitrefslang/examples/if_eval_test_false_2.let
+    app/explicitrefslang/examples/if_eval_test_true.let
+    app/explicitrefslang/examples/if_eval_test_true_2.let
+    app/explicitrefslang/examples/if_false.let
+    app/explicitrefslang/examples/if_true.let
+    app/explicitrefslang/examples/negative_const.let
+    app/explicitrefslang/examples/nested_arith_left.let
+    app/explicitrefslang/examples/nested_arith_right.let
+    app/explicitrefslang/examples/nested_procs_1.proc
+    app/explicitrefslang/examples/nested_procs_2.proc
+    app/explicitrefslang/examples/no_bool_to_diff_1.let
+    app/explicitrefslang/examples/no_bool_to_diff_2.let
+    app/explicitrefslang/examples/no_int_to_if.let
+    app/explicitrefslang/examples/positive_const.let
+    app/explicitrefslang/examples/show_allocation_1.expref
+    app/explicitrefslang/examples/simple_app_1.proc
+    app/explicitrefslang/examples/simple_app_2.proc
+    app/explicitrefslang/examples/simple_app_3.proc
+    app/explicitrefslang/examples/simple_arith_1.let
+    app/explicitrefslang/examples/simple_let_1.let
+    app/explicitrefslang/examples/simple_letrec_1.letrec
+    app/explicitrefslang/examples/simple_letrec_2.letrec
+    app/explicitrefslang/examples/simple_letrec_3.letrec
+    app/explicitrefslang/examples/simple_nested_let.let
+    app/explicitrefslang/examples/simple_store_test_1.expref
+    app/explicitrefslang/examples/test_unbound_var_1.let
+    app/explicitrefslang/examples/test_unbound_var_2.let
+    app/explicitrefslang/examples/test_var_1.let
+    app/explicitrefslang/examples/test_var_2.let
+    app/explicitrefslang/examples/test_var_3.let
+    app/explicitrefslang/examples/y_combinator_1.proc
+    app/implicitrefslang/examples/apply_proc_in_rator_pos.proc
+    app/implicitrefslang/examples/apply_simple_proc.proc
+    app/implicitrefslang/examples/assignment_test_1.impref
+    app/implicitrefslang/examples/begin_test_1.letrec_ext
+    app/implicitrefslang/examples/check_shadowing_in_body.let
+    app/implicitrefslang/examples/check_shadowing_in_rhs.let
+    app/implicitrefslang/examples/eval_let_body.let
+    app/implicitrefslang/examples/eval_let_rhs.let
+    app/implicitrefslang/examples/even_odd_via_set_1.impref
+    app/implicitrefslang/examples/example_for_book_1.impref
+    app/implicitrefslang/examples/gensym_test_1.impref
+    app/implicitrefslang/examples/ho_nested_letrecs.letrec
+    app/implicitrefslang/examples/if_eval_test_false.let
+    app/implicitrefslang/examples/if_eval_test_false_2.let
+    app/implicitrefslang/examples/if_eval_test_true.let
+    app/implicitrefslang/examples/if_eval_test_true_2.let
+    app/implicitrefslang/examples/if_false.let
+    app/implicitrefslang/examples/if_true.let
+    app/implicitrefslang/examples/let_to_proc_1.proc
+    app/implicitrefslang/examples/negative_const.let
+    app/implicitrefslang/examples/nested_arith_left.let
+    app/implicitrefslang/examples/nested_arith_right.let
+    app/implicitrefslang/examples/nested_procs_1.proc
+    app/implicitrefslang/examples/nested_procs_2.proc
+    app/implicitrefslang/examples/no_bool_to_diff_1.let
+    app/implicitrefslang/examples/no_bool_to_diff_2.let
+    app/implicitrefslang/examples/no_int_to_if.let
+    app/implicitrefslang/examples/positive_const.let
+    app/implicitrefslang/examples/simple_app_1.proc
+    app/implicitrefslang/examples/simple_app_2.proc
+    app/implicitrefslang/examples/simple_app_3.proc
+    app/implicitrefslang/examples/simple_arith_1.let
+    app/implicitrefslang/examples/simple_let_1.let
+    app/implicitrefslang/examples/simple_letrec_1.letrec
+    app/implicitrefslang/examples/simple_letrec_2.letrec
+    app/implicitrefslang/examples/simple_letrec_3.letrec
+    app/implicitrefslang/examples/simple_nested_let.let
+    app/implicitrefslang/examples/test_unbound_var_1.let
+    app/implicitrefslang/examples/test_unbound_var_2.let
+    app/implicitrefslang/examples/test_var_1.let
+    app/implicitrefslang/examples/test_var_2.let
+    app/implicitrefslang/examples/test_var_3.let
+    app/implicitrefslang/examples/y_combinator_1.proc
 
 source-repository head
   type: git

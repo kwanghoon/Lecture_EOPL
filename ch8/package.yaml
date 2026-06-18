@@ -40,12 +40,16 @@ dependencies:
 library:
   source-dirs: src
 
+extra-source-files:
+  - app/*/examples/*    
+
 executables:
   simplemodules-exe:
     main:                Main.hs
     source-dirs:         
     - app/simplemodules
     ghc-options:
+    - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
@@ -55,6 +59,7 @@ executables:
     source-dirs:         
     - app/opaquetypes
     ghc-options:
+    - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
@@ -64,6 +69,7 @@ executables:
     source-dirs:         
     - app/procmodules
     ghc-options:
+    - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
@@ -76,6 +82,7 @@ tests:
     - test/simplemodules
     - app/simplemodules
     ghc-options:
+    - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
@@ -86,6 +93,7 @@ tests:
     - test/opaquetypes
     - app/opaquetypes
     ghc-options:
+    - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
@@ -96,6 +104,7 @@ tests:
     - test/procmodules
     - app/procmodules
     ghc-options:
+    - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:

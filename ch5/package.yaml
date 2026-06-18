@@ -28,6 +28,9 @@ dependencies:
 library:
   source-dirs: src
 
+extra-source-files:
+  - app/*/examples/*  
+  
 executables:
   letreccps-exe:
     main:                Main.hs

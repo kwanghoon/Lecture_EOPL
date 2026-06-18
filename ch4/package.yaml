@@ -27,6 +27,9 @@ dependencies:
 library:
   source-dirs: src
 
+extra-source-files:
+  - app/*/examples/*  
+
 executables:
   expref-exe:
     main:                Main.hs

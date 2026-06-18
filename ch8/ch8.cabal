@@ -16,8 +16,310 @@ license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
-    README.md
-    CHANGELOG.md
+    app/opaquetypes/examples/apply_proc_in_rator_pos.checked
+    app/opaquetypes/examples/apply_simple_proc.checked
+    app/opaquetypes/examples/check_shadowing_in_body.let
+    app/opaquetypes/examples/check_shadowing_in_rhs.let
+    app/opaquetypes/examples/eval_let_body.let
+    app/opaquetypes/examples/eval_let_rhs.let
+    app/opaquetypes/examples/example_8_10.opaque
+    app/opaquetypes/examples/example_8_10a.opaque
+    app/opaquetypes/examples/example_8_11.opaque
+    app/opaquetypes/examples/example_8_12.opaque
+    app/opaquetypes/examples/example_8_13.opaque
+    app/opaquetypes/examples/example_8_14.opaque
+    app/opaquetypes/examples/example_8_15.opaque
+    app/opaquetypes/examples/example_8_15a.opaque
+    app/opaquetypes/examples/example_8_2.simpmod
+    app/opaquetypes/examples/example_8_3.simpmod
+    app/opaquetypes/examples/example_8_4.simpmod
+    app/opaquetypes/examples/example_8_5_a.simpmod
+    app/opaquetypes/examples/example_8_5_b.simpmod
+    app/opaquetypes/examples/example_8_6.opaque
+    app/opaquetypes/examples/example_8_7.opaque
+    app/opaquetypes/examples/example_8_8.opaque
+    app/opaquetypes/examples/example_8_9.opaque
+    app/opaquetypes/examples/exercise_8_14.opaque
+    app/opaquetypes/examples/ho_nested_letrecs.checked
+    app/opaquetypes/examples/if_eval_test_false.let
+    app/opaquetypes/examples/if_eval_test_false_2.let
+    app/opaquetypes/examples/if_eval_test_true.let
+    app/opaquetypes/examples/if_eval_test_true_2.let
+    app/opaquetypes/examples/if_false.let
+    app/opaquetypes/examples/if_true.let
+    app/opaquetypes/examples/interp_ignores_type_info_in_proc.checked
+    app/opaquetypes/examples/let_to_proc_1.checked
+    app/opaquetypes/examples/lift_type_from_scope_0_01.opaque
+    app/opaquetypes/examples/lift_type_from_scope_0_1.opaque
+    app/opaquetypes/examples/lift_type_from_scope_1.opaque
+    app/opaquetypes/examples/lift_type_from_scope_2.opaque
+    app/opaquetypes/examples/lift_type_from_scope_3.opaque
+    app/opaquetypes/examples/modules_14.opaque
+    app/opaquetypes/examples/modules_14_1.opaque
+    app/opaquetypes/examples/modules_14b.opaque
+    app/opaquetypes/examples/modules_check_iface_subtyping_1.simpmod
+    app/opaquetypes/examples/modules_check_letstar_1.simpmod
+    app/opaquetypes/examples/modules_check_letstar_2_0.simpmod
+    app/opaquetypes/examples/modules_check_letstar_2_05.simpmod
+    app/opaquetypes/examples/modules_check_letstar_2_1.simpmod
+    app/opaquetypes/examples/modules_check_letstar_2_2.simpmod
+    app/opaquetypes/examples/modules_check_polymorphism_1.opaque
+    app/opaquetypes/examples/modules_check_polymorphism_1a.opaque
+    app/opaquetypes/examples/modules_check_polymorphism_1b.opaque
+    app/opaquetypes/examples/modules_check_shadowing_1.opaque
+    app/opaquetypes/examples/modules_check_shadowing_1_8.opaque
+    app/opaquetypes/examples/modules_check_shadowing_1_8a.opaque
+    app/opaquetypes/examples/modules_dans_simplest.simpmod
+    app/opaquetypes/examples/modules_declare_and_ignore.simpmod
+    app/opaquetypes/examples/modules_export_abs_type_1.opaque
+    app/opaquetypes/examples/modules_extra_types_are_ok_11.opaque
+    app/opaquetypes/examples/modules_extra_types_are_ok_12.opaque
+    app/opaquetypes/examples/modules_extra_types_are_ok_13.opaque
+    app/opaquetypes/examples/modules_extra_vals_are_ok_1.simpmod
+    app/opaquetypes/examples/modules_extra_vals_are_ok_2.simpmod
+    app/opaquetypes/examples/modules_mybool_1.opaque
+    app/opaquetypes/examples/modules_mybool_1a.opaque
+    app/opaquetypes/examples/modules_mybool_1b.opaque
+    app/opaquetypes/examples/modules_myints_0_1.opaque
+    app/opaquetypes/examples/modules_myints_0_20.opaque
+    app/opaquetypes/examples/modules_myints_0_2a.opaque
+    app/opaquetypes/examples/modules_take_bad_value.simpmod
+    app/opaquetypes/examples/modules_take_from_ints_0_1.opaque
+    app/opaquetypes/examples/modules_take_from_ints_0_1_91.opaque
+    app/opaquetypes/examples/modules_take_from_ints_0_1_91a.opaque
+    app/opaquetypes/examples/modules_take_from_ints_0_1a.opaque
+    app/opaquetypes/examples/modules_take_from_ints_0_2.opaque
+    app/opaquetypes/examples/modules_take_from_ints_1.opaque
+    app/opaquetypes/examples/modules_take_from_ints_1a.opaque
+    app/opaquetypes/examples/modules_take_from_ints_1b.opaque
+    app/opaquetypes/examples/modules_take_from_ints_2.opaque
+    app/opaquetypes/examples/modules_take_from_ints_2_bad_1.opaque
+    app/opaquetypes/examples/modules_take_from_ints_3.opaque
+    app/opaquetypes/examples/modules_take_from_parameterized_module.simpmod
+    app/opaquetypes/examples/modules_take_one_value.simpmod
+    app/opaquetypes/examples/modules_take_one_value_but_interface_bad.simpmod
+    app/opaquetypes/examples/modules_take_one_value_no_import.simpmod
+    app/opaquetypes/examples/modules_two_vals.simpmod
+    app/opaquetypes/examples/modules_two_vals_bad_interface_1.simpmod
+    app/opaquetypes/examples/modules_two_vals_bad_interface_14.simpmod
+    app/opaquetypes/examples/negative_const.let
+    app/opaquetypes/examples/nested_arith_left.let
+    app/opaquetypes/examples/nested_arith_right.let
+    app/opaquetypes/examples/nested_procs_1.checked
+    app/opaquetypes/examples/nested_procs_2.checked
+    app/opaquetypes/examples/no_bool_to_diff_1.let
+    app/opaquetypes/examples/no_bool_to_diff_2.let
+    app/opaquetypes/examples/no_int_to_if.let
+    app/opaquetypes/examples/positive_const.let
+    app/opaquetypes/examples/simple_arith_1.let
+    app/opaquetypes/examples/simple_arith_var_1.let
+    app/opaquetypes/examples/simple_let_1.let
+    app/opaquetypes/examples/simple_letrec_1.checked
+    app/opaquetypes/examples/simple_letrec_2.checked
+    app/opaquetypes/examples/simple_letrec_3.checked
+    app/opaquetypes/examples/simple_nested_let.let
+    app/opaquetypes/examples/test_unbound_var_1.let
+    app/opaquetypes/examples/test_unbound_var_2.let
+    app/opaquetypes/examples/test_var_1.let
+    app/opaquetypes/examples/test_var_2.let
+    app/opaquetypes/examples/test_var_3.let
+    app/opaquetypes/examples/transparent_0.opaque
+    app/opaquetypes/examples/transparent_1.opaque
+    app/opaquetypes/examples/transparent_2.opaque
+    app/opaquetypes/examples/y_combinator_1.checked
+    app/procmodules/examples/alice_bob_and_charlie.procmod
+    app/procmodules/examples/apply_proc_in_rator_pos.checked
+    app/procmodules/examples/apply_simple_proc.checked
+    app/procmodules/examples/check_shadowing_in_body.let
+    app/procmodules/examples/check_shadowing_in_rhs.let
+    app/procmodules/examples/diamond_1.procmod
+    app/procmodules/examples/eval_let_body.let
+    app/procmodules/examples/eval_let_rhs.let
+    app/procmodules/examples/example_8_10.opaque
+    app/procmodules/examples/example_8_10a.opaque
+    app/procmodules/examples/example_8_11.opaque
+    app/procmodules/examples/example_8_12.opaque
+    app/procmodules/examples/example_8_13.opaque
+    app/procmodules/examples/example_8_14.opaque
+    app/procmodules/examples/example_8_15.opaque
+    app/procmodules/examples/example_8_15.procmod
+    app/procmodules/examples/example_8_15a.opaque
+    app/procmodules/examples/example_8_16.procmod
+    app/procmodules/examples/example_8_2.simpmod
+    app/procmodules/examples/example_8_3.simpmod
+    app/procmodules/examples/example_8_4.simpmod
+    app/procmodules/examples/example_8_5_a.simpmod
+    app/procmodules/examples/example_8_5_b.simpmod
+    app/procmodules/examples/example_8_6.opaque
+    app/procmodules/examples/example_8_7.opaque
+    app/procmodules/examples/example_8_8.opaque
+    app/procmodules/examples/example_8_9.opaque
+    app/procmodules/examples/exercise_8_14.opaque
+    app/procmodules/examples/ho_nested_letrecs.checked
+    app/procmodules/examples/if_eval_test_false.let
+    app/procmodules/examples/if_eval_test_false_2.let
+    app/procmodules/examples/if_eval_test_true.let
+    app/procmodules/examples/if_eval_test_true_2.let
+    app/procmodules/examples/if_false.let
+    app/procmodules/examples/if_true.let
+    app/procmodules/examples/interp_ignores_type_info_in_proc.checked
+    app/procmodules/examples/let_to_proc_1.checked
+    app/procmodules/examples/lift_type_from_scope_0_01.opaque
+    app/procmodules/examples/lift_type_from_scope_0_1.opaque
+    app/procmodules/examples/lift_type_from_scope_1.opaque
+    app/procmodules/examples/lift_type_from_scope_2.opaque
+    app/procmodules/examples/lift_type_from_scope_3.opaque
+    app/procmodules/examples/module_extra_types_are_ok_11.opaque
+    app/procmodules/examples/module_extra_types_are_ok_12.opaque
+    app/procmodules/examples/module_extra_types_are_ok_13.opaque
+    app/procmodules/examples/modules_14.opaque
+    app/procmodules/examples/modules_14_1.opaque
+    app/procmodules/examples/modules_14b.opaque
+    app/procmodules/examples/modules_add_double_1.procmod
+    app/procmodules/examples/modules_apply_param_module_0_1.procmod
+    app/procmodules/examples/modules_apply_param_module_1.procmod
+    app/procmodules/examples/modules_apply_param_module_1a.procmod
+    app/procmodules/examples/modules_apply_param_module_3.procmod
+    app/procmodules/examples/modules_apply_param_module_4.procmod
+    app/procmodules/examples/modules_check_iface_subtyping_1.simpmod
+    app/procmodules/examples/modules_check_letstar_1.simpmod
+    app/procmodules/examples/modules_check_letstar_2_0.simpmod
+    app/procmodules/examples/modules_check_letstar_2_05.simpmod
+    app/procmodules/examples/modules_check_letstar_2_1.simpmod
+    app/procmodules/examples/modules_check_letstar_2_2.simpmod
+    app/procmodules/examples/modules_check_parameterized_1.procmod
+    app/procmodules/examples/modules_check_parameterized_2.procmod
+    app/procmodules/examples/modules_check_parameterized_bad_argument.procmod
+    app/procmodules/examples/modules_check_parameterized_bad_interface_1.procmod
+    app/procmodules/examples/modules_check_polymorphism_1.opaque
+    app/procmodules/examples/modules_check_polymorphism_1a.opaque
+    app/procmodules/examples/modules_check_polymorphism_1b.opaque
+    app/procmodules/examples/modules_check_shadowing_1.opaque
+    app/procmodules/examples/modules_check_shadowing_1_8.opaque
+    app/procmodules/examples/modules_check_shadowing_1_8a.opaque
+    app/procmodules/examples/modules_dans_simplest.simpmod
+    app/procmodules/examples/modules_declare_and_ignore.simpmod
+    app/procmodules/examples/modules_export_abs_type_1.opaque
+    app/procmodules/examples/modules_extra_types_are_ok_11.opaque
+    app/procmodules/examples/modules_extra_types_are_ok_12.opaque
+    app/procmodules/examples/modules_extra_types_are_ok_13.opaque
+    app/procmodules/examples/modules_extra_vals_are_ok_1.simpmod
+    app/procmodules/examples/modules_extra_vals_are_ok_2.simpmod
+    app/procmodules/examples/modules_mybool_1.opaque
+    app/procmodules/examples/modules_mybool_1a.opaque
+    app/procmodules/examples/modules_mybool_1b.opaque
+    app/procmodules/examples/modules_myints_0_1.opaque
+    app/procmodules/examples/modules_myints_0_20.opaque
+    app/procmodules/examples/modules_myints_0_2a.opaque
+    app/procmodules/examples/modules_myints_9_1.opaque
+    app/procmodules/examples/modules_take_bad_value.simpmod
+    app/procmodules/examples/modules_take_from_ints_0_1.opaque
+    app/procmodules/examples/modules_take_from_ints_0_1_91.opaque
+    app/procmodules/examples/modules_take_from_ints_0_1_91a.opaque
+    app/procmodules/examples/modules_take_from_ints_0_1a.opaque
+    app/procmodules/examples/modules_take_from_ints_0_2.opaque
+    app/procmodules/examples/modules_take_from_ints_1.opaque
+    app/procmodules/examples/modules_take_from_ints_1a.opaque
+    app/procmodules/examples/modules_take_from_ints_1b.opaque
+    app/procmodules/examples/modules_take_from_ints_2.opaque
+    app/procmodules/examples/modules_take_from_ints_2_bad_1.opaque
+    app/procmodules/examples/modules_take_from_ints_3.opaque
+    app/procmodules/examples/modules_take_from_parameterized_module.simpmod
+    app/procmodules/examples/modules_take_one_value.procmod
+    app/procmodules/examples/modules_take_one_value.simpmod
+    app/procmodules/examples/modules_take_one_value_but_interface_bad.simpmod
+    app/procmodules/examples/modules_take_one_value_no_import.simpmod
+    app/procmodules/examples/modules_test_curry1.procmod
+    app/procmodules/examples/modules_test_curry2.procmod
+    app/procmodules/examples/modules_two_vals.simpmod
+    app/procmodules/examples/modules_two_vals_bad_interface_1.simpmod
+    app/procmodules/examples/modules_two_vals_bad_interface_14.simpmod
+    app/procmodules/examples/negative_const.let
+    app/procmodules/examples/nested_arith_left.let
+    app/procmodules/examples/nested_arith_right.let
+    app/procmodules/examples/nested_procs_1.checked
+    app/procmodules/examples/nested_procs_2.checked
+    app/procmodules/examples/no_bool_to_diff_1.let
+    app/procmodules/examples/no_bool_to_diff_2.let
+    app/procmodules/examples/no_int_to_if.let
+    app/procmodules/examples/pass_around_ho_module_1.procmod
+    app/procmodules/examples/positive_const.let
+    app/procmodules/examples/simple_arith_1.let
+    app/procmodules/examples/simple_arith_var_1.let
+    app/procmodules/examples/simple_let_1.let
+    app/procmodules/examples/simple_letrec_1.checked
+    app/procmodules/examples/simple_letrec_2.checked
+    app/procmodules/examples/simple_letrec_3.checked
+    app/procmodules/examples/simple_nested_let.let
+    app/procmodules/examples/test_unbound_var_1.let
+    app/procmodules/examples/test_unbound_var_2.let
+    app/procmodules/examples/test_var_1.let
+    app/procmodules/examples/test_var_2.let
+    app/procmodules/examples/test_var_3.let
+    app/procmodules/examples/transparent_0.opaque
+    app/procmodules/examples/transparent_1.opaque
+    app/procmodules/examples/transparent_2.opaque
+    app/procmodules/examples/y_combinator_1.checked
+    app/simplemodules/examples/apply_proc_in_rator_pos.checked
+    app/simplemodules/examples/apply_simple_proc.checked
+    app/simplemodules/examples/check_shadowing_in_body.let
+    app/simplemodules/examples/check_shadowing_in_rhs.let
+    app/simplemodules/examples/eval_let_body.let
+    app/simplemodules/examples/eval_let_rhs.let
+    app/simplemodules/examples/example_8_2.simpmod
+    app/simplemodules/examples/example_8_3.simpmod
+    app/simplemodules/examples/example_8_4.simpmod
+    app/simplemodules/examples/example_8_5_a.simpmod
+    app/simplemodules/examples/example_8_5_b.simpmod
+    app/simplemodules/examples/ho_nested_letrecs.checked
+    app/simplemodules/examples/if_eval_test_false.let
+    app/simplemodules/examples/if_eval_test_false_2.let
+    app/simplemodules/examples/if_eval_test_true.let
+    app/simplemodules/examples/if_eval_test_true_2.let
+    app/simplemodules/examples/if_false.let
+    app/simplemodules/examples/if_true.let
+    app/simplemodules/examples/interp_ignores_type_info_in_proc.checked
+    app/simplemodules/examples/let_to_proc_1.checked
+    app/simplemodules/examples/modules_check_iface_subtyping_1.simpmod
+    app/simplemodules/examples/modules_check_letstar_1.simpmod
+    app/simplemodules/examples/modules_check_letstar_2_0.simpmod
+    app/simplemodules/examples/modules_check_letstar_2_05.simpmod
+    app/simplemodules/examples/modules_check_letstar_2_1.simpmod
+    app/simplemodules/examples/modules_check_letstar_2_2.simpmod
+    app/simplemodules/examples/modules_dans_simplest.simpmod
+    app/simplemodules/examples/modules_declare_and_ignore.simpmod
+    app/simplemodules/examples/modules_extra_vals_are_ok_1.simpmod
+    app/simplemodules/examples/modules_extra_vals_are_ok_2.simpmod
+    app/simplemodules/examples/modules_take_bad_value.simpmod
+    app/simplemodules/examples/modules_take_from_parameterized_module.procmod
+    app/simplemodules/examples/modules_take_one_value.simpmod
+    app/simplemodules/examples/modules_take_one_value_but_interface_bad.simpmod
+    app/simplemodules/examples/modules_take_one_value_no_import.simpmod
+    app/simplemodules/examples/modules_two_vals.simpmod
+    app/simplemodules/examples/modules_two_vals_bad_interface_1.simpmod
+    app/simplemodules/examples/modules_two_vals_bad_interface_14.simpmod
+    app/simplemodules/examples/negative_const.let
+    app/simplemodules/examples/nested_arith_left.let
+    app/simplemodules/examples/nested_arith_right.let
+    app/simplemodules/examples/nested_procs_1.checked
+    app/simplemodules/examples/nested_procs_2.checked
+    app/simplemodules/examples/no_bool_to_diff_1.let
+    app/simplemodules/examples/no_bool_to_diff_2.let
+    app/simplemodules/examples/no_int_to_if.let
+    app/simplemodules/examples/positive_const.let
+    app/simplemodules/examples/simple_arith_1.let
+    app/simplemodules/examples/simple_arith_var_1.let
+    app/simplemodules/examples/simple_let_1.let
+    app/simplemodules/examples/simple_letrec_1.checked
+    app/simplemodules/examples/simple_letrec_2.checked
+    app/simplemodules/examples/simple_letrec_3.checked
+    app/simplemodules/examples/simple_nested_let.let
+    app/simplemodules/examples/test_unbound_var_1.let
+    app/simplemodules/examples/test_unbound_var_2.let
+    app/simplemodules/examples/test_var_1.let
+    app/simplemodules/examples/test_var_2.let
+    app/simplemodules/examples/test_var_3.let
+    app/simplemodules/examples/y_combinator_1.checked
 
 source-repository head
   type: git
@@ -55,7 +357,7 @@ executable opaquetypes-exe
       Paths_ch8
   hs-source-dirs:
       app/opaquetypes
-  ghc-options: -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
@@ -82,7 +384,7 @@ executable procmodules-exe
       Paths_ch8
   hs-source-dirs:
       app/procmodules
-  ghc-options: -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
@@ -108,7 +410,7 @@ executable simplemodules-exe
       Paths_ch8
   hs-source-dirs:
       app/simplemodules
-  ghc-options: -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
@@ -139,7 +441,7 @@ test-suite opaquetypes-test
   hs-source-dirs:
       test/opaquetypes
       app/opaquetypes
-  ghc-options: -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
@@ -170,7 +472,7 @@ test-suite procmodules-test
   hs-source-dirs:
       test/procmodules
       app/procmodules
-  ghc-options: -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
@@ -200,7 +502,7 @@ test-suite simplemodules-test
   hs-source-dirs:
       test/simplemodules
       app/simplemodules
-  ghc-options: -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , ch8
