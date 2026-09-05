@@ -1,4 +1,4 @@
-# EOPL Rewritten in [Haskell](https://www.haskell.org/)
+# EOPL in [Haskell](https://www.haskell.org/)
  - Statically Typed Purely Functional Definitional Interpreters for [*Essentials of Programming Languages*](https://github.com/mwand/eopl3) [(pdf)](https://github.com/kwanghoon/Lecture_EOPL/blob/master/doc/aplas2026extended.pdf)
 
 ### 개요
