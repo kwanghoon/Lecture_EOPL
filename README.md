@@ -1,5 +1,5 @@
 # EOPL Rewritten in [Haskell](https://www.haskell.org/)
- - Statically Typed Purely Functional Definitional Interpreters for *[Essentials of Programming Languages](https://github.com/mwand/eopl3) * [(pdf)](https://github.com/kwanghoon/Lecture_EOPL/blob/master/doc/aplas2026extended.pdf)
+ - Statically Typed Purely Functional Definitional Interpreters for [*Essentials of Programming Languages*](https://github.com/mwand/eopl3) [(pdf)](https://github.com/kwanghoon/Lecture_EOPL/blob/master/doc/aplas2026extended.pdf)
 
 ### 개요
 - [발표 자료](https://docs.google.com/presentation/d/1lfnezkz8Yi_seoaCpannYkEit2ozsmLCDcFeyRlcWSU/edit?usp=sharing)
