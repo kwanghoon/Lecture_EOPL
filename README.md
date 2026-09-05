@@ -2,13 +2,13 @@
 
  - [Essentials of Programming Languages](https://github.com/mwand/eopl3) 
  - Rewritten in [Haskell](https://www.haskell.org/)
+ - Statically Typed Purely Functional Definitional Interpreters for *Essentials of Programming Languages* [(pdf)](https://github.com/kwanghoon/Lecture_EOPL/blob/master/doc/aplas2026extended.pdf)
 
 ### 개요
 - [발표 자료](https://docs.google.com/presentation/d/1lfnezkz8Yi_seoaCpannYkEit2ozsmLCDcFeyRlcWSU/edit?usp=sharing)
 - [발표 동영상](https://youtu.be/vFCDz5jQKhU?si=AxrhyUXl1BFLDNCr)
 - [강의 동영상: Ch1,2,3,4,5,7](https://www.youtube.com/playlist?list=PLhbaMvGyp99982CpQoam-z9tqJ6qi_hw0)
 - [연습 Lecture_EOPL_Exercise](https://github.com/kwanghoon/Lecture_EOPL_Exercise)
-
 
 ### Preliminaries
 
@@ -67,9 +67,6 @@
  - CLASSES: An untyped object-oriented language (based on IMPLICIT-REFS)
  - TYPED-OO: A typed object-oriented language (based on CLASSES)
 
-## Presentations
-
- - Statically Typed Purely Functional Definitional Interpreters for *Essentials of Programming Languages* [(pdf)](https://github.com/kwanghoon/Lecture_EOPL/blob/master/doc/aplas2026extended.pdf)
 
 ## Contributors
 - Kwanghoon Choi
