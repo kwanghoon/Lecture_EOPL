@@ -67,6 +67,10 @@
  - CLASSES: An untyped object-oriented language (based on IMPLICIT-REFS)
  - TYPED-OO: A typed object-oriented language (based on CLASSES)
 
+## Presentations
+
+ - [Statically Typed Purely Functional Definitional Interpreters for Essentials of Programming Languages](https://github.com/kwanghoon/Lecture_EOPL/doc/aplas2026extended.pdf)
+
 ## Contributors
 - Kwanghoon Choi
 - Hyeonjin Lee
