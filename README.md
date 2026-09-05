@@ -69,7 +69,7 @@
 
 ## Presentations
 
- - [Statically Typed Purely Functional Definitional Interpreters for Essentials of Programming Languages](https://github.com/kwanghoon/Lecture_EOPL/doc/aplas2026extended.pdf)
+ - Statically Typed Purely Functional Definitional Interpreters for *Essentials of Programming Languages*[pdf](https://github.com/kwanghoon/Lecture_EOPL/blob/master/doc/aplas2026extended.pdf)
 
 ## Contributors
 - Kwanghoon Choi
