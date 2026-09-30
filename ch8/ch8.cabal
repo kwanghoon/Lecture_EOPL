@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.38.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -16,6 +16,8 @@ license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
+    README.md
+    CHANGELOG.md
     app/opaquetypes/examples/apply_proc_in_rator_pos.checked
     app/opaquetypes/examples/apply_simple_proc.checked
     app/opaquetypes/examples/check_shadowing_in_body.let

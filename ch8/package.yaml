@@ -9,6 +9,7 @@ copyright:           "2024 Kwanghoon Choi"
 extra-source-files:
 - README.md
 - CHANGELOG.md
+- app/*/examples/*
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -40,9 +41,6 @@ dependencies:
 library:
   source-dirs: src
 
-extra-source-files:
-  - app/*/examples/*    
-
 executables:
   simplemodules-exe:
     main:                Main.hs
@@ -51,7 +49,7 @@ executables:
     ghc-options:
     - -threaded
     - -rtsopts
-    - -with-rtsopts=-N
+    - -with-rtsopts=-N    
     dependencies:
     - ch8
   opaquetypes-exe:
