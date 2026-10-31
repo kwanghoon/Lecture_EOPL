@@ -2,6 +2,7 @@ module Interp where
 
 import Expr
 import EnvStore
+-- import Debug.Trace(trace)
 
 --
 value_of :: ClassEnv -> Exp -> Env -> Store -> (ExpVal, Store)   
@@ -132,6 +133,7 @@ value_of_arg class_env env (vals,store) arg =
 --
 value_of_program :: Program -> ExpVal
 value_of_program (Program classDecls body) =
+  -- trace (show init_class_Env)
   fst $ value_of init_class_Env body initEnv initStore
   where
     init_class_Env = initialize_class_env classDecls
