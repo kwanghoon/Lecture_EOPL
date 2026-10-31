@@ -2,6 +2,7 @@
 {-# HLINT ignore "Use camelCase" #-}
 module TypeCheck where
 
+-- import Debug.Trace 
 import Expr
 import TyEnv
 import EitherState
@@ -16,11 +17,14 @@ add_module_defns_to_tyenv :: [ ModuleDef ] -> TyEnv -> Either_ String TyEnv
 add_module_defns_to_tyenv [] tyenv = _Right tyenv
 add_module_defns_to_tyenv (ModuleDef m iface mbody : moddefs) tyenv = 
   do actual_iface <- interface_of mbody tyenv                 -- important!
-     isSubIface <- sub_iface actual_iface iface tyenv
+     isSubIface <- 
+        --trace ("\n[iface]: " ++ show iface ++ "\n[actual_iface]: " ++ show actual_iface ++ "\n")
+        sub_iface actual_iface iface tyenv
      if isSubIface                                            -- important!
      then 
         do  iface' <- expand_iface m iface tyenv               -- important!
             let newtyenv = extend_tyenv_with_module m iface' tyenv       
+            -- trace (show "\n[iface']: " ++ show iface' ++ "\n")
             add_module_defns_to_tyenv moddefs newtyenv 
      else _Left $ "In the module " ++ m
                    ++ "\n  expected interface: " ++ show iface
