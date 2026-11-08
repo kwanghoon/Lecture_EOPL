@@ -5,6 +5,7 @@ module TypeCheck where
 import Expr
 import TyEnv
 import EnvStore (DenVal(SelfObject_Val), append_field_names)
+-- import Debug.Trace(trace)
 
 --
 typeCheck :: Program -> IO (Either String Type)
@@ -15,6 +16,7 @@ type_of_program :: Program -> Either String Type
 type_of_program (Program classDecls exp) =
   do clzEnv <- initializeStaticClassEnv classDecls
      check_class_decls clzEnv classDecls
+     -- trace (show clzEnv) 
      type_of clzEnv exp initTyEnv
 
 initTyEnv = extend_tyenv "x" TyInt empty_tyenv
